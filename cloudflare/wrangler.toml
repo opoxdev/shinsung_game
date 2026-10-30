@@ -4,8 +4,8 @@ compatibility_date = "2026-10-01"
 workers_dev = true
 
 [vars]
-# Firebase project ID (not a secret). Set this before deployment.
-FIREBASE_PROJECT_ID = "REPLACE_WITH_FIREBASE_PROJECT_ID"
+# Public Firebase project ID. D1 database ID is configured after creation.
+FIREBASE_PROJECT_ID = "shinsung-td"
 
 [[d1_databases]]
 binding = "DB"
