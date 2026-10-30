@@ -6,7 +6,7 @@
 
 ## Node.js 없이 최초 소스 등록
 
-1. [신성 디펜스 v0.3 ZIP](../../releases)을 사용하거나 이전 대화의 `Shinsung_Defense_v0.3_Cloudflare_Free_Patch.zip`을 다운로드합니다.
+1. 이전 대화의 `Shinsung_Defense_v0.3_Cloudflare_Free_Patch.zip`을 다운로드합니다.
 2. 이 저장소의 **Add file → Upload files**를 선택합니다.
 3. ZIP을 `uploads/` 경로로 업로드합니다. (먼저 `uploads/README.md`에서 경로를 확인할 수 있습니다.)
 4. 커밋 후 **Actions → Shinsung game → 최근 작업**에서 테스트와 소스 반입을 확인합니다.
