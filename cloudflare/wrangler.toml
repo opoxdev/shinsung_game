@@ -19,3 +19,8 @@ class_name = "GameRoom"
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["GameRoom"]
+
+# The official Google Apps Script page loads graphics and game code here.
+# Static assets bypass the Worker runtime; /api, /socket, /health remain API routes.
+[assets]
+directory = "../dist/web"
