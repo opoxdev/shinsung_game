@@ -1,0 +1,26 @@
+# Shinsung Defense authoritative Worker (Cloudflare Git integration).
+# This file stays at the repository root so the default "npx wrangler deploy"
+# works without entering custom commands in the Cloudflare dashboard.
+name = "shinsung-defense"
+main = "cloudflare/worker.js"
+compatibility_date = "2026-10-01"
+workers_dev = true
+
+[build]
+command = "npm run build"
+
+[vars]
+FIREBASE_PROJECT_ID = "shinsung-td"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "shinsung-profiles"
+database_id = "f78d40e3-b555-453a-b75c-b172fa7594d4"
+
+[[durable_objects.bindings]]
+name = "ROOMS"
+class_name = "GameRoom"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["GameRoom"]
