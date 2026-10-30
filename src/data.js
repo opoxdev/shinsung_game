@@ -13,7 +13,7 @@ export const TOWERS = {
   summoner: { name: '고블린 소환사', role: '소환', rarity: 'epic', cost: 500, price: 2200, color: '#a4e68b', damage: 65, interval: 4, range: 260, kind: 'summon', cap: 4, upgrades: [550,1200,2400], desc: '고블린을 소환해 적을 추격한다. 소환수는 목표에 도달하면 공격하고 사라진다.' },
   workshop: { name: '버섯 정원', role: '지원 · 버프', rarity: 'epic', cost: 400, price: 1500, color: '#ff88a8', damage: 0, interval: 1, range: 210, kind: 'buff', cap: 3, upgrades: [450,900,1800], desc: '빛나는 포자로 아군 공격력을 20% 강화하는 작은 버섯집. 여러 정원의 효과는 중첩되지 않는다.' },
   rail: { name: '별술사', role: '별빛 · 장거리', rarity: 'legendary', cost: 1200, price: 5000, color: '#a6d8ff', damage: 170, interval: 2.8, range: 420, kind: 'ranged', cap: 3, upgrades: [1300,2600,5200], desc: '커다란 모자 아래 반짝이는 두 눈. 멀리 있는 적에게 장갑을 꿰뚫는 별빛을 떨어뜨린다.', pierce: true },
-  sonic: { name: '소닉', role: '초고속 · 광역', rarity: 'mythic', cost: 1800, price: null, color: '#f784cb', damage: 45, interval: .22, range: 240, splash: 45, kind: 'splash', cap: 2, upgrades: [1900,3800,7000], desc: '익스트림 이상 + 슈퍼소닉 모드 클리어 보상. 음파로 적의 대열을 분쇄한다.' }
+  sonic: { name: '소닉', role: '초고속 · 광역', rarity: 'mythic', cost: 1800, price: null, color: '#f784cb', damage: 45, interval: .22, range: 240, splash: 45, kind: 'splash', cap: 2, upgrades: [1900,3800,7000], desc: '익스트림 이상 + 슈퍼소닉 모드 클리어 보상. 음파로 적의 대열을 분쇄한다.' },
   archer: {name:'숲의 궁수', role:'정밀 · 원거리', rarity:'common',cost:190,price:400,color:'#a4e56d',damage:13,interval:1.05,range:275,kind:'ranged',cap:12,upgrades:[200,440,850],desc:'나뭇잎 망토를 두른 방랑자. 넓은 사거리로 선두 적을 정확히 추적한다.'},
   chef: {name:'도넛 요리사',role:'광역 · 폭발',rarity:'common',cost:270,price:600,color:'#ffb6bc',damage:17,interval:1.5,range:175,splash:58,kind:'splash',cap:10,upgrades:[270,540,1100],desc:'설탕 폭탄을 튀기는 요리사. 밀집된 적을 단숨에 밀어낸다.'},
   chemist: {name:'연금술사',role:'독 · 지속 피해',rarity:'rare',cost:360,price:1050,color:'#98eb70',damage:7,interval:1.2,range:205,kind:'ranged',dot:12,dotTime:3,cap:8,upgrades:[360,780,1500],desc:'초록색 약병을 던져 중독시키는 연구자. 독은 방어력이 높아도 지속적으로 작용한다.'},
@@ -43,7 +43,7 @@ export const ENEMIES = {
   chain: { name: 'MK5 쇠사슬', hp: 2200, speed: 38, color: '#9c8cba', armor: .35, leak: 12 },
   mecha: { name: 'MKX 메카', hp: 12000, speed: 32, color: '#b1a7df', armor: .3, leak: 55, size: 30 },
   doom: { name: '아마겟돈', hp: 80000, speed: 24, color: '#f17182', armor: .2, leak: 100, size: 38 },
-  apocalypse: { name: '파멸의 핵', hp: 180000, speed: 30, color: '#ff476a', armor: .35, leak: 100, size: 44 }
+  apocalypse: { name: '파멸의 핵', hp: 180000, speed: 30, color: '#ff476a', armor: .35, leak: 100, size: 44 },
   swarm:{name:'무리 좀비',hp:12,speed:78,color:'#b9e278',leak:1,size:9},
   sprinter:{name:'바람 주자',hp:42,speed:150,color:'#d8ee78',leak:2,size:11},
   shieldling:{name:'방패병',hp:190,shield:120,speed:46,color:'#9fc8c2',armor:.12,leak:4,size:16},
