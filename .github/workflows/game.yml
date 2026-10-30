@@ -84,7 +84,8 @@ jobs:
           fi
 
   pages:
-    name: Publish game preview to GitHub Pages
+    name: Optional GitHub Pages preview (not the official GAS host)
+    if: ${{ vars.ENABLE_GITHUB_PAGES == 'true' }}
     needs: test
     runs-on: ubuntu-latest
     permissions:
