@@ -1,0 +1,138 @@
+name: Shinsung game
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  import:
+    name: Import ZIP if uploaded
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract game files from uploads folder
+        run: |
+          python - <<'PY'
+          from pathlib import Path, PurePosixPath
+          import zipfile
+          archives = sorted(Path("uploads").glob("*.zip"))
+          allowed_dirs = {"src", "scripts", "tests", "server", "cloudflare", "firebase", "dist"}
+          allowed_files = {"package.json", "index.html", ".gitignore", "README.md", "DEPLOY.md", "CHANGELOG.md", "Start-Game.cmd", "preview.png"}
+          for archive in archives:
+              if archive.stat().st_size > 12_000_000:
+                  raise RuntimeError("Archive exceeds 12 MB")
+              total = 0
+              with zipfile.ZipFile(archive) as z:
+                  files = [info for info in z.infolist() if not info.is_dir()]
+                  if len(files) > 200:
+                      raise RuntimeError("Too many files")
+                  for info in files:
+                      if info.file_size > 8_000_000:
+                          raise RuntimeError("File too large")
+                      total += info.file_size
+                      if total > 20_000_000:
+                          raise RuntimeError("Expanded ZIP too large")
+                      parts = PurePosixPath(info.filename.replace("\\", "/")).parts
+                      if parts and parts[0].lower().startswith("shinsung_defense"):
+                          parts = parts[1:]
+                      if not parts or any(p in (".", "..", "") for p in parts):
+                          raise RuntimeError("Unsafe archive path")
+                      if len(parts) > 12:
+                          raise RuntimeError("Deep archive path")
+                      if parts[0] not in allowed_dirs and not (len(parts) == 1 and parts[0] in allowed_files):
+                          continue
+                      target = Path(*parts)
+                      if target.is_symlink():
+                          raise RuntimeError("Symlink target is not allowed")
+                      target.parent.mkdir(parents=True, exist_ok=True)
+                      target.write_bytes(z.read(info))
+              archive.unlink()
+              print("Imported", archive)
+          PY
+      - name: Commit extracted sources
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "Import Shinsung Defense project source"
+            git push origin HEAD:main
+          fi
+
+  test:
+    name: Build and test (cloud, no local Node.js)
+    needs: import
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Run game tests
+        run: |
+          if [ -f package.json ]; then
+            npm test
+          else
+            echo "Waiting for the v0.3 source ZIP in uploads/"
+          fi
+
+  pages:
+    name: Publish game preview to GitHub Pages
+    if: ${{ vars.ENABLE_GITHUB_PAGES == 'true' }}
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Build standalone game
+        run: |
+          npm run build
+          mkdir -p public
+          cp dist/index.html public/index.html
+      - name: Inject public client configuration
+        env:
+          FIREBASE_WEB_CONFIG: ${{ vars.FIREBASE_WEB_CONFIG }}
+          CLOUDFLARE_API: ${{ vars.CLOUDFLARE_API }}
+        run: |
+          python - <<'PY'
+          import os, json
+          from pathlib import Path
+          cfg = os.getenv("FIREBASE_WEB_CONFIG", "").strip()
+          api = os.getenv("CLOUDFLARE_API", "").strip()
+          if cfg:
+              obj = json.loads(cfg)
+              if not isinstance(obj, dict) or "apiKey" not in obj or "projectId" not in obj:
+                  raise ValueError("FIREBASE_WEB_CONFIG must contain apiKey and projectId")
+          else:
+              obj = {}
+          if api and not api.startswith("https://"):
+              raise ValueError("CLOUDFLARE_API must be an HTTPS URL")
+          boot = "<script>globalThis.__FIREBASE_CONFIG__=" + json.dumps(obj, ensure_ascii=True).replace("<", "\\u003c") + ";globalThis.__CLOUDFLARE_API__=" + json.dumps(api) + ";</script>"
+          target = Path("public/index.html")
+          html = target.read_text(encoding="utf-8")
+          target.write_text(html.replace("<script>", boot + "<script>", 1), encoding="utf-8")
+          PY
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+      - id: deploy
+        uses: actions/deploy-pages@v4
