@@ -28,34 +28,37 @@
 3. 생성된 데이터베이스의 **Console**에서 GitHub에 있는 `cloudflare/schema.sql`의 SQL 내용을 실행(테이블 생성).
 4. **완료:** D1 Database ID `f78d40e3-b555-453a-b75c-b172fa7594d4`가 GitHub에 반영되어 있습니다. 데이터베이스 이름이 `shinsung-profiles`인지 확인하세요.
 
-## 3. Cloudflare Workers: 웹에서만 배포하기
+## 3. Cloudflare Workers: 연결 완료
 
-**새로 추가한 루트 `wrangler.toml`에 빌드·배포 설정을 모두 입력했습니다.** Cloudflare의 환경 변수 입력 화면에 Worker name, Production branch, Build command 등을 입력하지 마세요.
+- **프로덕션 Worker 이름:** `shinsung-game`
+- **공개 서버 주소:** https://shinsung-game.joehw0405.workers.dev
+- **정상 동작 확인:** `/health` 응답 `{"ok":true,"service":"shinsung-cloudflare","version":"0.3.0"}`
+- GitHub의 `cloudflare/wrangler.toml` 및 `wrangler.toml`의 `name`을 실제 Worker 이름으로 통일했습니다.
+- Cloudflare 배포 명령 `npx wrangler deploy --config cloudflare/wrangler.toml`은 그대로 유지해도 됩니다.
 
-1. Cloudflare 대시보드 → **Workers & Pages → Create application → GitHub**를 선택합니다.
-2. `opoxdev/shinsung_game` 저장소를 선택합니다. GitHub 앱 권한을 요청하면 승인합니다.
-3. 환경 변수 단계에서는 **추가한 변수 없이** `Save and Deploy` 또는 `Deploy`를 누릅니다. 화면에 실제 Worker 이름을 묻는 항목이 있다면 `shinsung-defense`를 입력합니다.
-4. 이미 프로젝트를 만든 경우, 해당 Worker → **Settings → Builds → Connect**에서 동일 저장소를 연결합니다.
-5. Cloudflare가 기본적으로 `npx wrangler deploy`를 실행합니다. 루트 `wrangler.toml`의 `[build]` 명령이 `npm run build`를 수행하므로 Cloudflare UI에서 명령을 별도로 입력하지 않아도 됩니다.
-6. 배포 성공 후 `https://<생성된 Worker 주소>/health`를 열고 응답에 `"ok":true`가 있는지 확인합니다.
+이 확인은 HTTP 서버 접근만 검증합니다. Firebase Auth, D1 읽기/쓰기 및 PvP 웹소켓은 두 계정으로 별도 테스트해야 합니다.
 
-설정의 출처: https://developers.cloudflare.com/workers/ci-cd/builds/ 및 https://developers.cloudflare.com/workers/wrangler/custom-builds/
+## 4. GitHub Pages: 게임 화면 자동 배포
 
-**참고:** `cloudflare/wrangler.toml`은 기존 수동 배포 호환용으로 남겨두었습니다. 자동 Git 배포의 기준 파일은 저장소 최상위의 `wrangler.toml`입니다.
+이제 GitHub에서 **한 번만** Pages를 활성화하면 됩니다.
 
-## 5. GitHub Pages: 자동 업데이트 테스트 사이트 (권장)
+1. https://github.com/opoxdev/shinsung_game/settings/pages 를 엽니다.
+2. `Build and deployment` → `Source`에서 **GitHub Actions**를 선택합니다.
+3. 기존 `.github/workflows/game.yml` 워크플로가 게임 HTML을 빌드하고 배포합니다.
+4. https://github.com/opoxdev/shinsung_game/actions 에서 **Shinsung game**의 최신 실행을 확인합니다. Pages가 활성화되기 전 최초 배포는 실패할 수 있으니, 이후 **Re-run jobs**를 실행하면 됩니다.
+5. 게임 테스트 주소: https://opoxdev.github.io/shinsung_game/
 
-Google Apps Script 원본 호스팅은 유지할 수 있지만, **GAS 배포는 웹 편집기에서 코드를 다시 반영해야** 합니다. 자주 업데이트하는 테스트 빌드는 GitHub Pages가 더 간단합니다.
+**Firebase 공개 구성은 `firebase/config.json`을 통해, Cloudflare Worker URL은 GitHub Actions 기본값을 통해 이미 연결됩니다.** `ENABLE_GITHUB_PAGES`나 `CLOUDFLARE_API` 저장소 변수를 직접 만들 필요가 없습니다.
 
-1. GitHub **Settings → Pages → Build and deployment → Source → GitHub Actions**.
-2. **Settings → Secrets and variables → Actions → Variables → New repository variable**에 아래 추가:
-   - `ENABLE_GITHUB_PAGES` = `true`
-   - `CLOUDFLARE_API` = `https://....workers.dev` (끝에 / 없이)
-   - Firebase 웹 설정은 `firebase/config.json`에서 자동으로 읽으므로 별도 변수 입력이 필요 없습니다.
-3. **Actions → Shinsung game → Run workflow**를 누르면 테스트가 통과한 뒤 GitHub Pages 빌드 및 배포.
-4. 주소: https://opoxdev.github.io/shinsung_game/
+GitHub Actions로 자동 배포된 이후에는 소스코드를 수정하면 게임 화면도 자동으로 갱신됩니다.
 
-이 변수들은 공개 구성 정보입니다. 비밀번호나 Cloudflare API 토큰을 넣으면 안 됩니다.
+## 5. 첫 온라인 게임 테스트
+
+1. Firebase Authentication에서 Email/Password 로그인 제공자를 활성화합니다.
+2. GitHub Pages 게임 주소에서 서로 다른 이메일 계정 2개로 회원가입합니다.
+3. 서로 다른 브라우저 두 개로 방 생성·입장·전투를 확인합니다.
+4. D1 프로필이 저장되는지와 WebSocket 재접속, 승리 보상 중복 지급 여부를 확인합니다.
+5. 이 테스트 전에는 실시간 대전 및 계정 저장이 검증되었다고 간주하지 않습니다.
 
 ## 6. Google Apps Script 호스팅이 꼭 필요하면
 
