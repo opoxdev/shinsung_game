@@ -26,13 +26,11 @@
 1. https://dash.cloudflare.com/ → Free 계정 준비.
 2. **Storage & databases → D1 SQL Database → Create**에서 데이터베이스 이름을 `shinsung-profiles`로 생성.
 3. 생성된 데이터베이스의 **Console**에서 GitHub에 있는 `cloudflare/schema.sql`의 SQL 내용을 실행(테이블 생성).
-4. D1 세부 정보에서 `Database ID` (UUID) 복사.
+4. **완료:** D1 Database ID `f78d40e3-b555-453a-b75c-b172fa7594d4`가 GitHub에 반영되어 있습니다. 데이터베이스 이름이 `shinsung-profiles`인지 확인하세요.
 
-## 3. GitHub에서 Cloudflare 설정 파일 수정
+## 3. GitHub 서버 설정
 
-GitHub의 `cloudflare/wrangler.toml` 파일에서 **Edit(연필 아이콘)**:
-- **완료:** `FIREBASE_PROJECT_ID = "shinsung-td"`가 이미 반영되어 있습니다.
-- **남은 작업:** `database_id = "REPLACE_WITH_D1_DATABASE_ID"` → 생성한 D1 Database ID로 교체
+**완료:** `cloudflare/wrangler.toml`에 Firebase 프로젝트 `shinsung-td`와 D1 Database ID가 입력되어 있습니다. 직접 편집할 필요가 없습니다.
 
 이 두 값은 공개 식별자입니다. API 토큰이나 비밀번호가 아닙니다.
 
