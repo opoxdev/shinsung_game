@@ -56,8 +56,12 @@ export function requiredVotes(s) {const n=Object.keys(s.players).length;return n
 function event(s,e) {s.events.push({...e,id:s.nextId++,time:s.time});if(s.events.length>70)s.events.shift();}
 function spawn(s,type,field,source='wave') {
   const d=ENEMIES[type],mods=modifiers(s.config),diff=DIFFICULTIES.find(d=>d.id===s.config.difficulty);
-  const hp=d.hp*mods.hp*diff.hp;
-  s.enemies.push({id:s.nextId++,type,field,hp,maxHp:hp,progress:0,x:mapOf(s).path[0][0],y:mapOf(s).path[0][1],speed:d.speed*mods.speed,source});
+  const hp=Math.round(d.hp*mods.hp*diff.hp);
+  const shield=Math.round((d.shield||0)*mods.hp*diff.hp);
+  const unit={id:s.nextId++,type,field,hp,maxHp:hp,shield,maxShield:shield,
+    progress:0,x:mapOf(s).path[0][0],y:mapOf(s).path[0][1],
+    speed:d.speed*mods.speed,source};
+  s.enemies.push(unit);return unit;
 }
 function nextWave(s) {
   const d=DIFFICULTIES.find(d=>d.id===s.config.difficulty);
@@ -88,7 +92,7 @@ export function command(s,playerId,c) {
     if(s.towers.filter(t=>t.field===p.field&&t.type===c.type).length>=d.cap)return fail('이 타워의 배치 한도에 도달했습니다.');
     if(p.money<d.cost)return fail('전투 자금이 부족합니다.');
     if(!canPlace(s,p.field,c.x,c.y))return fail('도로와 다른 타워를 피해 배치하세요.');
-    p.money-=d.cost;s.towers.push({id:s.nextId++,owner:playerId,field:p.field,type:c.type,x:c.x,y:c.y,level:0,cd:0,spent:d.cost,target:'first',skin:p.skins[c.type]||'default'});
+    p.money-=d.cost;s.towers.push({id:s.nextId++,owner:playerId,field:p.field,type:c.type,x:c.x,y:c.y,level:0,cd:d.kind==='income'?d.interval:0,spent:d.cost,target:'first',skin:p.skins[c.type]||'default',shots:0});
   } else if(['upgrade','sell','target'].includes(c.kind)) {
     const t=s.towers.find(t=>t.id===c.id);if(!t||t.owner!==playerId)return fail('자신의 타워를 선택하세요.');
     if(c.kind==='upgrade') {
@@ -113,14 +117,42 @@ export function command(s,playerId,c) {
   } else return fail('알 수 없는 명령입니다.');
   return {ok:true};
 }
-function damage(s,e,n,t) {
+// All combat effects are deterministic. Only the authoritative simulation awards money.
+function damage(s,e,n,t,ignoreArmor=false) {
+  if(e.hp<=0||!Number.isFinite(n)||n<=0)return;
+  const source=TOWERS[t.type]||{};
+  let value=n*(ignoreArmor||source.pierce?1:1-(ENEMIES[e.type].armor||0));
+  if(e.shield>0){const absorbed=Math.min(e.shield,value);e.shield-=absorbed;value-=absorbed;}
+  if(value>0)e.hp-=value;
+  if(e.hp>0)return;
+  e.hp=0;
+  const team=Object.values(s.players).filter(p=>p.field===e.field);
+  const reward=bounty(e.maxHp)/(team.length||1);
+  team.forEach(p=>p.money+=reward);s.kills++;
+  event(s,{kind:'kill',x:e.x,y:e.y,field:e.field,color:ENEMIES[e.type].color});
+  const offspring=ENEMIES[e.type].onDeath||[];
+  // Each new child is a normal enemy, once only, and starts at the parent's position.
+  for(const [type,count] of offspring)for(let i=0;i<count&&s.enemies.length<350;i++){
+    const child=spawn(s,type,e.field,'split');
+    child.progress=e.progress;child.x=e.x;child.y=e.y;
+  }
+}
+function applyHit(s,e,n,t,stats,scale=1){
+  if(!e||e.hp<=0)return;
+  const def=TOWERS[t.type]||{};
+  const crit=def.critChance&&((t.id*17+(t.shots||0)*31)%100)<def.critChance;
+  const execute=def.execute&&e.hp/e.maxHp<=def.execute;
+  damage(s,e,n*scale*(crit?(def.critBonus||1.8):1)*(execute?(def.executeBonus||2):1),t);
   if(e.hp<=0)return;
-  e.hp-=n*(TOWERS[t.type].pierce?1:1-(ENEMIES[e.type].armor||0));
-  if(e.hp<=0) {
-    const team=Object.values(s.players).filter(p=>p.field===e.field);
-    const reward=bounty(e.maxHp)/team.length;
-    team.forEach(p=>p.money+=reward);s.kills++;
-    event(s,{kind:'kill',x:e.x,y:e.y,field:e.field,color:ENEMIES[e.type].color});
+  if(def.dot){
+    const dot=def.dot*(1+(t.level||0)*.65);
+    if(!e.dotDps||dot>=e.dotDps){e.dotDps=dot;e.dotFrom=t.type;}
+    e.dotUntil=Math.max(e.dotUntil||0,s.time+(def.dotTime||3));
+  }
+  if(def.slow){
+    const factor=Math.max(.25,def.slow);
+    if(!e.slowFactor||factor<e.slowFactor)e.slowFactor=factor;
+    e.slowUntil=Math.max(e.slowUntil||0,s.time+(def.slowTime||2));
   }
 }
 export function tick(s,dt=STEP) {
@@ -129,32 +161,78 @@ export function tick(s,dt=STEP) {
   s.time+=dt;s.waveTime+=dt;
   const ready=s.queue.filter(q=>q.at<=s.time).slice(0,Math.max(0,350-s.enemies.length));
   const set=new Set(ready);s.queue=s.queue.filter(q=>!set.has(q));ready.forEach(q=>spawn(s,q.type,q.field));
+  // Enemy healing, regeneration and damage-over-time. 1 tick = 50ms.
+  for(const e of s.enemies){
+    const d=ENEMIES[e.type];
+    if(e.dotUntil>s.time&&e.dotDps&&e.hp>0)damage(s,e,e.dotDps*dt,{type:e.dotFrom},true);
+    if(e.hp<=0)continue;
+    if(d.regen)e.hp=Math.min(e.maxHp,e.hp+d.regen*dt);
+    if(d.heal){
+      e.healClock=(e.healClock||0)+dt;
+      if(e.healClock>=1){
+        e.healClock-=1;
+        for(const ally of s.enemies)if(ally.field===e.field&&ally.hp>0&&dist(ally,e)<=(d.healRange||100))ally.hp=Math.min(ally.maxHp,ally.hp+d.heal);
+        event(s,{kind:'heal',x:e.x,y:e.y,field:e.field,type:e.type});
+      }
+    }
+  }
   for(const t of s.towers) {
-    const d=TOWERS[t.type];if(d.kind==='buff')continue;
-    t.cd-=dt;if(t.cd>0)continue;
-    const stats=towerStats(t),candidates=s.enemies.filter(e=>e.field===t.field&&e.hp>0&&dist(t,e)<=stats.range);
+    const d=TOWERS[t.type],stats=towerStats(t);
+    if(d.kind==='buff')continue;
+    t.cd-=dt;
+    if(d.kind==='income'){
+      if(t.cd<=0){
+        const owner=s.players[t.owner];if(owner)owner.money+=(d.income||0)*(1+t.level*.8);
+        t.cd=stats.interval;
+        event(s,{kind:'income',x:t.x,y:t.y,field:t.field,type:t.type});
+      }
+      continue;
+    }
+    if(t.cd>0)continue;
+    const candidates=s.enemies.filter(e=>e.field===t.field&&e.hp>0&&dist(t,e)<=stats.range);
     candidates.sort(t.target==='strong'?(a,b)=>b.hp-a.hp:t.target==='near'?(a,b)=>dist(a,t)-dist(b,t):(a,b)=>b.progress-a.progress);
     const e=candidates[0];if(!e)continue;
-    const buff=s.towers.filter(b=>b.field===t.field&&TOWERS[b.type].kind==='buff'&&dist(b,t)<=towerStats(b).range).reduce((a,b)=>Math.max(a,1.2+b.level*.1),1);
-    t.cd=stats.interval;t.angle=Math.atan2(e.y-t.y,e.x-t.x);
+    const buffs=s.towers.filter(b=>b.field===t.field&&TOWERS[b.type].kind==='buff'&&dist(b,t)<=towerStats(b).range);
+    const power=buffs.reduce((a,b)=>Math.max(a,1+(TOWERS[b.type].power??.2)+b.level*.1),1);
+    const haste=buffs.reduce((a,b)=>Math.max(a,1+(TOWERS[b.type].haste||0)*(1+b.level*.2)),1);
+    t.cd=stats.interval/haste;t.shots=(t.shots||0)+1;
+    t.angle=Math.atan2(e.y-t.y,e.x-t.x);
     event(s,{kind:d.kind,from:t.id,x:t.x,y:t.y,tx:e.x,ty:e.y,field:t.field,type:t.type});
-    if(d.kind==='summon')s.units.push({id:s.nextId++,x:t.x,y:t.y,field:t.field,target:e.id,damage:stats.damage*buff,type:t.type,life:8});
-    else if(d.kind==='splash')s.enemies.filter(a=>a.field===t.field&&dist(a,e)<=stats.splash).forEach(a=>damage(s,a,stats.damage*buff,t));
-    else if(d.kind==='melee')candidates.slice(0,3).forEach(a=>damage(s,a,stats.damage*buff,t));
-    else damage(s,e,stats.damage*buff,t);
+    if(d.kind==='summon'){
+      const count=d.summons||1;
+      for(let i=0;i<count&&s.units.length<80;i++)s.units.push({id:s.nextId++,x:t.x+i*12,y:t.y-i*6,field:t.field,target:e.id,damage:stats.damage*power,type:t.type,life:d.unitLife||8,speed:d.unitSpeed||210,level:t.level});
+    }else if(d.kind==='splash'){
+      const hits=s.enemies.filter(a=>a.field===t.field&&a.hp>0&&dist(a,e)<=stats.splash);
+      for(const a of hits)applyHit(s,a,stats.damage*power,t,stats);
+    }else if(d.kind==='melee'){
+      for(const a of candidates.slice(0,d.cleave||3))applyHit(s,a,stats.damage*power,t,stats);
+    }else if(d.kind==='chain'){
+      const targets=[e],left=new Set([e.id]),max=d.chain||3;
+      while(targets.length<max){
+        const prev=targets[targets.length-1];
+        const next=s.enemies.filter(a=>a.field===t.field&&a.hp>0&&!left.has(a.id)&&dist(prev,a)<=(d.chainRange||120)).sort((a,b)=>dist(a,prev)-dist(b,prev))[0];
+        if(!next)break;targets.push(next);left.add(next.id);
+      }
+      targets.forEach((target,i)=>{
+        applyHit(s,target,stats.damage*power,t,stats,Math.max(.35,1-i*.13));
+        if(i>0)event(s,{kind:'arc',x:targets[i-1].x,y:targets[i-1].y,tx:target.x,ty:target.y,field:t.field,type:t.type});
+      });
+    }else applyHit(s,e,stats.damage*power,t,stats);
   }
   for(const u of s.units) {
     u.life-=dt;let e=s.enemies.find(e=>e.id===u.target&&e.hp>0);
     if(!e){e=s.enemies.find(e=>e.field===u.field&&e.hp>0);if(e)u.target=e.id;}
     if(!e)continue;
-    const distance=dist(u,e),move=210*dt;
-    if(distance<=move+10){damage(s,e,u.damage,u);u.life=0;event(s,{kind:'melee',x:e.x,y:e.y,tx:e.x,ty:e.y,field:e.field,type:u.type});}
-    else {u.x+=(e.x-u.x)*move/distance;u.y+=(e.y-u.y)*move/distance;}
+    const distance=dist(u,e),move=(u.speed||210)*dt;
+    if(distance<=move+10){
+      applyHit(s,e,u.damage,u,{damage:u.damage});
+      u.life=0;event(s,{kind:'melee',x:e.x,y:e.y,tx:e.x,ty:e.y,field:e.field,type:u.type});
+    }else {u.x+=(e.x-u.x)*move/distance;u.y+=(e.y-u.y)*move/distance;}
   }
   s.units=s.units.filter(u=>u.life>0);
   s.enemies=s.enemies.filter(e=>e.hp>0);
   for(const e of s.enemies) {
-    e.progress+=e.speed*dt;const pos=pointOnPath(mapOf(s).path,e.progress);e.x=pos.x;e.y=pos.y;
+    e.progress+=e.speed*dt*(e.slowUntil>s.time?(e.slowFactor||1):1);const pos=pointOnPath(mapOf(s).path,e.progress);e.x=pos.x;e.y=pos.y;
     if(pos.end){s.fields[e.field]=Math.max(0,s.fields[e.field]-ENEMIES[e.type].leak);e.hp=0;event(s,{kind:'leak',x:e.x,y:e.y,field:e.field});}
   }
   s.enemies=s.enemies.filter(e=>e.hp>0);
@@ -176,11 +254,11 @@ export function rewardFor(s,id) {
   const d=DIFFICULTIES.find(d=>d.id===s.config.difficulty);
   // PvP opponents must not be usable as a repeatable currency faucet in this alpha.
   const coins=s.config.type==='pvp'?0:win?Math.floor(d.reward*modifiers(s.config).reward):0;
-  return {coins,xp:s.config.type==='pvp'?0:win?d.waves.length*20:0,sonic:win&&s.config.type!=='pvp'&&DIFFICULTIES.indexOf(d)>=3&&s.config.modes.includes('supersonic'),win};
+  return {coins,xp:s.config.type==='pvp'?0:win?d.waves.length*20:0,sonic:win&&s.config.type!=='pvp'&&DIFFICULTIES.indexOf(d)>=3&&s.config.modes.includes('supersonic'),aurora:win&&s.config.type!=='pvp'&&d.id==='ruin'&&s.config.modes.includes('elite'),win};
 }
 export function applyReward(profile,reward) {
   profile.coins+=reward.coins;profile.xp+=reward.xp;if(reward.win)profile.wins++;
-  if(reward.sonic&&!profile.owned.includes('sonic'))profile.owned.push('sonic');return profile;
+  if(reward.sonic&&!profile.owned.includes('sonic'))profile.owned.push('sonic');if(reward.aurora&&!profile.owned.includes('aurora'))profile.owned.push('aurora');return profile;
 }
 export function profileAction(profile,a) {
   if(!a||typeof a!=='object')throw Error('잘못된 요청입니다.');
