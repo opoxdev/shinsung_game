@@ -28,23 +28,20 @@
 3. 생성된 데이터베이스의 **Console**에서 GitHub에 있는 `cloudflare/schema.sql`의 SQL 내용을 실행(테이블 생성).
 4. **완료:** D1 Database ID `f78d40e3-b555-453a-b75c-b172fa7594d4`가 GitHub에 반영되어 있습니다. 데이터베이스 이름이 `shinsung-profiles`인지 확인하세요.
 
-## 3. GitHub 서버 설정
+## 3. Cloudflare Workers: 웹에서만 배포하기
 
-**완료:** `cloudflare/wrangler.toml`에 Firebase 프로젝트 `shinsung-td`와 D1 Database ID가 입력되어 있습니다. 직접 편집할 필요가 없습니다.
+**새로 추가한 루트 `wrangler.toml`에 빌드·배포 설정을 모두 입력했습니다.** Cloudflare의 환경 변수 입력 화면에 Worker name, Production branch, Build command 등을 입력하지 마세요.
 
-이 두 값은 공개 식별자입니다. API 토큰이나 비밀번호가 아닙니다.
+1. Cloudflare 대시보드 → **Workers & Pages → Create application → GitHub**를 선택합니다.
+2. `opoxdev/shinsung_game` 저장소를 선택합니다. GitHub 앱 권한을 요청하면 승인합니다.
+3. 환경 변수 단계에서는 **추가한 변수 없이** `Save and Deploy` 또는 `Deploy`를 누릅니다. 화면에 실제 Worker 이름을 묻는 항목이 있다면 `shinsung-defense`를 입력합니다.
+4. 이미 프로젝트를 만든 경우, 해당 Worker → **Settings → Builds → Connect**에서 동일 저장소를 연결합니다.
+5. Cloudflare가 기본적으로 `npx wrangler deploy`를 실행합니다. 루트 `wrangler.toml`의 `[build]` 명령이 `npm run build`를 수행하므로 Cloudflare UI에서 명령을 별도로 입력하지 않아도 됩니다.
+6. 배포 성공 후 `https://<생성된 Worker 주소>/health`를 열고 응답에 `"ok":true`가 있는지 확인합니다.
 
-## 4. Cloudflare GitHub 자동 배포 (API 토큰 불필요)
+설정의 출처: https://developers.cloudflare.com/workers/ci-cd/builds/ 및 https://developers.cloudflare.com/workers/wrangler/custom-builds/
 
-1. Cloudflare **Workers & Pages → Create application → GitHub로 연결**.
-2. `opoxdev/shinsung_game` 선택하고 main 브랜치 연결.
-3. 구성에서 **Repository root = /**, **Build command = `npm run build`**, **Deploy command = `npx wrangler deploy --config cloudflare/wrangler.toml`**로 설정.
-4. 저장 및 배포. Worker 주소 `https://shinsung-defense.<account>.workers.dev`를 확인.
-5. Worker URL의 `/health`를 브라우저에서 열어 `"ok":true` 확인. 이것만으로 실제 멀티플레이까지 검증된 것은 아닙니다.
-
-위 경로와 메뉴 이름은 Cloudflare 콘솔 개편에 따라 조금 달라질 수 있습니다. 배포 로그에서 `D1` 권한과 Durable Object 마이그레이션 성공을 확인해야 합니다.
-
-문서: https://developers.cloudflare.com/workers/ci-cd/builds/git-integration/ 및 https://developers.cloudflare.com/workers/ci-cd/builds/configuration/
+**참고:** `cloudflare/wrangler.toml`은 기존 수동 배포 호환용으로 남겨두었습니다. 자동 Git 배포의 기준 파일은 저장소 최상위의 `wrangler.toml`입니다.
 
 ## 5. GitHub Pages: 자동 업데이트 테스트 사이트 (권장)
 
