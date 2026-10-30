@@ -109,7 +109,6 @@ jobs:
           cp dist/index.html public/index.html
       - name: Inject public client configuration
         env:
-          FIREBASE_WEB_CONFIG: ${{ vars.FIREBASE_WEB_CONFIG }}
           CLOUDFLARE_API: ${{ vars.CLOUDFLARE_API }}
         run: |
           python - <<'PY'
@@ -117,12 +116,10 @@ jobs:
           from pathlib import Path
           cfg = os.getenv("FIREBASE_WEB_CONFIG", "").strip()
           api = os.getenv("CLOUDFLARE_API", "").strip()
-          if cfg:
-              obj = json.loads(cfg)
-              if not isinstance(obj, dict) or "apiKey" not in obj or "projectId" not in obj:
-                  raise ValueError("FIREBASE_WEB_CONFIG must contain apiKey and projectId")
-          else:
-              obj = {}
+          source = Path("firebase/config.json")
+          obj = json.loads(cfg) if cfg else json.loads(source.read_text(encoding="utf-8"))
+          if not isinstance(obj, dict) or not obj.get("apiKey") or not obj.get("projectId"):
+              raise ValueError("Firebase web config requires apiKey and projectId")
           if api and not api.startswith("https://"):
               raise ValueError("CLOUDFLARE_API must be an HTTPS URL")
           boot = "<script>globalThis.__FIREBASE_CONFIG__=" + json.dumps(obj, ensure_ascii=True).replace("<", "\\u003c") + ";globalThis.__CLOUDFLARE_API__=" + json.dumps(api) + ";</script>"
