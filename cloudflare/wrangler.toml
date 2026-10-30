@@ -4,13 +4,13 @@ compatibility_date = "2026-10-01"
 workers_dev = true
 
 [vars]
-# Public Firebase project ID. D1 database ID is configured after creation.
+# Firebase project ID and D1 database ID are public identifiers.
 FIREBASE_PROJECT_ID = "shinsung-td"
 
 [[d1_databases]]
 binding = "DB"
 database_name = "shinsung-profiles"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "f78d40e3-b555-453a-b75c-b172fa7594d4"
 
 [[durable_objects.bindings]]
 name = "ROOMS"
