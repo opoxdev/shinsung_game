@@ -7,6 +7,7 @@ const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const out=path.join(root,'dist'),gas=path.join(out,'apps-script');
 await mkdir(gas,{recursive:true});
 const cf=path.join(out,'cloudflare');await mkdir(cf,{recursive:true});
+const web=path.join(out,'web');await mkdir(web,{recursive:true});
 const read=p=>readFile(path.join(root,p),'utf8');
 function stripModules(source){
   return source.replace(/^import\s+\{[^\n]*\}\s+from\s+['"][^'"\n]+['"];?\s*$/gm,'')
@@ -24,8 +25,12 @@ const coreSources=files.slice(0,2).map(stripModules).join('\n');
 const exported=['VERSION','WORLD','RARITIES','TOWERS','ENEMIES','PACKS','MODES','MAPS','DIFFICULTIES','starterProfile','STEP','bounty','mapOf','pointOnPath','pathDistance','modifiers','validateConfig','createMatch','towerStats','canPlace','requiredVotes','command','tick','advance','rewardFor','applyReward','profileAction'];
 const core=`var Core = (()=>{\n'use strict';\n${coreSources}\nreturn {${exported.join(',')}};\n})();\n`;
 await writeFile(path.join(out,'index.html'),html.replace('BOOTSTRAP',''));
-await writeFile(path.join(gas,'Index.html'),html.replace('BOOTSTRAP','<script>globalThis.__FIREBASE_CONFIG__ = <?!= firebaseConfig ?>;globalThis.__CLOUDFLARE_API__ = <?!= cloudflareApi ?>;</script>'));
+// The official Apps Script web app is a tiny permanent HTML shell.
+ // Full game graphics and scripts are updated on the existing Worker via GitHub.
+await writeFile(path.join(web,'game.js'),js);
+await writeFile(path.join(web,'game.css'),css);
+await copyFile(path.join(root,'server/Index.html'),path.join(gas,'Index.html'));
 await writeFile(path.join(cf,'core.js'),core.replace('var Core =','export const Core =')); 
 await copyFile(path.join(root,'server/Code.gs'),path.join(gas,'Code.gs'));
 await copyFile(path.join(root,'server/appsscript.json'),path.join(gas,'appsscript.json'));
-console.log('Built browser, Apps Script host and Cloudflare authoritative game core.');
+console.log('Built browser preview, permanent GAS shell, live Worker JS/CSS assets, and authoritative game core.');
