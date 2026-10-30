@@ -16,7 +16,7 @@
 1. https://console.firebase.google.com/ → 프로젝트 만들기 → **Spark(무료)** 유지.
 2. **Authentication → Sign-in method → Email/Password** 활성화.
 3. **프로젝트 설정 → 일반 → 내 앱 → 웹 앱** 등록.
-4. 웹 구성 `firebaseConfig`의 `apiKey`, `authDomain`, `projectId`, `appId`를 확인.
+4. **완료:** `firebase/config.json`에 Firebase 웹 설정을 등록했습니다. GitHub Pages 빌드는 이를 자동으로 읽습니다.
 5. Firebase Authentication → Settings → Authorized domains에 `opoxdev.github.io` 추가(웹 게임을 GitHub Pages에서 테스트할 경우).
 
 이는 브라우저용 공개 설정이며 **서비스 계정 JSON과 전혀 다릅니다**. 개인키는 사용하지 않습니다.
@@ -31,8 +31,8 @@
 ## 3. GitHub에서 Cloudflare 설정 파일 수정
 
 GitHub의 `cloudflare/wrangler.toml` 파일에서 **Edit(연필 아이콘)**:
-- `FIREBASE_PROJECT_ID = "REPLACE_WITH_FIREBASE_PROJECT_ID"` → Firebase `projectId`로 교체
-- `database_id = "REPLACE_WITH_D1_DATABASE_ID"` → D1 Database ID로 교체
+- **완료:** `FIREBASE_PROJECT_ID = "shinsung-td"`가 이미 반영되어 있습니다.
+- **남은 작업:** `database_id = "REPLACE_WITH_D1_DATABASE_ID"` → 생성한 D1 Database ID로 교체
 
 이 두 값은 공개 식별자입니다. API 토큰이나 비밀번호가 아닙니다.
 
@@ -55,12 +55,12 @@ Google Apps Script 원본 호스팅은 유지할 수 있지만, **GAS 배포는 
 1. GitHub **Settings → Pages → Build and deployment → Source → GitHub Actions**.
 2. **Settings → Secrets and variables → Actions → Variables → New repository variable**에 아래 추가:
    - `ENABLE_GITHUB_PAGES` = `true`
-   - `FIREBASE_WEB_CONFIG` = Firebase **공개 웹 설정 전체를 JSON 객체 한 줄**로 입력
    - `CLOUDFLARE_API` = `https://....workers.dev` (끝에 / 없이)
+   - Firebase 웹 설정은 `firebase/config.json`에서 자동으로 읽으므로 별도 변수 입력이 필요 없습니다.
 3. **Actions → Shinsung game → Run workflow**를 누르면 테스트가 통과한 뒤 GitHub Pages 빌드 및 배포.
 4. 주소: https://opoxdev.github.io/shinsung_game/
 
-이 세 값은 공개 구성 정보입니다. 비밀번호나 Cloudflare API 토큰을 넣으면 안 됩니다.
+이 변수들은 공개 구성 정보입니다. 비밀번호나 Cloudflare API 토큰을 넣으면 안 됩니다.
 
 ## 6. Google Apps Script 호스팅이 꼭 필요하면
 
