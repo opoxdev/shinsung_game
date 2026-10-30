@@ -1,5 +1,63 @@
 // Original vector characters. The same silhouettes are used on cards and in battle.
+// v0.4 silhouettes: lightweight original SVG art; no external image assets.
+// Each roster member has a recognizable prop and headgear, not a military uniform.
+function expansionPortrait(id,skin){
+  const cfg={
+    archer:['#72b96d','#305e55','#e4d694','leaf'],
+    chef:['#f7dfc3','#e97279','#fff7e7','chef'],
+    chemist:['#b2ec7c','#427c6e','#baef75','goggles'],
+    icewitch:['#b6e9ff','#5981c7','#dafaff','crown'],
+    firefly:['#ffad56','#ed685a','#fff0bb','wings'],
+    knight:['#b9b6e8','#6661b1','#edf0ff','helmet'],
+    drone:['#83e9eb','#376eaa','#eaffff','robot'],
+    clockmaker:['#f2cf86','#82557d','#f8e6b5','clock'],
+    mermaid:['#7ae4d5','#4d83b2','#f4c98a','coral'],
+    prism:['#c5a8ff','#5d55ad','#d9ffff','prism'],
+    reaper:['#d7c0ee','#8057a5','#ffebeb','rabbit']
+  };
+  const standalone={
+    spirit:`<g><path d="M42 114Q35 46 92 48Q151 52 140 122L149 179 122 170 104 189 89 173 67 191 54 169 34 177Z" fill="#bdf4f4" stroke="#335577" stroke-width="6"/><path d="M62 94Q57 78 75 71m39 2q17 8 13 23" fill="none" stroke="#fff" stroke-width="7"/><circle cx="75" cy="115" r="6" fill="#355371"/><circle cx="111" cy="115" r="6" fill="#355371"/><path d="M80 139q12 9 24 0" fill="none" stroke="#537394" stroke-width="5"/><path d="M134 101l12 15 17-4-3 36-14 11-22-9Z" fill="#efc975" stroke="#5c6b8d" stroke-width="5"/><circle cx="146" cy="135" r="7" fill="#fffed0"/><path d="M82 42l13-30 10 30" fill="#f5e3a3"/></g>`,
+    banker:`<path d="M35 132Q30 61 93 58Q151 60 150 132Q159 185 94 188Q29 187 35 132Z" fill="#f7d76b" stroke="#9d7a39" stroke-width="6"/><path d="M47 143Q50 174 85 176" stroke="#fff6b7" stroke-width="9" fill="none"/><ellipse cx="78" cy="123" rx="7" ry="9" fill="#6b6347"/><ellipse cx="111" cy="123" rx="7" ry="9" fill="#6b6347"/><path d="M85 147q10 11 21 0" stroke="#8d6944" stroke-width="5" fill="none"/><path d="M73 65L91 26 117 65" fill="#ffed92" stroke="#b18e45" stroke-width="5"/><circle cx="94" cy="92" r="12" fill="#fff1a1"/><path d="M94 82v21m-6-17h15m-15 12h16" stroke="#bb953b" stroke-width="3"/>`,
+    storm:`<path d="M65 100L41 173 80 180 97 160 117 183 145 165 123 99Z" fill="#748dc6" stroke="#425381" stroke-width="5"/><path d="M52 94Q31 86 43 66q-3-21 23-23 9-28 34-17 27-5 32 22 26 1 21 31-7 28-40 22Z" fill="#d0dcff" stroke="#657eb4" stroke-width="6"/><path d="M77 86h10m27 0h10" stroke="#33466e" stroke-width="6"/><path d="M111 124l-25 34 17-3-14 32 40-44-21 3Z" fill="#ffe68c"/><path d="M38 124l-18 16 17 1-15 19" stroke="#b5e8ff" stroke-width="7" fill="none"/>`,
+    phoenix:`<path d="M68 109Q14 54 17 128L52 112Q22 178 69 157 84 185 94 192 109 167 117 153q46 14 32-28L176 145Q169 58 119 109Z" fill="#ff7357" stroke="#a74760" stroke-width="6"/><path d="M91 104L62 58 92 78 111 37 122 81 143 65 128 118Z" fill="#ffe58d" stroke="#b15e47" stroke-width="5"/><ellipse cx="95" cy="116" rx="33" ry="37" fill="#ffb95b" stroke="#aa4b43" stroke-width="5"/><circle cx="84" cy="114" r="5" fill="#63465d"/><circle cx="108" cy="114" r="5" fill="#63465d"/><path d="M92 131l14 0-7 14Z" fill="#fff1ab"/><path d="M75 163l-21 32 32-14m29-18 21 32-32-14" fill="#ffc964"/>`,
+    aurora:`<defs><linearGradient id="aurora-a" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#61fae3"/><stop offset=".5" stop-color="#69b9ff"/><stop offset="1" stop-color="#a2fa91"/></linearGradient></defs><path d="M94 10Q166 48 143 117L158 185 107 161 95 203 80 162 29 184 45 114Q22 42 94 10Z" fill="#283d73" stroke="url(#aurora-a)" stroke-width="7"/><path d="M73 43l22-29 22 29-7 32-16-15-16 15Z" fill="#94f9dc"/><path d="M59 82Q92 64 129 82l-9 61-25 25-26-24Z" fill="url(#aurora-a)" opacity=".85"/><path d="M77 103h12m18 0h12" stroke="#213c64" stroke-width="7"/><path d="M35 80q89 18 112 81M147 80Q58 98 35 160" fill="none" stroke="#d8ffcf" stroke-width="5" stroke-dasharray="6 9"/><circle cx="48" cy="107" r="7" fill="#b1ffe6"/><circle cx="137" cy="131" r="7" fill="#82bcff"/>`
+  };
+  const palette=cfg[id];
+  if(!palette&&!standalone[id])return null;
+  if(standalone[id])return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 210" aria-hidden="true"><ellipse cx="92" cy="196" rx="57" ry="10" fill="#19294a" opacity=".22"/>${standalone[id]}</svg>`;
+  const [base,shade,trim,hat]=palette;
+  const coat=skin==='arctic'?'#d0edff':base;
+  const headgear={
+    leaf:`<path d="M53 62Q72 8 119 39L130 65 93 52Z" fill="#3c865d"/><path d="M93 39L116 17 125 31 100 44" fill="#a3ed91"/>`,
+    chef:`<path d="M61 57Q39 36 61 24q-4-24 26-18 23-17 32 8 28 0 22 27L128 56Z" fill="#fff9e7" stroke="#dbded8" stroke-width="5"/><path d="M65 52h64v17H65Z" fill="#f2ebdd"/>`,
+    goggles:`<path d="M61 54Q53 22 93 22q46 0 37 38" fill="#7acb83"/><rect x="59" y="58" width="72" height="24" rx="8" fill="#3f5b62"/><path d="M64 66h25m12 0h25" stroke="#b2f5a1" stroke-width="6"/>`,
+    crown:`<path d="M56 58L55 24 75 37 93 8 112 36 132 22 130 58Z" fill="#c6efff" stroke="#77a5df" stroke-width="5"/><path d="M60 45h66" stroke="#f7ffff" stroke-width="4"/>`,
+    wings:`<path d="M57 113Q3 73 17 40q45 4 64 50m36 26q62-44 43-79-47 6-64 54" fill="#ffe0a3" stroke="#ffa778" stroke-width="5"/><path d="M62 56L81 26 101 47 119 23 127 57" fill="#ffc34f"/>`,
+    helmet:`<path d="M58 85L52 40 86 24 125 41 130 90 116 101 75 101Z" fill="#aab4df" stroke="#515e98" stroke-width="5"/><path d="M62 69h64" stroke="#f4f0ff" stroke-width="7"/><path d="M88 25l8-17 8 17" fill="#ffeea9"/>`,
+    robot:`<path d="M54 53l18-24h44l21 24v52H54Z" fill="#7dd6e2" stroke="#3b698f" stroke-width="5"/><path d="M60 67h72v25H60Z" fill="#294d76"/><path d="M70 80h18m17 0h18" stroke="#b9fff0" stroke-width="6"/><path d="M96 30V12" stroke="#37719a" stroke-width="6"/><circle cx="96" cy="12" r="7" fill="#fff4ae"/>`,
+    clock:`<path d="M56 59L66 8 120 8 129 59Z" fill="#68506e" stroke="#e6bd79" stroke-width="5"/><path d="M47 55h93v13H47Z" fill="#bb896e"/><circle cx="95" cy="34" r="15" fill="#fff0c0"/><path d="M95 24v10l8 5" stroke="#6b5c68" stroke-width="4" fill="none"/>`,
+    coral:`<path d="M60 52L48 21 66 34 77 14 94 36 117 13 129 38 143 22 134 64Z" fill="#ffbaab" stroke="#c4799a" stroke-width="5"/><path d="M69 45h55" stroke="#fff3d6" stroke-width="5"/>`,
+    prism:`<path d="M55 59L81 22 109 24 135 56 119 85 65 86Z" fill="#9879e3"/><path d="M81 22L90 75 135 56Z" fill="#d1c8ff"/><path d="M81 22L55 59 90 75Z" fill="#73e9fb"/>`,
+    rabbit:`<path d="M63 58L51 9 73 17 85 48 108 49 124 8 142 17 128 62" fill="#f0dcf6" stroke="#85629c" stroke-width="6"/><path d="M62 16l9 30m57-28-12 28" stroke="#ed9cbc" stroke-width="6"/>`
+  };
+  const items={
+    archer:`<path d="M37 102Q14 129 37 156 54 178 65 155" fill="none" stroke="#a97343" stroke-width="9"/><path d="M38 104l0 56" stroke="#f7f0bf" stroke-width="3"/><path d="M25 111L78 135" stroke="#f8e6bc" stroke-width="5"/>`,
+    chef:`<path d="M132 118l27-16 8 13-28 18Z" fill="#576176"/><ellipse cx="136" cy="121" rx="24" ry="14" fill="#fff2cb" stroke="#bb855f" stroke-width="5"/><circle cx="136" cy="121" r="9" fill="#fc9d8e"/>`,
+    chemist:`<path d="M132 111l17 12-6 29-28-7-2-24Z" fill="#a4fd95" stroke="#438e89" stroke-width="5"/><path d="M119 123h20l-3 14-15-3Z" fill="#64d6e5"/>`,
+    icewitch:`<path d="M139 56v120" stroke="#8cc9eb" stroke-width="8"/><path d="M139 48l-18 19 18 17 19-17Z" fill="#e4ffff" stroke="#89bde9" stroke-width="4"/>`,
+    firefly:`<circle cx="144" cy="108" r="20" fill="#ffe77e"/><path d="M144 77v-10m0 77v11m-31-47h-10m72 0h-11" stroke="#ffd264" stroke-width="5"/>`,
+    knight:`<path d="M133 59l13 102 20-7-16-105Z" fill="#d8e6ff" stroke="#656aa5" stroke-width="5"/><path d="M123 150h40" stroke="#ffe8a0" stroke-width="8"/>`,
+    drone:`<path d="M14 121l32-24 12 30-29 19Z" fill="#6ce3dd" stroke="#426993" stroke-width="5"/><circle cx="27" cy="117" r="12" fill="#f9e59e"/><path d="M135 125l35-16-4 34-33 9Z" fill="#6ce3dd"/>`,
+    clockmaker:`<circle cx="143" cy="123" r="27" fill="#ebcb88" stroke="#7e5a78" stroke-width="7"/><path d="M143 105v18l13 10" fill="none" stroke="#7e5a78" stroke-width="5"/>`,
+    mermaid:`<path d="M74 148q-6 39 24 36l17-32-2 35 22 5-21-53" fill="#6fe4cd" stroke="#467eac" stroke-width="5"/><path d="M122 100l15-18 8 14 18-1-17 33-21 3Z" fill="#ffb4a8"/>`,
+    prism:`<path d="M143 69l-26 35 19 47 29-32Z" fill="#a3ecfb" stroke="#8174ce" stroke-width="6"/><path d="M143 69l-7 82 29-32Z" fill="#e9d9ff"/>`,
+    reaper:`<path d="M144 44L117 184" stroke="#655578" stroke-width="8"/><path d="M146 41Q177 26 169 86 150 70 133 72" fill="#d8dcff" stroke="#6c658e" stroke-width="5"/>`
+  };
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 210" aria-hidden="true"><ellipse cx="92" cy="191" rx="57" ry="11" fill="#142b4a" opacity=".25"/><g stroke-linejoin="round" stroke-linecap="round"><path d="M67 139L58 184 82 183 93 149 108 185 130 182 119 138Z" fill="${shade}" stroke="#263655" stroke-width="5"/><path d="M70 93L48 116 58 143 72 127 67 163 120 161 118 125 137 143 145 113 117 91Z" fill="${coat}" stroke="#253e60" stroke-width="5"/><path d="M78 113L108 113M87 132h18" stroke="${trim}" stroke-width="6"/><path d="M62 64Q59 30 94 29Q129 30 126 66L121 94 69 92Z" fill="${hat==='robot'?'#84cad1':'#f8d5af'}" stroke="#324568" stroke-width="5"/><path d="M77 76h8m22 0h8" stroke="#283e54" stroke-width="6"/><path d="M89 89q6 5 12 0" fill="none" stroke="#c48d83" stroke-width="3"/>${headgear[hat]}${items[id]}</g></svg>`;
+}
+
 export function character(id,skin='default') {
+  const expanded=expansionPortrait(id,skin);if(expanded)return expanded;
   const white=skin==='arctic';
   const ink='#192445', face='#ffdbb0';
   const head=(hair,extra='')=>`<path d="M65 67Q64 39 92 39Q120 40 118 70L113 88Q92 101 72 86Z" fill="${face}"/><path d="M65 63L61 42 78 25 105 28 123 47 115 67 104 49 91 58 83 47 72 65Z" fill="${hair}"/><path d="M79 73v5m25-5v5" stroke="${ink}" stroke-width="5"/>${extra}`;
