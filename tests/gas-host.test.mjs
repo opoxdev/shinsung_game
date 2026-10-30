@@ -19,7 +19,7 @@ test('Build publishes separate JS and CSS bundles for Worker assets', async () =
   const css = await read('dist/web/game.css');
   assert.match(js, /class Online/);
   assert.match(js, /__CLOUDFLARE_API__/);
-  assert.match(css, /#app|\.app/);
+  assert.match(css, /\.shell\{|:root\{/);
   assert.ok(js.length > 20_000);
   assert.ok(css.length > 10_000);
 });
