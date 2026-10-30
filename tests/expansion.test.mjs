@@ -57,11 +57,11 @@ test('slow, poison, split on death and regeneration run inside the deterministic
   chem.cd=100;const old=p.enemies[0].hp;advance(p,.5);assert.ok(p.enemies[0].hp<old);
   const split=fresh();split.enemies=[enemy(split,'splitter',1)];tower(split,'knight');tick(split);
   assert.equal(split.enemies.filter(e=>e.type==='swarm').length,3);assert.equal(split.kills,1);
-  const regen=fresh();regen.enemies=[enemy(regen,'ember',500)];advance(regen,.5);
+  const regen=fresh();regen.enemies=[enemy(regen,'ember',500,{maxHp:1250})];advance(regen,.5);
   assert.ok(regen.enemies[0].hp>500);
 });
 test('income tower pays periodically, not instantly or per player in a lobby',()=>{
-  const s=fresh();const b=tower(s,'banker');b.cd=15;
+  const s=fresh();s.enemies=[enemy(s,'heavy',50000,{x:1500,y:900})];const b=tower(s,'banker');b.cd=15;
   const start=s.players.hero.money;advance(s,10);assert.equal(s.players.hero.money,start);
   advance(s,5.1);assert.equal(s.players.hero.money,start+120);
 });
