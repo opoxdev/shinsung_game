@@ -85,7 +85,6 @@ jobs:
 
   pages:
     name: Publish game preview to GitHub Pages
-    if: ${{ vars.ENABLE_GITHUB_PAGES == 'true' }}
     needs: test
     runs-on: ubuntu-latest
     permissions:
@@ -115,7 +114,7 @@ jobs:
           import os, json
           from pathlib import Path
           cfg = os.getenv("FIREBASE_WEB_CONFIG", "").strip()
-          api = os.getenv("CLOUDFLARE_API", "").strip()
+          api = os.getenv("CLOUDFLARE_API", "").strip() or "https://shinsung-game.joehw0405.workers.dev"
           source = Path("firebase/config.json")
           obj = json.loads(cfg) if cfg else json.loads(source.read_text(encoding="utf-8"))
           if not isinstance(obj, dict) or not obj.get("apiKey") or not obj.get("projectId"):
