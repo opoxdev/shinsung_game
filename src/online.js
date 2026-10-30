@@ -1,0 +1,87 @@
+// Firebase Spark Auth + Cloudflare Workers Free / Durable Objects WebSockets.
+// All game state mutations happen on the authenticated Cloudflare server.
+export class Online {
+  constructor(){
+    this.config=globalThis.__FIREBASE_CONFIG__||null;
+    this.api=(globalThis.__CLOUDFLARE_API__||'').replace(/\/$/,'');
+    this.enabled=!!(this.config?.apiKey&&this.config.projectId&&/^https:\/\//.test(this.api));
+    this.user=null;this.room=null;this.socket=null;this.seq=0;this.pending=new Map();this.nextId=0;
+    this.retries=0;this.closed=true;this.serial=0;
+  }
+  async init(onUser){
+    if(!this.enabled)return;
+    const [app,auth]=await Promise.all([
+      import('https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js'),
+      import('https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js')
+    ]);
+    const a=app.initializeApp(this.config);this.auth=auth.getAuth(a);this.authSDK=auth;
+    auth.onAuthStateChanged(this.auth,async user=>{
+      if(this.user?.uid!==user?.uid)this.stop();
+      this.user=user;try{await onUser(user);}catch(e){this.onError?.(e);}
+    });
+  }
+  async signIn(email,password,signup){if(!this.auth)throw Error('온라인 서버 설정이 필요합니다. DEPLOY.md를 확인하세요.');return signup?this.authSDK.createUserWithEmailAndPassword(this.auth,email,password):this.authSDK.signInWithEmailAndPassword(this.auth,email,password);}
+  async signOut(){this.stop();if(this.auth)await this.authSDK.signOut(this.auth);}
+  async apiCall(action,payload={}){
+    if(!this.user)throw Error('먼저 계정에 로그인하세요.');
+    const token=await this.user.getIdToken();
+    const res=await fetch(this.api+'/api',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify({action,payload})});
+    const r=await res.json();if(!r.ok)throw Error(r.error||'서버 통신 오류');return r.data;
+  }
+  async call(action,payload={}){
+    if(['command','pulse'].includes(action)&&this.room===payload.code&&this.socket?.readyState===WebSocket.OPEN){
+      if(action==='pulse'){this.socket.send(JSON.stringify({type:'pulse'}));return {updated:true};}
+      const id=++this.nextId;
+      return new Promise((resolve,reject)=>{
+        const timer=setTimeout(()=>{this.pending.delete(id);reject(Error('명령 확인 시간 초과'));},6000);
+        this.pending.set(id,{resolve,reject,timer});
+        this.socket.send(JSON.stringify({type:'command',command:payload.command,id}));
+      });
+    }
+    if(action==='pulse')return {updated:false}; // never poll GAS/HTTP on a broken socket
+    return this.apiCall(action,payload);
+  }
+  async watch(code,callback,onError){
+    this.stop();this.room=code;this.closed=false;this.cb=callback;this.err=onError;
+    const serial=++this.serial;
+    await this.connect(serial);
+  }
+  async connect(serial){
+    if(this.closed||serial!==this.serial||!this.user)return;
+    try{
+      const {ticket,code}=await this.apiCall('ticket',{code:this.room});
+      if(this.closed||serial!==this.serial)return;
+      const address=this.api.replace(/^http/,'ws')+'/socket?code='+encodeURIComponent(code)+'&ticket='+encodeURIComponent(ticket);
+      const sock=new WebSocket(address);this.socket=sock;
+      sock.onopen=()=>{this.retries=0;};
+      sock.onmessage=e=>{
+        try{
+          const msg=JSON.parse(e.data);
+          if(msg.type==='room')this.cb(msg.room);
+          else if(msg.type==='ack'){
+            const p=this.pending.get(msg.id);if(!p)return;
+            clearTimeout(p.timer);this.pending.delete(msg.id);
+            msg.error?p.reject(Error(msg.error)):p.resolve(msg.data);
+          }else if(msg.type==='error')this.err?.(Error(msg.message));
+        }catch(err){this.err?.(err);}
+      };
+      sock.onclose=()=>{
+        if(this.socket===sock)this.socket=null;
+        for(const p of this.pending.values()){clearTimeout(p.timer);p.reject(Error('WebSocket 연결이 끊겼습니다.'));}this.pending.clear();
+        if(!this.closed&&serial===this.serial){
+          const delay=Math.min(12000,800*2**Math.min(4,++this.retries));
+          setTimeout(()=>this.connect(serial).catch(e=>this.err?.(e)),delay);
+        }
+      };
+      sock.onerror=()=>this.err?.(Error('실시간 서버 연결을 확인하세요.'));
+    }catch(e){
+      this.err?.(e);
+      if(!this.closed&&serial===this.serial){const delay=Math.min(12000,800*2**Math.min(4,++this.retries));setTimeout(()=>this.connect(serial).catch(err=>this.err?.(err)),delay);}
+    }
+  }
+  stop(){
+    this.closed=true;this.serial++;
+    this.socket?.close(1000,'Leaving');this.socket=null;this.room=null;
+    for(const p of this.pending.values()){clearTimeout(p.timer);p.reject(Error('방 연결 종료'));}this.pending.clear();
+  }
+}

@@ -1,29 +1,25 @@
-# 신성 디펜스 (Shinsung Defense)
+# 신성 디펜스 — Shinsung Defense v0.3.0
 
-2D 전략 타워디펜스 게임. 기존 **v0.3 Cloudflare + Firebase Auth** 소스를 이 저장소에서 관리합니다.
+학교/군대 테마가 아닌 2D 타워 디펜스 게임. 평야, 어두운 산맥, 수정 동굴, 용암 협곡, 눈꽃 숲 5개 맵과 6개 난이도, 5개 모드, 타워 수집/장착, PvP 몬스터 소환, 2~4인 협동전을 포함합니다.
 
-> **현재 상태:** GitHub 자동화 준비. 게임 본체는 아직 반입 전입니다. `uploads/`에 v0.3 ZIP을 **한 번만** 올리면 GitHub Actions가 안전하게 압축을 풀고 테스트한 뒤 저장소에 반영하도록 설정되어 있습니다.
+**서버 변경(v0.3):** 기존 Firebase RTDB + GAS 2초 폴링 방식 제거. Firebase Spark는 계정 로그인에만 사용하고, Cloudflare Workers Free + Durable Objects(WebSocket) + D1(SQL)로 방/전투/보상 서버를 이전했습니다. 서버는 클라이언트가 보내는 피해·코인 수치를 신뢰하지 않습니다.
 
-## Node.js 없이 최초 소스 등록
+## 시작
 
-1. 이전 대화의 `Shinsung_Defense_v0.3_Cloudflare_Free_Patch.zip`을 다운로드합니다.
-2. 이 저장소의 **Add file → Upload files**를 선택합니다.
-3. ZIP을 `uploads/` 경로로 업로드합니다. (먼저 `uploads/README.md`에서 경로를 확인할 수 있습니다.)
-4. 커밋 후 **Actions → Shinsung game → 최근 작업**에서 테스트와 소스 반입을 확인합니다.
+- 오프라인 체험: Windows에서 `Start-Game.cmd` 실행.
+- 온라인 배포: 반드시 [`DEPLOY.md`](DEPLOY.md)를 차례로 실행하세요.
+- 빌드: `npm run build` (외부 패키지 설치 없이 작동)
+- 자동 테스트: `npm test` (브라우저/실제 Cloudflare 통합 테스트는 별도)
 
-업데이트 시에는 `src/`, `cloudflare/`, `tests/`를 수정해 저장하면 자동 테스트가 실행됩니다. Node.js가 필요한 작업은 GitHub 서버가 수행합니다.
+## 파일
 
-## 무료 서버 구성
+- `src/`: 브라우저 게임 소스, 화면과 전투 시뮬레이션.
+- `cloudflare/`: Worker API, Durable Object 방 서버, Firebase ID 토큰 검증, D1 스키마와 설정.
+- `server/`: GAS HTML 웹 호스팅(코드만, 비공개 키 없음).
+- `dist/apps-script/`: GAS 배포용 3개 파일.
+- `dist/cloudflare/core.js`: 게임 엔진의 Cloudflare용 빌드 출력.
+- `firebase/config.example.json`: 공개 웹 로그인 설정 예제.
 
-- **Firebase Spark Authentication:** 로그인만 담당, 비밀 서비스 계정 키 불필요
-- **Cloudflare Workers Free + Durable Objects:** PvP/협동전 WebSocket, 전투 명령 검증
-- **Cloudflare D1:** 계정 진행도 및 보상
-- **Google Apps Script:** 원래의 웹 앱 호스트, 정적 게임 본체 배포는 별도 구성
+## 중요한 점
 
-모든 유료 요금제 및 결제 수단 등록은 제외합니다.
-
-자세한 콘솔 설정은 [온라인 연결 안내](docs/ONLINE_SETUP.md)를 참조하세요. 비밀키/Cloudflare API 토큰을 GitHub 코드나 채팅에 올리지 마세요.
-
-## 주의 사항
-
-프로젝트 소스가 반입되어도 Firebase/Cloudflare 실제 연결과 20명 동시 접속은 별도 검증 대상입니다. 무료 한도를 넘으면 일부 기능이 중단될 수 있습니다.
+Cloudflare/Firebase 계정 연동 전에는 온라인 모드가 활성화되지 않습니다. 기존 RTDB 데이터의 자동 이전은 포함되지 않습니다. 무료 서비스라도 제한에 도달하면 실패할 수 있습니다. 운영 서비스에서 20명 동접/장시간 플레이와 부정행위 차단은 실제 검증이 필요합니다.

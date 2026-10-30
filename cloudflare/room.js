@@ -1,0 +1,128 @@
+import {Core} from '../dist/cloudflare/core.js';
+const bad = message => new Response(JSON.stringify({ok:false,error:message}),{status:400,headers:{'content-type':'application/json'}});
+const ok = data => new Response(JSON.stringify({ok:true,data}),{headers:{'content-type':'application/json'}});
+const CODE_LIMIT=5000, ROOM_TTL=24*3600*1000;
+export class GameRoom {
+  constructor(ctx,env){
+    this.ctx=ctx;this.env=env;this.room=null;this.lastSave=0;
+    this.ctx.blockConcurrencyWhile(async()=>{this.room=await ctx.storage.get('room')||null;});
+  }
+  async persist(){this.room.lastSavedAt=Date.now();await this.ctx.storage.put('room',this.room);this.lastSave=this.room.lastSavedAt;}
+  view(){
+    const r=this.room;
+    if(!r)return null;
+    const {profiles,claimed,state,...visible}=r;
+    return {...visible,stateJson:r.state?JSON.stringify(r.state):null};
+  }
+  broadcast(){const payload=JSON.stringify({type:'room',room:this.view()});for(const sock of this.ctx.getWebSockets())try{sock.send(payload);}catch{}}
+  ensure(uid){if(!this.room?.members?.[uid])throw Error('이 방의 참가자가 아닙니다.');}
+  advance(){
+    const r=this.room;
+    if(!r||r.status!=='playing')return false;
+    const now=Date.now(),secs=Math.max(0,(now-r.lastPulse)/1000);
+    const steps=Math.min(55,Math.floor(secs/Core.STEP+1e-7));
+    if(!steps)return false;
+    // A disconnected match pauses after a short bounded catch-up; no runaway CPU use.
+    Core.advance(r.state,steps*Core.STEP);
+    r.lastPulse=secs>3?now:r.lastPulse+steps*Core.STEP*1000;
+    if(r.state.status!=='playing')r.status='finished';
+    return true;
+  }
+  async action(name,p,user){
+    const r=this.room,uid=user.uid;
+    if(name==='create'){
+      if(r)throw Error('이미 사용 중인 방 코드입니다.');
+      const cfg=Core.validateConfig(p.config);
+      this.room={config:cfg,host:uid,createdAt:Date.now(),lastPulse:Date.now(),members:{[uid]:true},names:{[uid]:user.name},profiles:{[uid]:p.profile},status:'lobby',state:null};
+      await this.persist();return {created:true};
+    }
+    if(!r||name!=='leave'&&Date.now()-r.createdAt>ROOM_TTL)throw Error('존재하지 않거나 만료된 방입니다.');
+    if(name==='join'){
+      if(r.status!=='lobby'||r.config.type==='solo')throw Error('참가할 수 없는 대기실입니다.');
+      if(Date.now()-r.createdAt>2*3600*1000)throw Error('대기실이 만료되었습니다.');
+      if(!r.members[uid]&&Object.keys(r.members).length>=(r.config.type==='pvp'?2:4))throw Error('방이 가득 찼습니다.');
+      r.members[uid]=true;r.names[uid]=user.name;r.profiles[uid]=p.profile;
+      await this.persist();this.broadcast();return {joined:true};
+    }
+    this.ensure(uid);
+    if(name==='ticket'){
+      const ticket=crypto.randomUUID();
+      await this.ctx.storage.put('ticket:'+ticket,{uid,until:Date.now()+30000});
+      return {ticket};
+    }
+    if(name==='start'){
+      if(r.host!==uid||r.status!=='lobby')throw Error('방장만 대기실에서 시작할 수 있습니다.');
+      const ids=Object.keys(r.members);
+      if(r.config.type==='coop'&&ids.length<2)throw Error('협동전에는 2명 이상 필요합니다.');
+      r.state=Core.createMatch(r.config,ids.map(id=>({id,profile:r.profiles[id]})));
+      r.status='playing';r.lastPulse=Date.now();
+      await this.persist();this.broadcast();return {started:true};
+    }
+    if(name==='pulse'){
+      if(r.status!=='playing'||Date.now()-r.lastPulse<1750)return {updated:false};
+      if(r.host!==uid && Date.now()-r.lastPulse<6000)return {updated:false};
+      if(r.host!==uid)r.host=uid;
+      if(!this.advance())return {updated:false};
+      if(Date.now()-(r.lastSavedAt||0)>8000||r.status!=='playing')await this.persist();
+      this.broadcast();return {updated:true};
+    }
+    if(name==='command'){
+      if(!p.command||JSON.stringify(p.command).length>CODE_LIMIT)throw Error('잘못된 명령입니다.');
+      if(r.status!=='playing')throw Error('전투가 종료되었습니다.');
+      this.advance();
+      const result=Core.command(r.state,uid,p.command);
+      await this.persist();this.broadcast();return result;
+    }
+    if(name==='reward'){
+      if(!r.state||r.state.status==='playing')throw Error('전투가 끝나지 않았습니다.');
+      return Core.rewardFor(r.state,uid);
+    }
+    if(name==='leave'){
+      delete r.members[uid];delete r.names[uid];delete r.profiles[uid];
+      const remaining=Object.keys(r.members);
+      if(r.state&&r.status==='playing'){
+        if(r.config.type==='pvp'){
+          r.state.status='complete';r.state.winner=1-r.state.players[uid].field;r.status='finished';
+        } else if(!remaining.length){r.state.status='defeat';r.status='finished';}
+      }
+      if(r.host===uid)r.host=remaining[0]||'';
+      if(!remaining.length){this.room=null;await this.ctx.storage.delete('room');}else await this.persist();
+      for(const sock of this.ctx.getWebSockets())if(sock.deserializeAttachment()?.uid===uid)try{sock.close(1000,'Left room');}catch{}
+      this.broadcast();return {left:true};
+    }
+    throw Error('지원하지 않는 방 요청입니다.');
+  }
+  async fetch(request){
+    const url=new URL(request.url);
+    if(url.pathname==='/socket'){
+      if(request.headers.get('Upgrade')?.toLowerCase()!=='websocket')return bad('WebSocket 연결이 필요합니다.');
+      const ticket=url.searchParams.get('ticket');if(!ticket||!/^[-a-f0-9]{36}$/.test(ticket))return bad('접속 권한이 없습니다.');
+      const grant=await this.ctx.storage.get('ticket:'+ticket);
+      if(!grant||grant.until<Date.now()||!this.room?.members?.[grant.uid])return bad('접속 권한이 만료되었습니다.');
+      await this.ctx.storage.delete('ticket:'+ticket);
+      const [client,server]=Object.values(new WebSocketPair());
+      this.ctx.acceptWebSocket(server);server.serializeAttachment({uid:grant.uid,rateAt:0,rateCount:0});
+      server.send(JSON.stringify({type:'room',room:this.view()}));
+      return new Response(null,{status:101,webSocket:client});
+    }
+    if(request.method!=='POST')return bad('올바르지 않은 요청입니다.');
+    try{
+      const {action,payload,user}=await request.json();
+      return ok(await this.action(action,payload||{},user));
+    }catch(e){return bad(String(e.message||'방 처리 실패').slice(0,180));}
+  }
+  async webSocketMessage(socket,message){
+    const a=socket.deserializeAttachment();
+    if(!a||typeof message!=='string'||message.length>CODE_LIMIT+400)return;
+    const now=Date.now();if(now-a.rateAt>5000){a.rateAt=now;a.rateCount=0;}
+    if(++a.rateCount>30){socket.send(JSON.stringify({type:'error',message:'요청이 너무 빠릅니다.'}));return;}
+    socket.serializeAttachment(a);
+    let obj;
+    try{obj=JSON.parse(message);if(!['command','pulse'].includes(obj.type))return;
+      if(obj.type==='pulse'&&this.room?.host!==a.uid&&Date.now()-this.room?.lastPulse<6000)return;
+      const data=await this.action(obj.type,obj.type==='command'?{command:obj.command}:{},{uid:a.uid});
+      if(obj.id)socket.send(JSON.stringify({type:'ack',id:obj.id,data}));
+    }catch(e){if(obj?.id)socket.send(JSON.stringify({type:'ack',id:obj.id,error:String(e.message).slice(0,180)}));}
+  }
+  async webSocketClose(){ /* hibernation-capable; no timers or in-memory sockets */ }
+}
