@@ -4,6 +4,10 @@
 
 **서버 변경(v0.3):** 기존 Firebase RTDB + GAS 2초 폴링 방식 제거. Firebase Spark는 계정 로그인에만 사용하고, Cloudflare Workers Free + Durable Objects(WebSocket) + D1(SQL)로 방/전투/보상 서버를 이전했습니다. 서버는 클라이언트가 보내는 피해·코인 수치를 신뢰하지 않습니다.
 
+## 최종 배포 방향 (GAS 유지)
+
+**공식 게임 주소는 Google Apps Script의 /exec 입니다.** Firebase 로그인, Cloudflare PvP 서버, D1 DB, 게임 콘텐츠는 그대로 유지합니다. 별도 Node.js 설치 없이 한 번 [GAS 공식 배포 안내](docs/GAS_SETUP.md)를 따라 연결하면 됩니다. 이후 평소 업데이트는 GitHub → Cloudflare로 자동 적용되고 GAS 주소는 유지됩니다.
+
 ## 시작
 
 - 오프라인 체험: Windows에서 `Start-Game.cmd` 실행.
