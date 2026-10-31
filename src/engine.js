@@ -1,4 +1,4 @@
-import { WORLD, MAPS, TOWERS, ENEMIES, MODES, DIFFICULTIES, PACKS, SKIN_STYLES, CRATES, BOSS_ABILITIES, starterProfile, skinCandidates, availableCrateStyles } from './data.js';
+import { WORLD, MAPS, TOWERS, ENEMIES, MODES, DIFFICULTIES, PACKS, SKIN_STYLES, CRATES, BOSS_ABILITIES, COMBAT_SCALE, starterProfile, skinCandidates, availableCrateStyles } from './data.js';
 import { evolutionAt } from './evolutions.js';
 export const STEP = .05;
 export function bounty(hp) {
@@ -63,11 +63,11 @@ export function canPlace(s,field,x,y) {
   return Number.isFinite(x)&&Number.isFinite(y)&&x>=45&&y>=45&&x<=WORLD.width-45&&y<=WORLD.height-45&&pathDistance(mapOf(s).path,x,y)>WORLD.road/2+22&&!s.towers.some(t=>t.field===field&&Math.hypot(t.x-x,t.y-y)<50);
 }
 export function requiredVotes(s) {const n=Object.keys(s.players).length;return n===1?1:Math.max(2,Math.floor(n/2)+1);}
-function event(s,e) {s.events.push({...e,id:s.nextId++,time:s.time});if(s.events.length>70)s.events.shift();}
+function event(s,e) {s.events.push({...e,id:s.nextId++,time:s.time});if(s.events.length>140)s.events.shift();}
 function spawn(s,type,field,source='wave') {
   const d=ENEMIES[type],mods=modifiers(s.config),diff=DIFFICULTIES.find(d=>d.id===s.config.difficulty);
-  const hp=Math.round(d.hp*mods.hp*diff.hp);
-  const shield=Math.round((d.shield||0)*mods.hp*diff.hp);
+  const hp=d.hp*mods.hp*diff.hp;
+  const shield=(d.shield||0)*mods.hp*diff.hp;
   const unit={id:s.nextId++,type,field,hp,maxHp:hp,shield,maxShield:shield,
     progress:0,x:mapOf(s).path[0][0],y:mapOf(s).path[0][1],
     speed:d.speed*mods.speed,source};
@@ -132,19 +132,31 @@ export function command(s,playerId,c) {
 // All combat effects are deterministic. Only the authoritative simulation awards money.
 function damage(s,e,n,t,ignoreArmor=false) {
   if(e.hp<=0||!Number.isFinite(n)||n<=0)return;
-  const source=TOWERS[t.type]||{};
-  let value=n*(ignoreArmor||towerStats(t).pierce?1:1-(ENEMIES[e.type].armor||0));
+  const def=towerStats(t);
+  let value=n*(ignoreArmor||def.pierce?1:1-(ENEMIES[e.type].armor||0));
   if(e.markUntil>s.time&&e.markAmp>1)value*=e.markAmp;
-  if(e.shield>0){const absorbed=Math.min(e.shield,value);e.shield-=absorbed;value-=absorbed;}
-  if(value>0)e.hp-=value;
+  const absorbed=Math.min(e.shield||0,value);
+  if(absorbed>0)e.shield-=absorbed;
+  const hpLoss=Math.min(e.hp,Math.max(0,value-absorbed));
+  if(hpLoss>0)e.hp-=hpLoss;
+  const actual=hpLoss+absorbed;
+  // DoT can tick 20 times per second per enemy; aggregate its damage labels
+  // over 250 ms while retaining the exact authoritative HP calculation.
+  if(ignoreArmor){
+    e.dotFloat=(e.dotFloat||0)+actual;
+    if(s.time-(e.lastDotFloatAt??-1)>=.25||e.hp<=0){
+      if(e.dotFloat>0)event(s,{kind:'damage',x:e.x,y:e.y,field:e.field,type:e.type,amount:e.dotFloat,dot:true});
+      e.dotFloat=0;e.lastDotFloatAt=s.time;
+    }
+  }else if(actual>0)event(s,{kind:'damage',x:e.x,y:e.y,field:e.field,type:e.type,amount:actual,shield:absorbed>0});
   if(e.hp>0)return;
   e.hp=0;
   const team=Object.values(s.players).filter(p=>p.field===e.field);
-  const reward=bounty(e.maxHp)/(team.length||1);
+  // The visible HP scale changed, but combat earnings must not shrink.
+  const reward=bounty(e.maxHp*COMBAT_SCALE)/(team.length||1);
   team.forEach(p=>p.money+=reward);s.kills++;
   event(s,{kind:'kill',x:e.x,y:e.y,field:e.field,type:e.type,color:ENEMIES[e.type].color,split:!!ENEMIES[e.type].onDeath,size:ENEMIES[e.type].size||12});
   const offspring=ENEMIES[e.type].onDeath||[];
-  // Each new child is a normal enemy, once only, and starts at the parent's position.
   for(const [type,count] of offspring)for(let i=0;i<count&&s.enemies.length<350;i++){
     const child=spawn(s,type,e.field,'split');
     child.progress=e.progress;child.x=e.x;child.y=e.y;
@@ -306,12 +318,23 @@ export function tick(s,dt=STEP) {
 }
 export function advance(s,seconds) {let n=Math.min(1200,Math.floor(seconds/STEP+1e-8));while(n-->0&&s.status==='playing')tick(s);return s;}
 export function rewardFor(s,id) {
-  const p=s.players[id];if(!p||s.status==='playing')return {coins:0,xp:0,sonic:false,win:false};
+  const p=s.players[id];if(!p||s.status==='playing')return {coins:0,xp:0,sonic:false,aurora:false,win:false,clearBonus:0};
   const win=s.config.type==='pvp'?s.winner===p.field:s.status==='victory';
   const d=DIFFICULTIES.find(d=>d.id===s.config.difficulty);
-  // PvP opponents must not be usable as a repeatable currency faucet in this alpha.
-  const coins=s.config.type==='pvp'?0:win?Math.floor(d.reward*modifiers(s.config).reward):0;
-  return {coins,xp:s.config.type==='pvp'?0:win?d.waves.length*20:0,sonic:win&&s.config.type!=='pvp'&&DIFFICULTIES.indexOf(d)>=3&&s.config.modes.includes('supersonic'),aurora:win&&s.config.type!=='pvp'&&d.id==='ruin'&&s.config.modes.includes('elite'),win};
+  // PvP cannot be used to trade losses for unlimited account currency.
+  if(s.config.type==='pvp')return {coins:0,xp:0,sonic:false,aurora:false,win,clearBonus:0};
+  const maxWave=d.waves.length;
+  const progress=Math.max(0,Math.min(1,s.wave/maxWave));
+  const totalCoins=Math.floor(d.reward*modifiers(s.config).reward);
+  const totalXp=maxWave*20;
+  // Keep existing full-clear payouts, but explicitly separate the 20%
+  // completion-only share from the participation reward pool.
+  const clearBonus=Math.floor(totalCoins*.2),clearXp=Math.floor(totalXp*.2);
+  const coins=win?totalCoins:Math.floor((totalCoins-clearBonus)*.5*progress);
+  const xp=win?totalXp:Math.floor((totalXp-clearXp)*.5*progress);
+  return {coins,xp,clearBonus:win?clearBonus:0,
+    sonic:win&&DIFFICULTIES.indexOf(d)>=3&&s.config.modes.includes('supersonic'),
+    aurora:win&&d.id==='ruin'&&s.config.modes.includes('elite'),win};
 }
 export function applyReward(profile,reward) {
   profile.coins+=reward.coins;profile.xp+=reward.xp;if(reward.win)profile.wins++;
