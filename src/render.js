@@ -5,6 +5,12 @@ import { makeTerrain } from './terrain.js';
 import { TERRAIN_MARGIN, constrainCamera } from './presentation.js';
 export const portrait=character;
 export { landscape } from './art.js';
+export function drawMelee(g,e,age){
+  const dx=(e.tx??e.x)-e.x,dy=(e.ty??e.y)-e.y,angle=Math.atan2(dy,dx);
+  const reach=Math.max(24,Math.hypot(dx,dy)),radius=12+Math.min(1,age/.28)*(reach-12);
+  g.lineWidth=e.type==='knight'?9:7;g.beginPath();
+  g.arc(e.x,e.y,radius,angle-1.45,angle+1.45);g.stroke();
+}
 const sprites=new Map();
 function sprite(id,skin,level=0){const key=id+'|'+skin+'|'+level;if(!sprites.has(key)){const img=new Image();img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(character(id,skin,level));sprites.set(key,img);}return sprites.get(key);}
 export class Renderer {
@@ -31,7 +37,7 @@ export class Renderer {
       g.rect(left,-TERRAIN_MARGIN,right-left,WORLD.height+2*TERRAIN_MARGIN);g.clip();
       g.drawImage(this.cache.get(map.id),-TERRAIN_MARGIN,-TERRAIN_MARGIN);g.restore();
       if(state?.config.type==='pvp'){g.fillStyle=f===field?'#bcd994':'#f6a498';g.font='bold 30px sans-serif';g.fillText(f===field?'아군 방어 구역':'상대 방어 구역',60,75);}
-      if(!state){for(let i=0;i<9;i++){const p=pointOnPath(map.path,(now*15+i*185)%2900);this.enemy(g,{...p,type:i%3?'zombie':'runner',hp:18,maxHp:18,id:i},now);}for(const [x,y,id]of [[270,410,'scout'],[810,620,'soldier'],[1130,650,'cannon']])this.tower(g,{x,y,type:id,level:2,angle:Math.sin(now*.4)},now);}
+      if(!state){const length=map.path.slice(1).reduce((sum,p,i)=>sum+Math.hypot(p[0]-map.path[i][0],p[1]-map.path[i][1]),0);for(let i=0;i<9;i++){const p=pointOnPath(map.path,(now*45+i*length/9)%length);this.enemy(g,{...p,type:i%3?'zombie':'runner',hp:18,maxHp:18,id:i},now);}}
       else {
         const selected=state.towers.find(t=>t.id===this.selected&&t.field===f);
         if(selected){g.fillStyle='#f1db8420';g.strokeStyle='#f1db8470';g.lineWidth=2;g.beginPath();g.arc(selected.x,selected.y,towerStats(selected).range,0,7);g.fill();g.stroke();}
@@ -78,10 +84,10 @@ export class Renderer {
           }else if(e.type==='soldier'){g.beginPath();g.moveTo(e.x,e.y-20);for(let j=1;j<7;j++)g.lineTo(e.x+(e.tx-e.x)*j/7+(j%2?8:-8),e.y-20+(e.ty-e.y+20)*j/7);g.lineTo(e.tx,e.ty);g.stroke();}
           else if(e.type==='rail'){g.beginPath();g.moveTo(e.tx-40,e.ty-100);g.lineTo(e.tx,e.ty);g.stroke();g.save();g.translate(e.tx,e.ty);g.rotate(age*6);g.fillStyle='#fff7b6';g.beginPath();for(let j=0;j<8;j++){const a=j*Math.PI/4,rad=j%2?6:24;g.lineTo(Math.cos(a)*rad,Math.sin(a)*rad);}g.closePath();g.fill();g.restore();}
           else if(e.type==='sonic'){for(let j=0;j<3;j++){g.beginPath();g.arc(e.tx,e.ty,6+age*120+j*10,0,7);g.stroke();}}
-          else if(e.kind==='melee'){g.lineWidth=7;g.beginPath();g.arc(e.x,e.y,12+age*90,-1.5,1.4);g.stroke();}
+          else if(e.kind==='melee'){drawMelee(g,e,age);}
           else if(e.kind==='ranged'){const f=Math.min(1,age/.15);g.fillStyle='#fff3bf';g.beginPath();g.arc(e.x+(e.tx-e.x)*f,e.y-20+(e.ty-e.y+20)*f,5,0,7);g.fill();}
           else if(e.kind==='splash'){g.lineWidth=5;g.beginPath();g.arc(e.tx,e.ty,12+age*100,0,7);g.stroke();for(let j=0;j<6;j++){const a=j*6.28/6;g.fillStyle='#ffdd83';g.fillRect(e.tx+Math.cos(a)*age*120,e.ty+Math.sin(a)*age*120,5,5);}}
-          else {g.beginPath();g.arc(e.tx||e.x,e.ty||e.y,8+age*70,0,7);g.stroke();}g.globalAlpha=1;g.shadowBlur=0;}
+          else {g.beginPath();g.arc(e.tx??e.x,e.ty??e.y,8+age*70,0,7);g.stroke();}g.globalAlpha=1;g.shadowBlur=0;}
         if(this.preview&&this.pointer&&f===field){const p={x:this.pointer.x-offset,y:this.pointer.y},ok=canPlace(state,field,p.x,p.y);g.fillStyle=ok?'#9ccf7922':'#eb807b33';g.strokeStyle=ok?'#c1e08c':'#ed887d';g.beginPath();g.arc(p.x,p.y,TOWERS[this.preview].range,0,7);g.fill();g.stroke();g.globalAlpha=.65;this.tower(g,{...p,type:this.preview,level:0},now);g.globalAlpha=1;}
       }
       g.restore();

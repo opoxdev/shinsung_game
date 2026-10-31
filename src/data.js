@@ -111,11 +111,11 @@ export const MODES = {
   supersonic: { name: '슈퍼소닉', reward: 2, hp: 1, speed: 2.5, desc: '적 속도 ×2.5 · 특수 타워 도전' }
 };
 export const MAPS = [
-  { id: 'plains', name: '평야', tag: 'GREEN MEADOWS', biome: 'plains', color: '#93ed76', ground: '#68b965', roadColor: '#e7c694', desc: '푸른 들판, 굽이치는 오솔길. 첫 모험이 시작되는 곳!', path: [[0,560],[320,560],[320,280],[740,280],[740,820],[1200,820],[1200,430],[1800,430]] },
-  { id: 'mountains', name: '어두운 산맥', tag: 'SHADOW PEAKS', biome: 'mountains', color: '#b49bfc', ground: '#444362', roadColor: '#87809d', desc: '보랏빛 안개와 날카로운 봉우리 너머에서 적들이 몰려온다.', path: [[0,760],[280,760],[470,460],[470,200],[910,200],[1080,520],[920,850],[1440,850],[1550,480],[1800,480]] },
-  { id: 'crystal', name: '수정 동굴', tag: 'CRYSTAL CAVERNS', biome: 'crystal', color: '#8be9ff', ground: '#45396d', roadColor: '#a48dc8', desc: '빛나는 수정 사이로 울려 퍼지는 발소리. 아름답지만 위험하다.', path: [[0,400],[330,400],[480,780],[850,780],[1030,480],[810,200],[1270,200],[1470,630],[1800,630]] },
-  { id: 'volcano', name: '용암 협곡', tag: 'EMBER CANYON', biome: 'volcano', color: '#ff9863', ground: '#62414c', roadColor: '#a77065', desc: '갈라진 대지와 붉은 용암. 좁은 협곡의 마지막 방어전.', path: [[0,250],[450,250],[600,530],[340,850],[840,850],[1060,300],[1400,300],[1530,800],[1800,800]] },
-  { id: 'snow', name: '눈꽃 숲', tag: 'FROSTWOOD', biome: 'snow', color: '#d0f5ff', ground: '#a3d0df', roadColor: '#eaf8ff', desc: '소복한 눈 아래 숨은 오솔길. 차가운 숲을 따뜻하게 지켜라.', path: [[0,250],[350,250],[350,700],[700,700],[700,400],[1100,400],[1100,850],[1500,850],[1500,400],[1800,400]] }
+  { id: 'plains', name: '평야', tag: 'GREEN MEADOWS', biome: 'plains', color: '#93ed76', ground: '#68b965', roadColor: '#e7c694', desc: '완만한 S자 오솔길과 넓은 배치 공간. 기본기를 익히기 좋은 평야.', path: [[0,560],[430,560],[630,180],[1100,180],[1320,820],[1800,820]] },
+  { id: 'mountains', name: '어두운 산맥', tag: 'SHADOW PEAKS', biome: 'mountains', color: '#b49bfc', ground: '#444362', roadColor: '#87809d', desc: '봉우리를 오르내리는 사선 고갯길. 굽이마다 교차 사격을 준비하라.', path: [[0,820],[220,820],[520,590],[260,310],[650,140],[1040,420],[800,740],[1260,920],[1550,620],[1800,620]] },
+  { id: 'crystal', name: '수정 동굴', tag: 'CRYSTAL CAVERNS', biome: 'crystal', color: '#8be9ff', ground: '#45396d', roadColor: '#a48dc8', desc: '북쪽 입구에서 동굴 중심부로 감기는 나선 통로. 안쪽 수정핵을 지켜라.', path: [[900,0],[900,160],[1480,160],[1480,850],[300,850],[300,330],[1160,330],[1160,620],[700,620]] },
+  { id: 'volcano', name: '용암 협곡', tag: 'EMBER CANYON', biome: 'volcano', color: '#ff9863', ground: '#62414c', roadColor: '#a77065', desc: '가장 짧은 대각선 협곡. 적이 빠르게 돌파하니 초반 화력이 중요하다.', path: [[0,180],[460,340],[900,320],[1260,650],[1800,920]] },
+  { id: 'snow', name: '눈꽃 숲', tag: 'FROSTWOOD', biome: 'snow', color: '#d0f5ff', ground: '#a3d0df', roadColor: '#eaf8ff', desc: '숲을 세 번 가로지르는 긴 왕복길. 나란한 통로를 함께 노려라.', path: [[0,200],[1450,200],[1450,440],[350,440],[350,710],[1450,710],[1450,930],[900,930],[900,1100]] }
 ];
 // Authored wave lists. A wave recipe is "enemy:count,enemy:count".
 // Unlike generated scaling, every wave has a deliberate formation and escalation.
