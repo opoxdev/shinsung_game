@@ -11,6 +11,7 @@ const icons={home:'⌂',towers:'▥',shop:'◇',pvp:'⚔',coop:'♟',events:'✧
 let localProfile;
 try{const raw=JSON.parse(localStorage.getItem('shinsung.profile.v1'));localProfile=raw?.schema===1&&Array.isArray(raw.owned)&&Array.isArray(raw.loadout)&&raw.loadout.length?raw:starterProfile();}catch{localProfile=starterProfile();}
 let profile=localProfile,page='home',selectedTower='scout',shopTab='towers',filter='',rarityFilter='all';
+let collectionTab='towers',selectedPack=null;
 let openCrateBusy=false;
 let config={map:'plains',difficulty:'easy',type:'solo',modes:[]};
 let renderer,state=null,playerId='local',placement=null,paused=false,resultShown=false,accumulator=0,lastTime=0,lastHud=0;
@@ -31,13 +32,67 @@ function home(){
   renderer=null;
 }
 function towerCard(id){const t=TOWERS[id],owned=profile.owned.includes(id);return `<button class="tower-card ${id===selectedTower?'selected':''} ${owned?'':'locked'} ${t.rarity}" style="--rarity:${RARITIES[t.rarity].color}" data-action="inspect" data-id="${id}"><div class="card-top"><span>${owned?profile.loadout.includes(id)?'장착 중':'보유':'미보유'}</span><b>${owned?'◇':'⊘'}</b></div>${portrait(id,profile.equippedSkins[id])}<b class="card-name">${t.name}</b><small>${t.role}</small><div class="card-line"></div></button>`;}
+function collectionHeader(){
+  return `<div class="page-heading"><div><span class="eyebrow">TEAM / LOADOUT</span><h1>타워 구성</h1></div><div class="edition">COLLECTED <b>${profile.owned.length} / ${Object.keys(TOWERS).length}</b></div></div>
+    <div class="collection-switch" role="group" aria-label="타워 구성 종류">
+      <button type="button" class="${collectionTab==='towers'?'selected':''}" data-action="setCollectionTab" data-id="towers" aria-pressed="${collectionTab==='towers'}">✦ 타워 컬렉션 <small>${profile.loadout.length}/5 장착</small></button>
+      <button type="button" class="${collectionTab==='packs'?'selected':''}" data-action="setCollectionTab" data-id="packs" aria-pressed="${collectionTab==='packs'}">☣ 몬스터 팩 <small>${PACKS[profile.pack]?.name||PACKS.basic.name}</small></button>
+    </div>`;
+}
 function collection(){
-  renderer=null;const t=TOWERS[selectedTower],owned=profile.owned.includes(selectedTower);
-  $('#content').innerHTML=`<div class="page-heading"><div><span class="eyebrow">COLLECTION</span><h1>타워 컬렉션<span>.</span></h1></div><div class="edition">COLLECTED <b>${profile.owned.length} / ${Object.keys(TOWERS).length}</b></div></div><div class="collection-layout"><section class="collection-list"><div class="collection-toolbar"><input id="tower-search" placeholder="타워 이름으로 검색" value="${esc(filter)}" aria-label="타워 검색"><select id="rarity-filter" aria-label="등급 필터"><option value="all">모든 등급</option>${Object.entries(RARITIES).map(([id,r])=>`<option value="${id}" ${id===rarityFilter?'selected':''}>${r.name}</option>`).join('')}</select><span>장착 ${profile.loadout.length}/5</span></div><div class="tower-groups">${Object.entries(RARITIES).map(([r,v])=>{const ids=Object.keys(TOWERS).filter(id=>TOWERS[id].rarity===r&&(rarityFilter==='all'||rarityFilter===r)&&TOWERS[id].name.includes(filter));return ids.length?`<div class="rarity-title" style="color:${v.color}">${v.name}<span></span><small>${ids.length}</small></div><div class="tower-grid">${ids.map(towerCard).join('')}</div>`:'';}).join('')||'<p class="empty-message">검색 결과가 없습니다.</p>'}</div></section><section class="tower-detail" style="--rarity:${RARITIES[t.rarity].color}"><span class="eyebrow">${RARITIES[t.rarity].name} / ${t.role}</span><h2>${t.name}</h2><div class="detail-art">${portrait(selectedTower,profile.equippedSkins[selectedTower])}<span class="art-ring"></span></div><div class="stat-grid"><div>배치 비용<b>₩ ${t.cost}</b></div><div>피해량<b>${t.damage||(t.income?'수입 +'+t.income:'지원')}</b></div><div>공격 간격<b>${t.interval}s</b></div><div>사거리<b>${t.range}</b></div></div><p>${t.desc}</p><div class="detail-actions"><button class="primary" data-action="equip" data-id="${selectedTower}" ${owned?'':'disabled'}>${profile.loadout.includes(selectedTower)?'장착 해제':'장착하기'}</button><button data-action="skin" data-id="${selectedTower}" ${owned?'':'disabled'}>스킨</button></div>${!owned?`<small class="unlock-note">${t.price===null?(selectedTower==='aurora'?'파멸 + 엘리트 모드 클리어로 획득':'익스트림 이상 + 슈퍼소닉 클리어로 획득'):'상점에서 '+fmt(t.price)+' 코인으로 획득'}</small>`:''}</section></div>`;
-  $('#content').insertAdjacentHTML('beforeend',packLoadout());
+  renderer=null;
+  if(collectionTab==='packs'){
+    $('#content').innerHTML=collectionHeader()+packLoadout();
+    return;
+  }
+  const t=TOWERS[selectedTower],owned=profile.owned.includes(selectedTower);
+  $('#content').innerHTML=collectionHeader()+`<div class="collection-layout"><section class="collection-list"><div class="collection-toolbar"><input id="tower-search" placeholder="타워 이름으로 검색" value="${esc(filter)}" aria-label="타워 검색"><select id="rarity-filter" aria-label="등급 필터"><option value="all">모든 등급</option>${Object.entries(RARITIES).map(([id,r])=>`<option value="${id}" ${id===rarityFilter?'selected':''}>${r.name}</option>`).join('')}</select><span>장착 ${profile.loadout.length}/5</span></div><div class="tower-groups">${Object.entries(RARITIES).map(([r,v])=>{const ids=Object.keys(TOWERS).filter(id=>TOWERS[id].rarity===r&&(rarityFilter==='all'||rarityFilter===r)&&TOWERS[id].name.includes(filter));return ids.length?`<div class="rarity-title" style="color:${v.color}">${v.name}<span></span><small>${ids.length}</small></div><div class="tower-grid">${ids.map(towerCard).join('')}</div>`:'';}).join('')||'<p class="empty-message">검색 결과가 없습니다.</p>'}</div></section><section class="tower-detail" style="--rarity:${RARITIES[t.rarity].color}"><span class="eyebrow">${RARITIES[t.rarity].name} / ${t.role}</span><h2>${t.name}</h2><div class="detail-art">${portrait(selectedTower,profile.equippedSkins[selectedTower])}<span class="art-ring"></span></div><div class="stat-grid"><div>배치 비용<b>₩ ${t.cost}</b></div><div>피해량<b>${t.damage||(t.income?'수입 +'+t.income:'지원')}</b></div><div>공격 간격<b>${t.interval}s</b></div><div>사거리<b>${t.range}</b></div></div><p>${t.desc}</p><div class="detail-actions"><button class="primary" data-action="equip" data-id="${selectedTower}" ${owned?'':'disabled'}>${profile.loadout.includes(selectedTower)?'장착 해제':'장착하기'}</button><button data-action="skin" data-id="${selectedTower}" ${owned?'':'disabled'}>스킨</button></div>${!owned?`<small class="unlock-note">${t.price===null?(selectedTower==='aurora'?'파멸 + 엘리트 모드 클리어로 획득':'익스트림 이상 + 슈퍼소닉 클리어로 획득'):'상점에서 '+fmt(t.price)+' 코인으로 획득'}</small>`:''}</section></div>`;
 }
 function monsterList(p){return `<div class="monster-roster">${p.monsters.map(([id,cost,cd])=>{const e=ENEMIES[id],tags=[e.shield?'방패':null,e.heal?'치유':null,e.regen?'재생':null,e.onDeath?'분열':null,e.speed>=110?'속공':null,e.hp>=10000?'보스':null].filter(Boolean);return `<div class="monster-portrait" title="${esc(e.name)}"><div class="monster-art">${monsterPortrait(id)}</div><b>${esc(e.name)}</b><small>₩ ${fmt(cost)} / ${cd}s</small><span>${tags.join(' · ')||'기본'}</span></div>`}).join('')}</div>`;}
-function packLoadout(){return `<section class="pack-loadout"><span class="eyebrow">PVP MONSTER LOADOUT</span><h2>몬스터 팩 구성</h2><p>구매는 상점에서, 장착은 이 타워 구성 화면에서 진행합니다.</p><div class="pack-loadout-options">${profile.packs.filter(id=>PACKS[id]).map(id=>`<button class="pack-equip-option ${profile.pack===id?'equipped':''}" data-action="pack" data-id="${id}">${monsterPortrait(PACKS[id].monsters[0][0])}<span><b>${PACKS[id].name}</b><small>${profile.pack===id?'✓ 장착 중':'장착하기'}</small></span></button>`).join('')}</div><b>선택한 팩의 몬스터</b>${monsterList(PACKS[profile.pack]||PACKS.basic)}</section>`;}
+const PACK_DESCRIPTIONS={
+  basic:'가장 기본적인 좀비 조합. 빠른 적과 튼튼한 적을 균형 있게 활용합니다.',
+  lab:'강화 실험체와 기계형 적으로 구성된 고압박 몬스터 팩입니다.',
+  twilight:'유령·방패·분열·지원형 적을 조합해 상대의 대응을 흔듭니다.',
+  elements:'초고속 적과 원소 특성 적을 조합한 전격전 몬스터 팩입니다.',
+  apocalypse:'거대 보스와 고내구 적을 집중적으로 보내는 최상위 몬스터 팩입니다.'
+};
+function packRole(id){
+  const e=ENEMIES[id];
+  if(e.heal)return '지원';
+  if(e.onDeath)return '분열';
+  if(e.shield)return '방패';
+  if(e.speed>=100)return '속공';
+  if(e.hp>=1000||e.size>=21)return '보스';
+  if(e.armor||e.hp>=120)return '탱커';
+  return '기본';
+}
+function packLoadout(){
+  const id=selectedPack&&Object.hasOwn(PACKS,selectedPack)?selectedPack:profile.pack;
+  const selected=Object.hasOwn(PACKS,id)?id:'basic',p=PACKS[selected];
+  const owned=profile.packs.includes(selected),equipped=profile.pack===selected;
+  const packButtons=Object.entries(PACKS).map(([key,value])=>{
+    const has=profile.packs.includes(key),active=selected===key;
+    return `<button type="button" class="pack-choice ${active?'selected':''} ${profile.pack===key?'is-equipped':''}" data-action="previewPack" data-id="${key}" aria-pressed="${active}">
+      <span class="pack-choice-art">${value.monsters.slice(0,3).map(([enemy])=>monsterPortrait(enemy)).join('')}</span>
+      <span class="pack-choice-copy"><strong>${value.name}</strong><small>${profile.pack===key?'✓ 장착 중':has?'보유 중':'🔒 미보유'}</small></span>
+    </button>`}).join('');
+  return `<section class="pack-config-screen" aria-label="PvP 몬스터 팩 구성">
+    <div class="pack-config-title"><div><span class="eyebrow">PVP MONSTER LOADOUT</span><h2>몬스터 팩 구성</h2><p>상점에서 구매하고, 이 화면에서 장착하세요. 팩을 눌러 몬스터를 미리 볼 수 있습니다.</p></div><span class="pack-selected-label">현재 장착 · ${PACKS[profile.pack]?.name||PACKS.basic.name}</span></div>
+    <div class="pack-choice-panel"><h3>몬스터 팩 선택 <small>${profile.packs.length} / ${Object.keys(PACKS).length} 보유</small></h3><div class="pack-choice-list">${packButtons}</div></div>
+    <div class="pack-detail-panel">
+      <div class="pack-detail-art">${p.monsters.slice(0,3).map(([enemy])=>monsterPortrait(enemy)).join('')}</div>
+      <div class="pack-detail-copy"><span class="eyebrow">${owned?'OWNED PACK':'LOCKED PACK'}</span><h3>${p.name}</h3><p>${PACK_DESCRIPTIONS[selected]}</p>
+        <div class="pack-detail-action">${equipped?'<span class="pack-equipped-badge">✓ 현재 장착 중</span>':owned?`<button type="button" class="primary" data-action="pack" data-id="${selected}">이 팩 장착하기</button>`:`<button type="button" class="primary" data-action="visitPackShop" data-id="${selected}">상점에서 구매 · ◈ ${fmt(p.price)}</button>`}</div>
+      </div>
+      <dl class="pack-detail-metrics"><div><dt>몬스터 종류</dt><dd>${p.monsters.length}종</dd></div><div><dt>등장 역할</dt><dd>${[...new Set(p.monsters.map(([enemy])=>packRole(enemy)))].slice(0,4).join(' · ')}</dd></div><div><dt>팩 상태</dt><dd>${equipped?'장착 중':owned?'장착 가능':'미보유'}</dd></div></dl>
+    </div>
+    <div class="pack-monster-heading"><h3>${p.name} · 몬스터 목록</h3><small>상대에게 소환하는 적 · 비용과 대기시간</small></div>
+    <div class="pack-monster-grid">${p.monsters.map(([enemy,cost,cooldown])=>{
+      const e=ENEMIES[enemy],role=packRole(enemy);
+      return `<article class="pack-monster-card"><div class="pack-monster-art">${monsterPortrait(enemy)}</div><b>${e.name}</b><span class="pack-monster-role">${role}</span><div class="pack-monster-meta"><span>◈ ${fmt(cost)}</span><span>◷ ${cooldown}s</span></div></article>`;
+    }).join('')}</div>
+  </section>`;
+}
 function crateView(){const c=CRATES.wardrobe;const possible=profile.owned.length*c.styles.length;const owned=profile.owned.reduce((n,id)=>n+c.styles.filter(style=>profile.skins?.[id+':'+style]).length,0);return `<div class="crate-hero"><div class="crate-visual"><div class="crate-glow"></div><div class="crate-icon">🎁</div><b>✦ MYSTERY CRATE ✦</b></div><div class="crate-content"><span class="eyebrow">COSMETIC SUPPLY</span><h2>${c.name}</h2><p>${c.description} 성능 변화 없는 꾸미기 전용 상품입니다.</p><div class="crate-odds">${Object.entries(SKIN_STYLES).map(([id,v])=>`<span style="--rarity:${v.color}"><i></i>${v.name} ${v.weight}%</span>`).join('')}</div><p class="crate-note">중복은 코인으로 환급 · 10회 연속 중복이면 미보유 스킨을 보장 (남은 스킨이 있을 때)</p><div class="crate-actions"><button class="buy" data-action="openCrate" data-id="1" ${profile.coins<c.price?'disabled':''}>1개 열기 · ◈ ${fmt(c.price)}</button><button class="buy primary" data-action="openCrate" data-id="10" ${profile.coins<c.price*10?'disabled':''}>10개 열기 · ◈ ${fmt(c.price*10)}</button></div><small>보유 스킨 ${owned}/${possible} · 연속 중복 ${profile.cratePity||0}/10 · 미보유 스킨이 남아 있다면 10번째 중복 방지</small></div></div>`;}
 function shop(){renderer=null;$('#content').innerHTML=`<div class="page-heading"><div><span class="eyebrow">SHOP</span><h1>어떤 친구를 데려갈까?<span>.</span></h1></div><div class="edition">EARN. COLLECT. DEFEND.<b>플레이로 얻는 보급품</b></div></div><div class="shop-tabs">${[['towers','타워'],['packs','몬스터 팩'],['crates','스킨 상자']].map(([id,name])=>`<button class="${shopTab===id?'selected':''}" data-action="shopTab" data-id="${id}">${name}</button>`).join('')}<span>현금 결제 없는 상점</span></div><div class="shop-scroll">${shopTab==='towers'?`<div class="featured">${['rail','summoner'].map(id=>{const t=TOWERS[id];return `<article class="feature-card" style="--rarity:${RARITIES[t.rarity].color}"><div><span class="eyebrow">${id==='rail'?'별빛을 부르는 마법사':'작은 친구, 거대한 마법'}</span><h2>${t.name}</h2><p>${t.desc}</p><button class="buy" data-action="buyTower" data-id="${id}" ${profile.owned.includes(id)?'disabled':''}>${profile.owned.includes(id)?'보유 중':'◈ '+fmt(t.price)+' · 영입'}</button></div>${portrait(id)}</article>`;}).join('')}</div><div class="shop-grid">${Object.entries(TOWERS).filter(([id,t])=>!['rail','summoner'].includes(id)&&t.price>0).map(([id,t])=>`<article class="supply-card" style="--rarity:${RARITIES[t.rarity].color}">${portrait(id)}<div><small>${RARITIES[t.rarity].name}</small><h3>${t.name}</h3><p>${t.role}</p><button class="buy" data-action="buyTower" data-id="${id}" ${profile.owned.includes(id)?'disabled':''}>${profile.owned.includes(id)?'보유 중':'◈ '+fmt(t.price)}</button></div></article>`).join('')}</div>`:shopTab==='packs'?`<div class="pack-grid">${Object.entries(PACKS).map(([id,p])=>`<article class="pack-card"><span class="eyebrow">PVP MONSTER PACK</span><h2>${p.name}</h2>${monsterList(p)}<button class="buy" data-action="buyPack" data-id="${id}" ${profile.packs.includes(id)?'disabled':''}>${profile.packs.includes(id)?'✓ 보유 · 구성탭에서 장착':'◈ '+fmt(p.price)+' · 구매'}</button></article>`).join('')}</div>`:crateView()}</div>`;}
 async function mutate(a,reveal=false){try{if(online.user){profile=await online.call('profileAction',a);}else{profileAction(profile,a);saveLocal();}shell();if(reveal&&profile.lastCrate){const rolls=profile.lastCrate.rolls;modal(`<span class="eyebrow">CRATE REVEAL</span><h2>✦ 상자 개봉 결과 ✦</h2><div class="crate-results">${rolls.map((r,i)=>`<div class="crate-result" style="--rarity:${SKIN_STYLES[r.style].color};animation-delay:${i*.075}s"><span>${portrait(r.id,r.style)}</span><b>${TOWERS[r.id].name}</b><small>${SKIN_STYLES[r.style].name} 스킨</small><strong>${r.duplicate?'중복 · +◈'+fmt(r.refund):r.guaranteed?'보장 획득':'NEW 획득!'}</strong></div>`).join('')}</div><p>획득한 스킨은 타워 구성 → 스킨에서 장착할 수 있습니다.</p><div class="crate-actions"><button class="primary" data-action="openCrate" data-id="1">한 번 더 열기</button><button data-action="close">확인</button></div>`);}}catch(e){toast(e.message);}}
@@ -180,8 +235,8 @@ async function pulse(now){if(!isOnlineMatch||!room||onlineBusy||now-lastPulse<20
 const actions={
   noop(){},close(){if(!state)renderer=null;closeModal();},account,help,
   mapPreview(){modal('<h2>'+MAPS.find(m=>m.id===config.map).name+'</h2><canvas id="world" class="terrain-preview" aria-label="실제 전투 맵"></canvas><p>빛나는 분홍 입구에서 시작해 파란 출구로 향합니다.</p>');renderer=new Renderer($('#world'));},
-  nav(id){page=id;config.type='solo';shell();},map(id){config.map=id;home();},difficulty(id){config.difficulty=id;home();},mode(id){config.modes=config.modes.includes(id)?config.modes.filter(x=>x!==id):[...config.modes,id];home();},
-  inspect(id){selectedTower=id;page='towers';shell();},equip(id){mutate({kind:'equip',id});},shopTab(id){shopTab=id;shop();},buyTower(id){mutate({kind:'buyTower',id});},buyPack(id){mutate({kind:'buyPack',id});},pack(id){mutate({kind:'pack',id});},
+  nav(id){page=id;config.type='solo';shell();},setCollectionTab(id){if(!['towers','packs'].includes(id))return;collectionTab=id;collection();},previewPack(id){if(!Object.hasOwn(PACKS,id))return;selectedPack=id;collection();},visitPackShop(id){if(!Object.hasOwn(PACKS,id))return;shopTab='packs';page='shop';shell();},map(id){config.map=id;home();},difficulty(id){config.difficulty=id;home();},mode(id){config.modes=config.modes.includes(id)?config.modes.filter(x=>x!==id):[...config.modes,id];home();},
+  inspect(id){selectedTower=id;page='towers';collectionTab='towers';shell();},equip(id){mutate({kind:'equip',id});},shopTab(id){shopTab=id;shop();},buyTower(id){mutate({kind:'buyTower',id});},buyPack(id){mutate({kind:'buyPack',id});},pack(id){mutate({kind:'pack',id});},
   skin(id){const options=['default',...Object.keys(SKIN_STYLES)].map(style=>{const owned=style==='default'||profile.skins[id+':'+style];return `<button data-action="setSkin" data-id="${id}|${style}" ${owned?'':'disabled'}>${portrait(id,style)}<b>${style==='default'?'기본':SKIN_STYLES[style].name} ${owned?profile.equippedSkins[id]===style?'· 장착 중':'· 보유':'· 미보유'}</b></button>`}).join('');modal(`<span class="eyebrow">TOWER COSMETICS</span><h2>${TOWERS[id].name} · 스킨</h2><div class="skin-options">${options}</div><p>스킨은 상점의 스킨 상자에서 획득하며 전투 성능은 변하지 않습니다.</p><button data-action="visitCrates">스킨 상자 보러 가기</button>`);},
   setSkin(key){const [id,style]=key.split('|');closeModal();mutate({kind:'skin',id,skin:style});},
   setDefault(id){closeModal();mutate({kind:'skin',id,skin:'default'});},setArctic(id){closeModal();mutate({kind:'skin',id,skin:'arctic'});},
