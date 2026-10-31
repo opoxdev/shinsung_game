@@ -9,13 +9,25 @@ import { matchmakingMarkup, matchmakingCards, waitingRoomMarkup } from './matchm
 import {adminPageMarkup} from './admin-panel.js';
 import {visualPrediction} from './online-prediction.js';
 import {STORIES,sceneForWave,storySceneIndex,storyPreviewMarkup,storyGuideMarkup,dialogueMarkup,storyProgress} from './story.js';
+import {loadClientProfile,saveClientProfile,multiplayerLoadout,validProfile} from './client-profile.js';
 const $=s=>document.querySelector(s), app=$('#app'), online=new Online();
 const fmt=n=>Math.floor(n).toLocaleString('ko-KR');
 const fmtHp=n=>Number.isFinite(n)?Number(Math.max(0,n).toFixed(Math.abs(n)<10?1:0)).toLocaleString('ko-KR'):'0';
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const icons={home:'⌂',towers:'▥',shop:'◇',pvp:'⚔',coop:'♟',events:'✧'};
-let localProfile;
-try{const raw=JSON.parse(localStorage.getItem('shinsung.profile.v1'));localProfile=raw?.schema===1&&Array.isArray(raw.owned)&&Array.isArray(raw.loadout)&&raw.loadout.length?raw:starterProfile();}catch{localProfile=starterProfile();}
+let localProfile=loadClientProfile(localStorage);
+const currentUid=()=>online.user?.uid||null;
+function switchAccountProfile(user){
+  if(!user){profile=localProfile;return;}
+  // First login inherits the current guest progress on this device, but later
+  // logins reuse only that account's own locally saved wallet and collection.
+  const hasSaved=!!localStorage.getItem('shinsung.profile.account.v2.'+encodeURIComponent(user.uid));
+  profile=loadClientProfile(localStorage,user.uid,{
+    name:user.displayName||user.email?.split('@')[0]||'모험가',
+    seed:hasSaved?null:localProfile
+  });
+  if(!hasSaved)saveLocal();
+}
 let profile=localProfile,page='home',selectedTower='scout',shopTab='towers',filter='',rarityFilter='all';
 let collectionTab='towers',selectedPack=null;
 let isAdminSession=false;
@@ -85,7 +97,12 @@ function resetStory(){
   storyHighestWave=0;storyObservedWave=0;storyCurrent=-1;storyLine=0;storyAdvanceAt=0;storyLastScene=-1;storyShown=new Set();
 }
 
-function saveLocal(){try{localStorage.setItem('shinsung.profile.v1',JSON.stringify(localProfile));}catch{toast('브라우저 저장 공간을 사용할 수 없습니다.');}}
+function saveLocal(){
+  try{
+    saveClientProfile(localStorage,currentUid(),profile);
+    if(!currentUid())localProfile=profile;
+  }catch(e){toast('기기 저장 실패: '+e.message);}
+}
 let toastTimer;function toast(message){$('#toast').textContent=message;$('#toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('#toast').classList.remove('show'),3200);}
 function modal(content){renderer?.keys.clear();$('#modal-root').innerHTML=`<div class="scrim"><section class="modal" role="dialog" aria-modal="true"><button class="close" data-action="close" aria-label="닫기">×</button>${content}</section></div>`;$('#modal-root').querySelector('input,button:not(.close)')?.focus({preventScroll:true});}
 function closeModal(){if(room&&!state)return;$('#modal-root').innerHTML='';if(!isOnlineMatch)paused=false;}
@@ -104,7 +121,7 @@ function profileBar(){return `<div class="identity"><div class="insignia">S<span
 function loadout(inGame=false){return Array.from({length:5},(_,i)=>{const id=(inGame?state.players[playerId].loadout:profile.loadout)[i];return id?`<button class="loadout-slot ${placement===id?'selected':''}" data-action="${inGame?'selectPlace':'inspect'}" data-id="${id}" style="--rarity:${RARITIES[TOWERS[id].rarity].color}"><span class="slot-number">0${i+1}</span>${portrait(id,profile.equippedSkins[id])}<span class="slot-name">${TOWERS[id].name}</span><strong>₩ ${TOWERS[id].cost}</strong></button>`:`<button class="loadout-slot empty" data-action="${inGame?'noop':'nav'}" data-id="towers"><span class="slot-number">0${i+1}</span><span>＋</span><small>빈 슬롯</small></button>`;}).join('');}
 function shell(){
   const restore=preserveScroll();
-  app.innerHTML=`<div class="shell"><header class="topbar"><a class="brand" href="#" data-action="nav" data-id="home"><span class="brand-symbol">S</span><div>신성 디펜스<small>SHINSUNG DEFENSE</small></div></a><div class="build-label">ALPHA <span>01</span></div><div class="profilebar">${profileBar()}</div></header><aside class="sidebar"><div class="nav-caption">PLAY</div>${['home','towers','shop'].map(id=>`<button class="nav-item ${page===id?'active':''}" data-action="nav" data-id="${id}"><span>${icons[id]}</span>${{home:'로비',towers:'타워 구성',shop:'상점'}[id]}<i>›</i></button>`).join('')}<div class="nav-caption second">친구들과 더 재미있게</div><button class="nav-item" data-action="pvp"><span>⚔</span>대전 · PVP<i>›</i></button><button class="nav-item" data-action="coop"><span>♟</span>친구와 함께<i>›</i></button><button class="nav-item" data-action="events"><span>✧</span>도전 과제<i>›</i></button>${isAdminSession?`<div class="nav-caption second">ADMIN</div><button class="nav-item ${page==='admin'?'active':''}" data-action="adminOpen"><span>⚙</span>관리자 패널<i>›</i></button>`:''}<div class="sidebar-bottom"><span class="status-dot"></span>${online.user?'ONLINE ACCOUNT':'LOCAL PLAY'}<small>모으고, 키우고,<br>함께 지켜내자!</small><button data-action="help">조작 안내 <span>?</span></button></div></aside><main class="content" id="content"></main><footer class="loadout-bar"><div class="loadout-label"><span>MY TEAM</span><b>내 팀</b><small>${profile.loadout.length} / 5 SLOTS</small></div><div class="loadout-slots">${loadout()}</div><div class="footer-note">${online.user?'서버 계정 진행도':'진행도는 이 브라우저에 저장됩니다.'}<br><span>BUILD 0.9.7 · PLAY WITH FRIENDS</span></div></footer></div>`;
+  app.innerHTML=`<div class="shell"><header class="topbar"><a class="brand" href="#" data-action="nav" data-id="home"><span class="brand-symbol">S</span><div>신성 디펜스<small>SHINSUNG DEFENSE</small></div></a><div class="build-label">ALPHA <span>01</span></div><div class="profilebar">${profileBar()}</div></header><aside class="sidebar"><div class="nav-caption">PLAY</div>${['home','towers','shop'].map(id=>`<button class="nav-item ${page===id?'active':''}" data-action="nav" data-id="${id}"><span>${icons[id]}</span>${{home:'로비',towers:'타워 구성',shop:'상점'}[id]}<i>›</i></button>`).join('')}<div class="nav-caption second">친구들과 더 재미있게</div><button class="nav-item" data-action="pvp"><span>⚔</span>대전 · PVP<i>›</i></button><button class="nav-item" data-action="coop"><span>♟</span>친구와 함께<i>›</i></button><button class="nav-item" data-action="events"><span>✧</span>도전 과제<i>›</i></button>${isAdminSession?`<div class="nav-caption second">ADMIN</div><button class="nav-item ${page==='admin'?'active':''}" data-action="adminOpen"><span>⚙</span>관리자 패널<i>›</i></button>`:''}<div class="sidebar-bottom"><span class="status-dot"></span>${online.user?'ONLINE ACCOUNT':'LOCAL PLAY'}<small>모으고, 키우고,<br>함께 지켜내자!</small><button data-action="help">조작 안내 <span>?</span></button></div></aside><main class="content" id="content"></main><footer class="loadout-bar"><div class="loadout-label"><span>MY TEAM</span><b>내 팀</b><small>${profile.loadout.length} / 5 SLOTS</small></div><div class="loadout-slots">${loadout()}</div><div class="footer-note">진행도는 이 브라우저에 저장됩니다.<br><span>BUILD 0.9.8 · OFFLINE-FIRST</span></div></footer></div>`;
   if(page==='home')home();else if(page==='towers')collection();else if(page==='admin'&&isAdminSession)adminRender();else shop();
   restore();
 }
@@ -148,7 +165,7 @@ async function adminChange(operation,details={},uid=adminData.selected?.uid){
     const result=await online.call('adminChange',{uid,operation,...details});
     adminData.selected=result.profile;
     adminData.status=labels[operation]+' 완료'+(result.auditWarning?' · '+result.auditWarning:'')+(result.kickWarning?' · '+result.kickWarning:'');
-    if(uid===online.user?.uid)profile=await online.call('profile');
+    if(uid===online.user?.uid){/* Admin D1 adjustments are server-only; local solo wallet is independent. */}
     const [summary,listing,audit]=await Promise.all([
       online.call('adminOverview'),
       online.call('adminUsers',{search:adminData.search,offset:adminData.offset}),
@@ -257,8 +274,8 @@ function crateView(){
   }).join('')}</div><p class="crate-catalog-note">표시 확률은 현재 보유 타워 기준의 일반 개봉 확률입니다. 타워를 영입하면 출현 대상과 확률이 달라지며, 10연속 중복 보장 발동 시 미보유 스킨 대상으로 별도 재계산됩니다. 전투 성능은 변하지 않습니다.</p>`;
 }
 function shop(){const restore=preserveScroll();resetRenderer();$('#content').innerHTML=`<div class="page-heading"><div><span class="eyebrow">SHOP</span><h1>어떤 친구를 데려갈까?<span>.</span></h1></div><div class="edition">EARN. COLLECT. DEFEND.<b>플레이로 얻는 보급품</b></div></div><div class="shop-tabs">${[['towers','타워'],['packs','몬스터 팩'],['crates','스킨 상자']].map(([id,name])=>`<button class="${shopTab===id?'selected':''}" data-action="shopTab" data-id="${id}">${name}</button>`).join('')}<span>등급 ≠ 설치 가격 · 역할별 선택</span></div><div class="shop-scroll">${shopTab==='towers'?`<div class="featured">${['starseed','hunter'].map(id=>{const t=TOWERS[id];return `<article class="feature-card" style="--rarity:${RARITIES[t.rarity].color}"><div><span class="eyebrow">${id==='starseed'?'신화지만 초반부터 활약':'희귀지만 후반 보스 저격'}</span><h2>${t.name}</h2><p>${t.desc}</p><p class="battle-cost">전투 배치 ₩ ${fmt(t.cost)} · ${RARITIES[t.rarity].name}</p><button class="buy" data-action="buyTower" data-id="${id}" ${profile.owned.includes(id)?'disabled':''}>${profile.owned.includes(id)?'보유 중':'◈ '+fmt(t.price)+' · 영입'}</button></div>${portrait(id)}</article>`;}).join('')}</div><div class="shop-grid">${Object.entries(TOWERS).filter(([id,t])=>!['starseed','hunter'].includes(id)&&t.price>0).map(([id,t])=>`<article class="supply-card" style="--rarity:${RARITIES[t.rarity].color}">${portrait(id)}<div><small>${RARITIES[t.rarity].name}</small><h3>${t.name}</h3><p>${t.role} · 설치 ₩ ${fmt(t.cost)}</p><button class="buy" data-action="buyTower" data-id="${id}" ${profile.owned.includes(id)?'disabled':''}>${profile.owned.includes(id)?'보유 중':'◈ '+fmt(t.price)}</button></div></article>`).join('')}</div>`:shopTab==='packs'?`<div class="pack-grid">${Object.entries(PACKS).map(([id,p])=>`<article class="pack-card"><span class="eyebrow">PVP MONSTER PACK</span><h2>${p.name}</h2>${monsterList(p)}<button class="buy" data-action="buyPack" data-id="${id}" ${profile.packs.includes(id)?'disabled':''}>${profile.packs.includes(id)?'✓ 보유 · 구성탭에서 장착':'◈ '+fmt(p.price)+' · 구매'}</button></article>`).join('')}</div>`:crateView()}</div>`;restore();}
-async function mutate(a,reveal=false){try{if(online.user){profile=await online.call('profileAction',a);}else{profileAction(profile,a);saveLocal();}shell();if(reveal&&profile.lastCrate){const rolls=profile.lastCrate.rolls;const opened=profile.lastCrate.crate;modal(`<span class="eyebrow">CRATE REVEAL</span><h2>✦ 상자 개봉 결과 ✦</h2><div class="crate-results">${rolls.map((r,i)=>`<div class="crate-result" style="--rarity:${SKIN_STYLES[r.style].color};animation-delay:${i*.075}s"><span>${portrait(r.id,r.style)}</span><b>${TOWERS[r.id].name}</b><small>${RARITIES[SKIN_STYLES[r.style].rarity].name} · ${SKIN_STYLES[r.style].name} 스킨</small><strong>${r.duplicate?'중복 · +◈'+fmt(r.refund):r.guaranteed?'보장 획득':'NEW 획득!'}</strong></div>`).join('')}</div><p>획득한 스킨은 타워 구성 → 스킨에서 장착할 수 있습니다.</p><div class="crate-actions"><button class="primary" data-action="openCrate" data-id="${opened}:1">같은 상자 한 번 더 열기</button><button data-action="close">확인</button></div>`);}}catch(e){toast(e.message);}}
-function account(){if(online.user){modal(`<span class="eyebrow">CONNECTED ACCOUNT</span><h2>${esc(profile.name)}</h2><p>${esc(online.user.email)}</p><p>계정 코인과 타워는 Cloudflare D1에 저장됩니다. 로컬 훈련 기록은 별도로 유지됩니다.</p>${online.user.email?.toLowerCase()==='joehw0405@gmail.com'&&!online.user.emailVerified?'<p>관리자 권한 사용을 위해 이메일 인증이 필요합니다.</p><button class="wide secondary" data-action="sendAdminVerification">인증 메일 보내기</button><button class="wide secondary" data-action="checkAdminVerification">이메일 인증 완료 확인</button>':''}${profile.activeRoom?`<button class="primary wide" data-action="resumeRoom">참가 중인 방 재접속 · ${esc(profile.activeRoom)}</button><button class="wide secondary" data-action="abandonRoom">만료되거나 중단된 방 정리</button>`:''}<button class="wide secondary" data-action="diagnostic">연결 상태 점검</button><button class="wide secondary" data-action="logout">로그아웃</button>`);return;}
+async function mutate(a,reveal=false){try{profileAction(profile,a);saveLocal();shell();if(reveal&&profile.lastCrate){const rolls=profile.lastCrate.rolls;const opened=profile.lastCrate.crate;modal(`<span class="eyebrow">CRATE REVEAL</span><h2>✦ 상자 개봉 결과 ✦</h2><div class="crate-results">${rolls.map((r,i)=>`<div class="crate-result" style="--rarity:${SKIN_STYLES[r.style].color};animation-delay:${i*.075}s"><span>${portrait(r.id,r.style)}</span><b>${TOWERS[r.id].name}</b><small>${RARITIES[SKIN_STYLES[r.style].rarity].name} · ${SKIN_STYLES[r.style].name} 스킨</small><strong>${r.duplicate?'중복 · +◈'+fmt(r.refund):r.guaranteed?'보장 획득':'NEW 획득!'}</strong></div>`).join('')}</div><p>획득한 스킨은 타워 구성 → 스킨에서 장착할 수 있습니다.</p><div class="crate-actions"><button class="primary" data-action="openCrate" data-id="${opened}:1">같은 상자 한 번 더 열기</button><button data-action="close">확인</button></div>`);}}catch(e){toast(e.message);}}
+function account(){if(online.user){modal(`<span class="eyebrow">CONNECTED ACCOUNT</span><h2>${esc(profile.name)}</h2><p>${esc(online.user.email)}</p><p>솔로·상점·컬렉션·보상은 이 기기에만 저장됩니다. 로그인해도 솔로 게임에서 서버 통신은 하지 않습니다. 다른 기기에는 자동으로 동기화되지 않습니다.</p><button class="wide secondary" data-action="importLegacyProfile">이전 서버 진행도 한 번 가져오기 (선택)</button>${online.user.email?.toLowerCase()==='joehw0405@gmail.com'&&!online.user.emailVerified?'<p>관리자 권한 사용을 위해 이메일 인증이 필요합니다.</p><button class="wide secondary" data-action="sendAdminVerification">인증 메일 보내기</button><button class="wide secondary" data-action="checkAdminVerification">이메일 인증 완료 확인</button>':''}${profile.activeRoom?`<button class="primary wide" data-action="resumeRoom">참가 중인 방 재접속 · ${esc(profile.activeRoom)}</button><button class="wide secondary" data-action="abandonRoom">만료되거나 중단된 방 정리</button>`:''}<button class="wide secondary" data-action="diagnostic">연결 상태 점검</button><button class="wide secondary" data-action="logout">로그아웃</button>`);return;}
   if(!online.enabled){modal('<span class="eyebrow">OFFLINE BUILD</span><h2>계정 서버 연결 준비</h2><p>현재는 로컬 플레이 버전입니다. 이메일 계정·협동·온라인 PvP를 사용하려면 Firebase 로그인과 무료 Cloudflare Worker를 연결해야 합니다.</p><p>프로젝트의 <b>DEPLOY.md</b>에 설정 순서가 있습니다. 배포 파일은 <b>dist/apps-script</b>에 생성됩니다.</p><button class="primary" data-action="close">로컬 플레이 계속</button>');return;}
   modal('<span class="eyebrow">SHINSUNG ACCOUNT</span><h2>모험가 계정 연결</h2><form id="auth-form"><label>이메일<input name="email" type="email" autocomplete="email" required></label><label>비밀번호<input name="password" type="password" minlength="8" autocomplete="current-password" required></label><div class="detail-actions"><button class="primary" type="submit" name="mode" value="login">로그인</button><button type="submit" name="mode" value="signup">회원가입</button></div><p id="auth-error" role="alert"></p></form>');}
 function help(){modal('<span class="eyebrow">FIELD MANUAL</span><h2>모험가 조작 안내</h2><div class="help-grid"><b>W A S D</b><span>카메라 이동</span><b>마우스 휠</b><span>줌 인 / 아웃</span><b>1 ~ 5</b><span>장착 타워 선택</span><b>클릭</b><span>타워 설치 / 배치된 타워 선택</span><b>Q / 우클릭</b><span>설치 취소</span><b>Space</b><span>웨이브 스킵 / 투표</span><b>Esc</b><span>전투 메뉴</span></div><p>도로 위에는 설치할 수 없습니다. 협동 플레이의 타워 한도는 필드 전체 기준입니다. 스킵해도 남아 있는 적은 사라지지 않습니다.</p>');}
@@ -301,7 +318,7 @@ async function refreshRooms(){
   }
 }
 function startLocal(type='solo'){
-  online.stop();room=null;isOnlineMatch=false;profile=localProfile;playerId='local';config.type=type;
+  online.stop();room=null;isOnlineMatch=false;playerId='local';config.type=type;
   const players=[{id:'local',profile}];if(type==='pvp')players.push({id:'bot',profile:{...starterProfile('훈련 상대'),loadout:['scout','blade','soldier'],pack:'basic'}});
   state=createMatch(config,players);beginGame();
 }
@@ -454,7 +471,20 @@ let previousWave=0;function updateHud(){if(!state||!$('#cash'))return;const hudS
   if(hudState.config.type==='pvp')PACKS[p.pack].monsters.forEach(([id,cost])=>{const b=$('#send-'+id),left=Math.max(0,(p.cooldowns[id]||0)-hudState.time);b.disabled=left>0||p.money<cost;b.querySelector('small').textContent=left>0?Math.ceil(left)+'s':'₩ '+cost;});
 }
 function bot(){if(!state.players.bot)return;botClock+=STEP;if(botClock<2)return;botClock=0;const p=state.players.bot;const points=[[250,440],[390,450],[400,370],[650,370],[820,450],[1120,650],[1270,570],[1380,520]];const t=state.towers.filter(t=>t.owner==='bot');if(t.length<points.length){const [x,y]=points[t.length];command(state,'bot',{kind:'place',type:t.length%3===2?'blade':'scout',x,y});}else{const u=t.find(t=>TOWERS[t.type].upgrades[t.level]!==undefined&&TOWERS[t.type].upgrades[t.level]<p.money);if(u)command(state,'bot',{kind:'upgrade',id:u.id});}if(state.wave>2&&p.money>500)command(state,'bot',{kind:'send',type:'runner'});if(state.votes.includes('local'))command(state,'bot',{kind:'skip'});}
-async function finish(){if(resultShown||performance.now()<claimAfter)return;resultShown=true;const reward=rewardFor(state,playerId);try{if(isOnlineMatch)profile=await online.call('claim',{code:room.code});else{applyReward(localProfile,reward);saveLocal();}}catch(e){toast('보상 정산 대기: '+e.message);claimAfter=performance.now()+5000;resultShown=false;return;}
+async function finish(){if(resultShown||performance.now()<claimAfter)return;resultShown=true;const reward=rewardFor(state,playerId);try{
+    if(isOnlineMatch){
+      // Multiplayer result is authenticated by the room; local collection
+      // receives the reward only once, even after reconnecting.
+      await online.call('claim',{code:room.code});
+      profile.claimedRooms=profile.claimedRooms||[];
+      if(!profile.claimedRooms.includes(room.code)){
+        applyReward(profile,reward);
+        profile.claimedRooms.push(room.code);
+        if(profile.claimedRooms.length>512)profile.claimedRooms=profile.claimedRooms.slice(-512);
+        saveLocal();
+      }
+    }else{applyReward(profile,reward);saveLocal();}
+  }catch(e){toast('보상 정산 대기: '+e.message);claimAfter=performance.now()+5000;resultShown=false;return;}
   const maxWaves=DIFFICULTIES.find(d=>d.id===state.config.difficulty).waves.length;
   const rewardText=state.config.type==='pvp'?'비랭크 PvP에는 계정 코인 보상이 없습니다.':
     reward.win?'클리어 보너스 ◈ '+fmt(reward.clearBonus)+' 포함':
@@ -463,7 +493,7 @@ async function finish(){if(resultShown||performance.now()<claimAfter)return;resu
 function battleMenu(){if(!isOnlineMatch)paused=true;modal(`<span class="eyebrow">FIELD PLAY</span><h2>${isOnlineMatch?'전투는 계속 진행됩니다':'일시 정지'}</h2><p>전투에서 나가면 클리어 보상을 받을 수 없습니다.${isOnlineMatch?' 방장은 참가자가 이어서 동기화를 요청할 수 있습니다.':''}</p><button class="primary wide" data-action="close">전투 계속</button><button class="wide secondary" data-action="leave">본부로 돌아가기</button>`);}
 async function leave(){
   if(isOnlineMatch&&room){try{await online.call('leave',{code:room.code});}catch(e){toast(e.message);return;}}
-  online.stop();room=null;state=null;isOnlineMatch=false;resetRenderer();placement=null;paused=false;$('#modal-root').innerHTML='';config.type='solo';page='home';if(online.user)try{profile=await online.call('profile');}catch{}else profile=localProfile;shell();
+  online.stop();room=null;state=null;isOnlineMatch=false;resetRenderer();placement=null;paused=false;$('#modal-root').innerHTML='';config.type='solo';page='home';shell();
 }
 
 async function openRoom(code){
@@ -505,7 +535,7 @@ const actions={
     try{
       await online.user.reload();await online.user.getIdToken(true);
       const result=await online.call('adminStatus');
-      if(result.admin){isAdminSession=true;profile=await online.call('profile');closeModal();shell();toast('관리자 이메일 인증이 완료되었습니다.');}
+      if(result.admin){isAdminSession=true;closeModal();shell();toast('관리자 이메일 인증이 완료되었습니다.');}
       else toast('아직 인증되지 않았습니다. 이메일 인증 링크를 완료하세요.');
     }catch(e){toast('이메일 인증 확인 실패: '+e.message);}
   },
@@ -546,12 +576,27 @@ const actions={
     finally{openCrateBusy=false;buttons.forEach(b=>{b.disabled=false;delete b.dataset.pending;});}
   },
   pvp(){special('pvp');},coop(){special('coop');},events(){modal('<span class="eyebrow">PERMANENT CHALLENGE / 01</span><h2>음속을 넘어서</h2><div class="challenge-art">'+portrait('sonic')+'</div><p>익스트림 이상의 난이도에서 「슈퍼소닉」 모드를 적용해 클리어하세요.</p><p>보상: 신화 타워 <b>소닉</b> · 최초 클리어 시 영구 획득</p><button class="primary wide" data-action="challenge">도전 설정 적용</button>');},challenge(){config.difficulty='extreme';config.modes=['supersonic'];config.type='solo';closeModal();page='home';shell();},
-  async start(){if(online.user){try{config.type='solo';const r=await online.call('createRoom',{config});await online.call('start',{code:r.code});await openRoom(r.code);}catch(e){toast(e.message);}}else startLocal();},trainingPvp(){startLocal('pvp');},
+  start(){startLocal('solo');},trainingPvp(){startLocal('pvp');},
   selectPlace:selectPlacement,cancelPlace(){selectPlacement(null);},skip(){sendCommand({kind:'skip'});},send(id){sendCommand({kind:'send',type:id});},upgrade(){sendCommand({kind:'upgrade',id:renderer.selected});},sell(){sendCommand({kind:'sell',id:renderer.selected});},target(){const t=state.towers.find(t=>t.id===renderer.selected),targets=['first','strong','near'];if(t)sendCommand({kind:'target',id:t.id,target:targets[(targets.indexOf(t.target)+1)%3]});},battleMenu,leave,
   zoomIn(){renderer.zoomBy(1.2);},zoomOut(){renderer.zoomBy(1/1.2);},zoomReset(){renderer.camera={x:900+state.players[playerId].field*2100,y:550,zoom:1.18};},field(){renderer.camera.x=renderer.camera.x<1800?3000:900;},
   async diagnostic(){try{const result=await online.call('diagnostic');modal(`<span class="eyebrow">ONLINE CHECK</span><h2>서버 연결 정상</h2><p>Firebase 인증 ✓ · Cloudflare Worker 통신 ✓ · D1 프로필 읽기 ✓</p><p>계정: ${esc(result.name)} · 서버 시간: ${esc(result.serverTime)}</p><p>실시간 대전 확인은 별도 계정 두 개로 방에 입장해 점검하세요.</p><button class="primary wide" data-action="close">확인</button>`);}catch(e){toast('연결 진단 실패: '+e.message);}},
+  async importLegacyProfile(){
+    if(!online.user||!window.confirm('기존 Cloudflare 프로필을 한 번 조회해 현재 기기 프로필에 보유 타워와 코인·경험치를 병합합니다. 이 버튼을 누른 경우에만 서버에 접속합니다. 계속할까요?'))return;
+    try{
+      const legacy=await online.call('profile');
+      if(!validProfile(legacy))throw Error('이전 서버 프로필을 읽지 못했습니다.');
+      profile.coins=Math.max(profile.coins,legacy.coins);
+      profile.xp=Math.max(profile.xp,legacy.xp);
+      profile.wins=Math.max(profile.wins||0,legacy.wins||0);
+      profile.owned=[...new Set([...profile.owned,...legacy.owned])];
+      profile.packs=[...new Set([...profile.packs,...legacy.packs])];
+      profile.skins={...legacy.skins,...profile.skins};
+      profile.equippedSkins={...legacy.equippedSkins,...profile.equippedSkins};
+      saveLocal();closeModal();shell();toast('이전 진행도를 기기에 가져왔습니다.');
+    }catch(e){toast('이전 진행도 불러오기 실패: '+e.message);}
+  },
   async logout(){await online.signOut();isAdminSession=false;adminData.selected=null;profile=localProfile;closeModal();page='home';shell();},
-  async resumeRoom(){await openRoom(profile.activeRoom);},async abandonRoom(){try{await online.call('leave',{code:profile.activeRoom});profile=await online.call('profile');closeModal();shell();}catch(e){toast(e.message);}},
+  async resumeRoom(){await openRoom(profile.activeRoom);},async abandonRoom(){try{await online.call('leave',{code:profile.activeRoom});profile.activeRoom=null;saveLocal();closeModal();shell();}catch(e){toast(e.message);}},
 
   refreshRooms(){roomListNext=0;return refreshRooms();},
   lobbyLogin(){pendingLobbyMode=config.type;account();},
@@ -559,8 +604,8 @@ const actions={
     if(!/^[A-Z0-9]{6}$/.test(code||''))return;
     if(!online.user){pendingLobbyMode=config.type;pendingJoinCode=code;account();return;}
     try{
-      await online.call('join',{code});
-      profile.activeRoom=code;
+      await online.call('join',{code,loadout:multiplayerLoadout(profile)});
+      profile.activeRoom=code;saveLocal();
       await openRoom(code);
     }catch(e){toast('방 참가 실패: '+e.message);if($('#public-room-list'))await refreshRooms();}
   },
@@ -571,8 +616,8 @@ const actions={
     if(createButton?.disabled)return;
     if(createButton){createButton.disabled=true;createButton.textContent='방 생성 중…';}
     try{
-      const r=await online.call('createRoom',{config});
-      profile.activeRoom=r.code;
+      const r=await online.call('createRoom',{config,loadout:multiplayerLoadout(profile)});
+      profile.activeRoom=r.code;saveLocal();
       await openRoom(r.code);
     }catch(e){
       toast('방 생성 실패: '+e.message);
@@ -593,15 +638,14 @@ const actions={
   async leaveRoom(){
     try{
       await online.call('leave',{code:room.code});
-      online.stop();room=null;profile.activeRoom=null;closeModal();
-      profile=await online.call('profile');shell();
+      online.stop();room=null;profile.activeRoom=null;saveLocal();closeModal();shell();
     }catch(e){toast('방 나가기 실패: '+e.message);}
   }
 };
 document.addEventListener('click',async e=>{const b=e.target.closest('[data-action]');if(!b||b.disabled)return;e.preventDefault();try{await actions[b.dataset.action]?.(b.dataset.id);}catch(err){toast(err.message);}});
 document.addEventListener('input',e=>{if(e.target.id==='tower-search'){const pos=e.target.selectionStart;filter=e.target.value;collection();$('#tower-search').focus({preventScroll:true});$('#tower-search').setSelectionRange(pos,pos);}});
 document.addEventListener('change',e=>{if(e.target.id==='rarity-filter'){rarityFilter=e.target.value;collection();}else if(e.target.id==='lobby-map'&&MAPS.some(m=>m.id===e.target.value)){config.map=e.target.value;}else if(e.target.id==='lobby-difficulty'&&DIFFICULTIES.some(d=>d.id===e.target.value)){config.difficulty=e.target.value;}});
-document.addEventListener('submit',async e=>{e.preventDefault();const f=new FormData(e.target);if(e.target.id==='auth-form'){const buttons=e.target.querySelectorAll('button');buttons.forEach(b=>b.disabled=true);try{await online.signIn(f.get('email'),f.get('password'),e.submitter?.value==='signup');profile=await online.call('profile');closeModal();if(pendingLobbyMode){const mode=pendingLobbyMode,code=pendingJoinCode;pendingLobbyMode=null;pendingJoinCode=null;special(mode);if(code)await actions.joinListedRoom(code);}}catch(err){$('#auth-error').textContent=err.message;}finally{buttons.forEach(b=>b.disabled=false);}}else if(e.target.id==='join-form'){try{const code=f.get('code').toUpperCase();await online.call('join',{code});profile.activeRoom=code;await openRoom(code);}catch(err){toast('방 참가 실패: '+err.message);}}else if(e.target.id==='admin-search-form'){
+document.addEventListener('submit',async e=>{e.preventDefault();const f=new FormData(e.target);if(e.target.id==='auth-form'){const buttons=e.target.querySelectorAll('button');buttons.forEach(b=>b.disabled=true);try{const credential=await online.signIn(f.get('email'),f.get('password'),e.submitter?.value==='signup');switchAccountProfile(credential.user);closeModal();shell();if(pendingLobbyMode){const mode=pendingLobbyMode,code=pendingJoinCode;pendingLobbyMode=null;pendingJoinCode=null;special(mode);if(code)await actions.joinListedRoom(code);}}catch(err){$('#auth-error').textContent=err.message;}finally{buttons.forEach(b=>b.disabled=false);}}else if(e.target.id==='join-form'){try{const code=f.get('code').toUpperCase();await online.call('join',{code,loadout:multiplayerLoadout(profile)});profile.activeRoom=code;saveLocal();await openRoom(code);}catch(err){toast('방 참가 실패: '+err.message);}}else if(e.target.id==='admin-search-form'){
   adminData.search=String(f.get('search')||'');adminData.offset=0;adminData.selected=null;await adminLoad({selected:false});
 }else if(e.target.id==='admin-balance-form'){
   await adminChange(String(f.get('field')),{amount:Number(f.get('amount'))});
@@ -645,17 +689,17 @@ function frame(now){
 shell();requestAnimationFrame(frame);online.onError=e=>toast(e.message);
 online.init(async user=>{
   if(user){
-    const isCandidate=user.email?.toLowerCase()==='joehw0405@gmail.com';
-    const [updated,admin]=await Promise.all([
-      online.call('profile'),
-      isCandidate?online.call('adminStatus').catch(()=>({admin:false})):Promise.resolve({admin:false})
-    ]);
-    profile=updated;isAdminSession=admin.admin===true;
-    if(page==='admin'&&!isAdminSession)page='home';
-    if(!state)shell();
+    switchAccountProfile(user);
+    isAdminSession=false;
+    // Ordinary sign-in does not contact Cloudflare. Admin status is checked
+    // only for the configured administrator identity.
+    if(user.email?.toLowerCase()==='joehw0405@gmail.com'){
+      try{isAdminSession=(await online.call('adminStatus')).admin===true;}catch{}
+    }
   }else{
-    isAdminSession=false;adminData.selected=null;profile=localProfile;
-    if(page==='admin')page='home';if(!state)shell();
+    profile=localProfile;isAdminSession=false;adminData.selected=null;
   }
+  if(page==='admin'&&!isAdminSession)page='home';
+  if(!state)shell();
 }).catch(e=>toast('계정 서비스: '+e.message));
 
