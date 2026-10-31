@@ -9,16 +9,77 @@ function evolvedPortrait(svg,id,level){
   if(!stage)return svg;
   const rarity=TOWERS[id]?.rarity;
   if(rarity==='common'||rarity==='rare'){
-    const accent=rarity==='rare'?'#88c9df':'#b8c0b2';
-    // Practical kit progression, not crowns, wings or glowing magic on recruits.
-    let kit='<g stroke="#293b4f" stroke-linejoin="round" stroke-width="3">';
-    kit+='<path d="M72 106v41m45-41v41" fill="none" stroke="'+accent+'" stroke-width="6"/>';
-    kit+='<path d="M70 136h49v11H70Z" fill="#354d5b"/>';
-    if(level>=2)kit+='<path d="M60 105l-10 16 20 9 7-18m52-7 12 16-20 9-7-18" fill="'+accent+'"/>';
-    if(level>=3)kit+='<rect x="66" y="62" width="58" height="13" rx="5" fill="#243748" stroke="'+accent+'"/><path d="M76 67h37" stroke="#c5ecf3" stroke-width="3"/>';
-    if(level>=4)kit+='<path d="M69 126h51" fill="none" stroke="'+accent+'" stroke-width="5"/>';
-    // Rank bars encode every level, including the fifth and final stage.
-    for(let i=0;i<level;i++)kit+='<rect x="'+(67+i*12)+'" y="168" width="7" height="5" fill="'+accent+'"/>';
+    // Profession upgrades, not generic helmets/crowns/ballistic suits:
+    // these small changes are read as skill and equipment, not new heroes.
+    const muted=rarity==='rare'?'#b6c9c0':'#b5a28b',ink='#514f49';
+    const pieces={
+      scout:[
+        '<path d="M55 142l13-12 14 11-11 20Z" fill="#8c7759" stroke="'+ink+'" stroke-width="3"/>',
+        '<path d="M132 134l19-37m-12 4 21 32" stroke="'+muted+'" stroke-width="4" fill="none"/>',
+        '<path d="M66 111l-13 9 14 9" stroke="'+muted+'" stroke-width="3" fill="none"/>',
+        '<rect x="63" y="140" width="20" height="14" rx="3" fill="'+muted+'"/>',
+        '<path d="M132 86l13 10 17-9" stroke="'+muted+'" stroke-width="3" fill="none"/>'
+      ],
+      archer:[
+        '<path d="M42 109l-10 29 15 12 10-36Z" fill="'+ink+'" stroke="'+muted+'" stroke-width="2"/>',
+        '<path d="M36 112l6-22 3 22m-8 0 6-16" stroke="'+muted+'" stroke-width="2" fill="none"/>',
+        '<path d="M151 40q39 59-2 123" stroke="'+muted+'" stroke-width="3" fill="none"/>'
+      ],
+      chef:[
+        '<rect x="51" y="131" width="18" height="23" rx="3" fill="'+ink+'"/>',
+        '<circle cx="75" cy="140" r="7" fill="#7b875f" stroke="'+ink+'" stroke-width="2"/>'
+      ],
+      scrap:[
+        '<path d="M115 103l44-10 11 10-49 9Z" fill="'+muted+'" stroke="'+ink+'" stroke-width="3"/>',
+        '<rect x="20" y="132" width="28" height="21" rx="3" fill="'+muted+'" stroke="'+ink+'"/>',
+        '<circle cx="37" cy="172" r="9" fill="#7a7c72" stroke="'+ink+'" stroke-width="3"/>'
+      ],
+      soldier:[
+        '<path d="M51 120l-11 16 13 12 11-17Z" fill="'+muted+'" stroke="'+ink+'" stroke-width="3"/>',
+        '<circle cx="143" cy="123" r="11" fill="none" stroke="'+muted+'" stroke-width="4"/>',
+        '<rect x="55" y="111" width="11" height="21" rx="3" fill="'+ink+'"/>',
+        '<path d="M136 100l10-13 10 13" stroke="'+muted+'" stroke-width="3" fill="none"/>'
+      ],
+      blade:[
+        '<path d="M71 117l41 28" stroke="'+muted+'" stroke-width="4" fill="none"/>',
+        '<path d="M131 137l38-66" stroke="'+muted+'" stroke-width="4" fill="none"/>',
+        '<path d="M58 154l-9 26" stroke="'+ink+'" stroke-width="5" fill="none"/>',
+        '<path d="M70 155l44 0" stroke="'+muted+'" stroke-width="3" fill="none"/>'
+      ],
+      chemist:[
+        '<rect x="46" y="122" width="16" height="25" rx="2" fill="'+ink+'"/>',
+        '<circle cx="54" cy="137" r="7" fill="#bdd3a3"/>',
+        '<rect x="64" y="130" width="10" height="25" rx="2" fill="'+muted+'"/>',
+        '<path d="M150 107l9-14 9 13" stroke="'+muted+'" stroke-width="3" fill="none"/>'
+      ],
+      icewitch:[
+        '<path d="M60 98l-10 29 17-11" fill="'+muted+'" stroke="'+ink+'" stroke-width="2"/>',
+        '<path d="M148 92l-9-9 10-14" stroke="'+muted+'" stroke-width="3" fill="none"/>',
+        '<path d="M148 64l-10-7m12 7 8-9" stroke="'+muted+'" stroke-width="2" fill="none"/>'
+      ],
+      spirit:[
+        '<rect x="58" y="114" width="20" height="25" rx="4" fill="'+ink+'"/>',
+        '<path d="M132 60l-11-9 24-5" stroke="'+muted+'" stroke-width="3" fill="none"/>',
+        '<circle cx="154" cy="65" r="5" fill="'+muted+'"/>',
+        '<rect x="130" y="126" width="27" height="13" rx="3" fill="'+muted+'"/>'
+      ],
+      hunter:[
+        '<path d="M47 145l13-8 13 12-15 13Z" fill="'+muted+'" stroke="'+ink+'" stroke-width="3"/>',
+        '<rect x="131" y="91" width="27" height="8" rx="2" fill="'+ink+'"/>',
+        '<path d="M120 117l46-22" stroke="'+muted+'" stroke-width="3" fill="none"/>'
+      ],
+      marker:[
+        '<rect x="49" y="129" width="16" height="22" rx="3" fill="'+muted+'"/>',
+        '<path d="M164 67l15 10-15 11" fill="'+muted+'" stroke="'+ink+'" stroke-width="2"/>',
+        '<rect x="121" y="106" width="34" height="11" rx="3" fill="'+ink+'"/>',
+        '<path d="M141 123l12 30" stroke="'+muted+'" stroke-width="3" fill="none"/>'
+      ]
+    };
+    const steps=pieces[id]||[];
+    let kit='<g data-upgrade="practical" stroke-linejoin="round" stroke-linecap="round">';
+    for(let i=0;i<Math.min(level,steps.length);i++)kit+=steps[i];
+    // An unobtrusive rank stitched onto the trouser cuff rather than a crown.
+    for(let i=0;i<level;i++)kit+='<path d="M'+(66+i*8)+' 175v5" stroke="'+muted+'" stroke-width="3"/>';
     kit+='</g>';
     return svg.replace('</svg>',kit+'</svg>');
   }
