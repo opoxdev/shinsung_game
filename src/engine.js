@@ -139,7 +139,7 @@ function damage(s,e,n,t,ignoreArmor=false) {
   const team=Object.values(s.players).filter(p=>p.field===e.field);
   const reward=bounty(e.maxHp)/(team.length||1);
   team.forEach(p=>p.money+=reward);s.kills++;
-  event(s,{kind:'kill',x:e.x,y:e.y,field:e.field,color:ENEMIES[e.type].color});
+  event(s,{kind:'kill',x:e.x,y:e.y,field:e.field,type:e.type,color:ENEMIES[e.type].color,split:!!ENEMIES[e.type].onDeath,size:ENEMIES[e.type].size||12});
   const offspring=ENEMIES[e.type].onDeath||[];
   // Each new child is a normal enemy, once only, and starts at the parent's position.
   for(const [type,count] of offspring)for(let i=0;i<count&&s.enemies.length<350;i++){
