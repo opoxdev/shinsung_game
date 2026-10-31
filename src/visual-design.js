@@ -1,6 +1,7 @@
 import { TOWERS } from './data.js';
 // Original Shinsung Defense silhouettes. No recolor filters or reused event costumes.
-// All default shapes share a readable tactical language; high tiers use richer equipment.
+// Everyday/common and craft/rare portraits use modest civilian jobs.
+// Epic/legendary/mythic gain progressively unique silhouettes; no military-uniform template.
 const DESIGNS={
   scout:{"main":"#9c9d84","dark":"#554f4a","trim":"#c9a77c","helmet":"none","weapon":"slingshot","rig":"casual"},
   archer:{"main":"#84967a","dark":"#485a49","trim":"#d2b98b","helmet":"none","weapon":"bow","rig":"casual"},
