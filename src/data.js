@@ -1,5 +1,5 @@
 import { EVOLUTIONS } from './evolutions.js';
-export const VERSION = '0.6.0';
+export const VERSION = '0.7.0';
 export const WORLD = { width: 1800, height: 1100, road: 76 };
 export const RARITIES = {
   common: { name: '일반', color: '#a8b8b0' }, rare: { name: '희귀', color: '#65c8f3' },
@@ -151,16 +151,45 @@ export const DIFFICULTIES = [
   {id:'hell',name:'지옥',color:'#f47f9b',reward:1800,hp:1.5,waves:compileWaves(WAVE_SCRIPTS.hell,58,.68,210)},
   {id:'ruin',name:'파멸',color:'#b491ea',reward:3000,hp:1.8,waves:compileWaves(WAVE_SCRIPTS.ruin,60,.58,270)}
 ];
-// Cosmetic crates: transparent probabilities, duplicate refunds and a guaranteed
-// new item when an eligible owned tower still has an unowned skin after 10 misses.
+// Cosmetic rarity is independent from tower rarity and gameplay strength.
+// Probabilities belong to each crate, NOT to a global style pool.
+export const SKIN_RARITIES={
+  common:{name:'일반',color:'#c3d3cc'},
+  rare:{name:'희귀',color:'#65c8f3'},
+  epic:{name:'에픽',color:'#bf94ff'},
+  legendary:{name:'전설',color:'#ffc558'},
+  mythic:{name:'신화',color:'#ff6484'}
+};
 export const SKIN_STYLES={
-  arctic:{name:'눈꽃',rarity:'rare',color:'#a6edff',weight:65,refund:90},
-  neon:{name:'네온',rarity:'epic',color:'#f79eff',weight:28,refund:170},
-  royal:{name:'왕실',rarity:'legendary',color:'#ffe19a',weight:7,refund:320}
+  meadow:{name:'초록 산책',rarity:'common',color:'#9ae69e',refund:30},
+  arctic:{name:'눈꽃',rarity:'rare',color:'#a6edff',refund:90},
+  bloom:{name:'벚꽃',rarity:'rare',color:'#ffa6ca',refund:90},
+  circuit:{name:'회로',rarity:'rare',color:'#85f6ce',refund:95},
+  neon:{name:'네온',rarity:'epic',color:'#f79eff',refund:170},
+  frostfire:{name:'서리불꽃',rarity:'epic',color:'#8cbbff',refund:175},
+  starlight:{name:'별무리',rarity:'epic',color:'#cfadff',refund:185},
+  royal:{name:'왕실',rarity:'legendary',color:'#ffe19a',refund:320},
+  solstice:{name:'숲의 수호자',rarity:'legendary',color:'#b8ed86',refund:280},
+  hologram:{name:'홀로그램',rarity:'legendary',color:'#7dfaff',refund:335},
+  glacier:{name:'영원한 빙하',rarity:'mythic',color:'#a6efff',refund:440},
+  void:{name:'디지털 심연',rarity:'mythic',color:'#dc7aff',refund:540},
+  celestial:{name:'천상의 성운',rarity:'mythic',color:'#ffb7dc',refund:680}
 };
+// All 5 boxes use game-earned coins only. odds sum to exactly 100 for each.
+// A box chooses a style by its own published probability, then uniformly
+// chooses an owned tower. Skins never modify combat stats.
 export const CRATES={
-  wardrobe:{name:'반짝 의상 상자',price:240,description:'보유한 타워의 눈꽃·네온·왕실 스킨을 뽑습니다.',styles:['arctic','neon','royal']}
+  wardrobe:{name:'반짝 의상 상자',theme:'종합',price:240,icon:'🎁',color:'#c2b6ff',description:'클래식한 눈꽃·네온·왕실 의상을 만나는 기본 상자.',odds:{arctic:65,neon:28,royal:7}},
+  forest:{name:'비밀의 숲 상자',theme:'자연',price:160,icon:'🌿',color:'#9ce4a5',description:'싱그러운 초록빛부터 오래된 숲의 수호자까지.',odds:{meadow:70,bloom:25,solstice:5}},
+  winter:{name:'빙설 궁전 상자',theme:'눈과 얼음',price:300,icon:'❄️',color:'#9ce3ff',description:'차가운 눈꽃, 푸른 서리불꽃, 영원한 빙하.',odds:{arctic:65,frostfire:30,glacier:5}},
+  cyber:{name:'네온 연구소 상자',theme:'사이버',price:420,icon:'⚡',color:'#f4a5ff',description:'전기 회로와 홀로그램, 초희귀 디지털 심연.',odds:{circuit:55,neon:32,hologram:11,void:2}},
+  astral:{name:'천상의 별빛 상자',theme:'우주·왕실',price:780,icon:'🌌',color:'#ffd38e',description:'별빛 의상과 왕실 장식, 천상의 신화 스킨.',odds:{starlight:55,royal:30,celestial:13,void:2}}
 };
+for(const [id,crate] of Object.entries(CRATES)){
+  crate.styles=Object.keys(crate.odds);
+  if(Object.values(crate.odds).reduce((a,b)=>a+b,0)!==100)throw Error('상자 확률 합계 오류: '+id);
+  for(const style of crate.styles)if(!Object.hasOwn(SKIN_STYLES,style))throw Error('상자 스킨 미등록: '+style);
+}
 export function starterProfile(name='새로운 모험가') {
-  return { name, coins:600, xp:0, wins:0, owned:['scout','blade'], loadout:['scout','blade'], packs:['basic'], pack:'basic', skins:{}, equippedSkins:{}, cratePity:0, lastCrate:null, schema:1 };
+  return { name, coins:600, xp:0, wins:0, owned:['scout','blade'], loadout:['scout','blade'], packs:['basic'], pack:'basic', skins:{}, equippedSkins:{}, cratePity:0, cratePities:{wardrobe:0,forest:0,winter:0,cyber:0,astral:0}, lastCrate:null, schema:2 };
 }
