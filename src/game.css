@@ -103,3 +103,7 @@ body{background:#15203d;color:var(--text)}button{border:2px solid #101a35;border
 @keyframes crateReveal{from{opacity:0;transform:translateY(28px) scale(.8)}to{opacity:1;transform:none}}
 @media(max-width:740px){.crate-hero{grid-template-columns:1fr}.crate-visual{min-height:150px}.crate-icon{font-size:78px}.pack-card .monster-roster{grid-template-columns:repeat(2,minmax(0,1fr))}.evo-upgrade-layout{grid-template-columns:74px 1fr}.evo-item-art{width:74px;height:84px}.evo-item-art svg{width:68px}}
 @media(prefers-reduced-motion:reduce){.crate-icon,.crate-glow,.crate-result{animation:none!important}}
+
+/* Touch-friendly battlefield: gesture ownership stays with the battle canvas. */
+#battlefield{touch-action:none;user-select:none;-webkit-user-select:none}
+@media(max-width:800px){.battle-tools button[data-action='cancelPlace']{min-width:55px;padding:8px 10px;font-weight:700}.battle-hints>span:not(#connection-status){display:none}.wave-intel{max-width:200px}.battle-bottom{gap:5px}}
