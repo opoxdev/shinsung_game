@@ -101,7 +101,8 @@ export async function adminAction(db,user,action,p={},helpers={}){
   if(['grantTower','revokeTower'].includes(operation)&&!Object.hasOwn(Core.TOWERS,tower))throw Error('존재하지 않는 타워입니다.');
   const reason=String(p.reason||'').trim().slice(0,120);
   // Must exist already: administrative actions never silently create accounts.
-  await existingProfile(db,uid);
+  const original=await existingProfile(db,uid);
+  const oldRoom=JSON.parse(original.profile_json).activeRoom;
   const target={uid,name:'admin-target'};
   const updated=await updateProfile(db,target,profile=>{
     if(!Array.isArray(profile.owned)||!Array.isArray(profile.loadout))throw Error('계정 보유 데이터가 잘못되었습니다.');
@@ -123,7 +124,7 @@ export async function adminAction(db,user,action,p={},helpers={}){
     }else if(operation==='grantAllSelf'){
       profile.owned=Array.from(new Set([...profile.owned,...Object.keys(Core.TOWERS)]));
     }else if(operation==='ban'){
-      profile.banned=true;profile.banReason=reason||'운영 정책 위반';
+      profile.banned=true;profile.banReason=reason||'운영 정책 위반';delete profile.activeRoom;
     }else if(operation==='unban'){
       profile.banned=false;delete profile.banReason;
     }
@@ -137,8 +138,8 @@ export async function adminAction(db,user,action,p={},helpers={}){
   try{await audit(db,user.uid,uid,operation,detail);}
   catch(e){auditWarning='감사 기록 저장에 실패했습니다. 운영 로그를 확인하세요.';console.error('Admin audit failed',e);}
   let kickWarning=null;
-  if(operation==='ban'&&updated.activeRoom&&helpers.kick){
-    try{await helpers.kick(updated.activeRoom,uid);}
+  if(operation==='ban'&&oldRoom&&helpers.kick){
+    try{await helpers.kick(oldRoom,uid);}
     catch(e){kickWarning='현재 게임방에서 강제 퇴장에 실패했습니다. 재접속은 제한됩니다.';console.error('Admin kick failed',e);}
   }
   return {profile:publicProfile({uid,value:updated}),auditWarning,kickWarning};
