@@ -59,6 +59,12 @@ try{
   await page.setViewportSize({width:390,height:760});
   const storyBounds=await page.locator('#story-overlay').boundingBox();
   assert.ok(storyBounds&&storyBounds.x>=0&&storyBounds.x+storyBounds.width<=390,'story overlay fits on mobile');
+  await page.click('[data-action="battleMenu"]');
+  await page.click('[data-action="leave"]');
+  assert.match(await page.locator('.story-preview').textContent(),/기록 1 \/ 6/);
+  await page.click('[data-action="storyGuide"]');
+  assert.equal(await page.locator('.story-chapter-step.unlocked').count(),1,'chapter remains unlocked on return to lobby');
+  await page.click('[data-action="close"]');
   assert.deepEqual(errors,[],'Uncaught browser errors: '+errors.join('; '));
   console.log('Browser smoke passed: six-story lobby, journal, dialogue controls, mobile overlay, PvP/co-op, shop and wave clock.');
 }finally{await browser.close();}
