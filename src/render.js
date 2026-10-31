@@ -5,11 +5,28 @@ import { makeTerrain } from './terrain.js';
 import { TERRAIN_MARGIN, constrainCamera } from './presentation.js';
 export const portrait=character;
 export { landscape } from './art.js';
+// Aim is a continuous world-space angle, not a 4/8-direction sprite choice.
 export function drawMelee(g,e,age){
-  const dx=(e.tx??e.x)-e.x,dy=(e.ty??e.y)-e.y,angle=Math.atan2(dy,dx);
-  const reach=Math.max(24,Math.hypot(dx,dy)),radius=12+Math.min(1,age/.28)*(reach-12);
-  g.lineWidth=e.type==='knight'?9:7;g.beginPath();
-  g.arc(e.x,e.y,radius,angle-1.45,angle+1.45);g.stroke();
+  const dx=(e.tx??e.x)-e.x,dy=(e.ty??e.y)-e.y;
+  const angle=Math.atan2(dy,dx),distance=Math.hypot(dx,dy);
+  const reach=20+(Math.max(24,distance)-20)*Math.min(1,Math.max(0,age/.17));
+  const halfWidth=Math.min(43,Math.max(18,distance*.31));
+  g.save();g.translate(e.x,e.y);g.rotate(angle);
+  g.lineJoin='round';g.lineCap='round';
+  g.fillStyle=e.type==='blade'?'#ffb6d3':e.type==='knight'?'#d2c6ff':'#e8f8ff';
+  g.strokeStyle=e.type==='blade'?'#ff648b':e.type==='knight'?'#a6a6ff':'#b0ecff';
+  g.lineWidth=e.type==='knight'?5:3;
+  // A directional sword wave, transformed toward the actual enemy position.
+  g.beginPath();g.moveTo(14,-halfWidth*.28);
+  g.quadraticCurveTo(reach*.48,-halfWidth*1.12,reach+8,-halfWidth*.27);
+  g.quadraticCurveTo(reach+halfWidth*.39,0,reach+8,halfWidth*.27);
+  g.quadraticCurveTo(reach*.48,halfWidth*1.12,14,halfWidth*.28);
+  g.quadraticCurveTo(reach*.26,0,14,-halfWidth*.28);
+  g.closePath();g.fill();g.stroke();
+  g.strokeStyle='#ffffff';g.lineWidth=2;g.beginPath();
+  g.moveTo(21,-halfWidth*.2);
+  g.quadraticCurveTo(reach*.6,-halfWidth*.71,reach+6,-halfWidth*.12);
+  g.stroke();g.restore();
 }
 const sprites=new Map();
 function sprite(id,skin,level=0){const key=id+'|'+skin+'|'+level;if(!sprites.has(key)){const img=new Image();img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(character(id,skin,level));sprites.set(key,img);}return sprites.get(key);}
@@ -110,7 +127,14 @@ export class Renderer {
       g.fillStyle='#fcceff';g.font='bold 20px sans-serif';g.fillText('⚡',-10,-54);
     }
     const img=sprite(t.type,t.skin||'default',lev),size=75+lev*3,bob=Math.sin(time*(t.type==='sonic'?5:2)+t.x)*1.6;
-    if(img.complete&&img.naturalWidth)g.drawImage(img,-size*.5,-size*.87+bob,size,size*210/180);
+    if(img.complete&&img.naturalWidth){
+      // Keep the character upright while facing left/right toward its target.
+      // The sword wave above follows the precise full-circle attack angle.
+      const mirror=stats.kind==='melee'&&Number.isFinite(t.angle)&&Math.cos(t.angle)<-1e-6;
+      if(mirror){g.save();g.scale(-1,1);}
+      g.drawImage(img,-size*.5,-size*.87+bob,size,size*210/180);
+      if(mirror)g.restore();
+    }
     g.fillStyle='#ffe892';for(let i=0;i<lev;i++)g.fillRect(-8+i*7,25,4,4);g.restore();
   }
   summon(g,u,time){
