@@ -17,6 +17,8 @@ function evolvedPortrait(svg,id,level){
     if(level>=2)kit+='<path d="M60 105l-10 16 20 9 7-18m52-7 12 16-20 9-7-18" fill="'+accent+'"/>';
     if(level>=3)kit+='<rect x="66" y="62" width="58" height="13" rx="5" fill="#243748" stroke="'+accent+'"/><path d="M76 67h37" stroke="#c5ecf3" stroke-width="3"/>';
     if(level>=4)kit+='<path d="M69 126h51" fill="none" stroke="'+accent+'" stroke-width="5"/>';
+    // Rank bars encode every level, including the fifth and final stage.
+    for(let i=0;i<level;i++)kit+='<rect x="'+(67+i*12)+'" y="168" width="7" height="5" fill="'+accent+'"/>';
     kit+='</g>';
     return svg.replace('</svg>',kit+'</svg>');
   }
