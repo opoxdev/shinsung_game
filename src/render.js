@@ -41,16 +41,18 @@ export function enemyUnderCursor(enemies,point,scale=1){
   }
   return closest;
 }
+// Adaptive raster scale cuts high-DPI fill/shadow workload on small devices.
+const canvasDpr=()=>Math.min(devicePixelRatio||1,window.innerWidth<700?1.2:1.4);
 export class Renderer {
   constructor(canvas){this.canvas=canvas;this.ctx=canvas.getContext('2d',{alpha:false});this.cache=new Map();this.camera={x:900,y:550,zoom:1};this.keys=new Set();this.pointer=null;this.pointerScreen=null;this.preview=null;this.selected=null;this.width=1;this.height=1;this.resize();this.observer=new ResizeObserver(()=>this.resize());this.observer.observe(canvas);}
   dispose(){this.observer.disconnect();this.cache.clear();this.keys.clear();}
-  resize(){const r=this.canvas.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,1.5);this.width=Math.max(1,r.width);this.height=Math.max(1,r.height);if(this.canvas.width!==Math.round(this.width*dpr)||this.canvas.height!==Math.round(this.height*dpr)){this.canvas.width=Math.round(this.width*dpr);this.canvas.height=Math.round(this.height*dpr);}this.dpr=dpr;}
+  resize(){const r=this.canvas.getBoundingClientRect(),dpr=canvasDpr();this.width=Math.max(1,r.width);this.height=Math.max(1,r.height);if(this.canvas.width!==Math.round(this.width*dpr)||this.canvas.height!==Math.round(this.height*dpr)){this.canvas.width=Math.round(this.width*dpr);this.canvas.height=Math.round(this.height*dpr);}this.dpr=dpr;}
   zoomBy(factor){this.camera.zoom*=factor;this.scale=constrainCamera(this.camera,this.width,this.height,this.fields||1);}
   visible(x,y,pad=100){return Math.abs(x-this.camera.x)<this.width/(2*this.scale)+pad&&Math.abs(y-this.camera.y)<this.height/(2*this.scale)+pad;}
   screenToWorld(x,y){const scale=this.scale||1;return {x:(x-this.width/2)/scale+this.camera.x,y:(y-this.height/2)/scale+this.camera.y};}
   enemyAt(state,screen){return enemyUnderCursor(state?.enemies||[],this.screenToWorld(screen.x,screen.y),this.scale||1);}
   frame(state,mapId,playerId,dt,now,lobby=false){
-    if(this.dpr!==Math.min(devicePixelRatio||1,1.5))this.resize();const g=this.ctx;g.setTransform(this.dpr,0,0,this.dpr,0,0);
+    if(this.dpr!==canvasDpr())this.resize();const g=this.ctx;g.setTransform(this.dpr,0,0,this.dpr,0,0);
     const map=MAPS.find(m=>m.id===mapId)||MAPS[0],field=state?.players[playerId]?.field||0;
     this.fields=state?.fields.length||1;
     g.fillStyle=map.ground;g.fillRect(0,0,this.width,this.height);
