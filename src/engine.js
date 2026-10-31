@@ -140,16 +140,19 @@ function damage(s,e,n,t,ignoreArmor=false) {
   if(absorbed>0)e.shield-=absorbed;
   const hpLoss=Math.min(e.hp,Math.max(0,value-absorbed));
   if(hpLoss>0)e.hp-=hpLoss;
-  const actual=hpLoss+absorbed;
-  // DoT can tick 20 times per second per enemy; aggregate its damage labels
-  // over 250 ms while retaining the exact authoritative HP calculation.
+  // HP is correctly capped at zero, but floating damage numbers must show the
+  // complete effective hit (after armor/mark), NEVER the target's remaining HP.
+  // For example 10 damage against 1 HP displays 10, not 1.
+  const displayedDamage=Math.max(0,value);
+  // Aggregate poison DoT labels over 250ms; the health calculation above
+  // remains authoritative and is not affected by presentation overkill.
   if(ignoreArmor){
-    e.dotFloat=(e.dotFloat||0)+actual;
+    e.dotFloat=(e.dotFloat||0)+displayedDamage;
     if(s.time-(e.lastDotFloatAt??-1)>=.25||e.hp<=0){
       if(e.dotFloat>0)event(s,{kind:'damage',x:e.x,y:e.y,field:e.field,type:e.type,amount:e.dotFloat,dot:true});
       e.dotFloat=0;e.lastDotFloatAt=s.time;
     }
-  }else if(actual>0)event(s,{kind:'damage',x:e.x,y:e.y,field:e.field,type:e.type,amount:actual,shield:absorbed>0});
+  }else if(displayedDamage>0)event(s,{kind:'damage',x:e.x,y:e.y,field:e.field,type:e.type,amount:displayedDamage,shield:absorbed>0});
   if(e.hp>0)return;
   e.hp=0;
   const team=Object.values(s.players).filter(p=>p.field===e.field);
