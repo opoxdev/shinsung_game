@@ -19,7 +19,7 @@ test('all thirty baseline characters have unique v2 tactical or advanced silhoue
     assert.ok(plain.includes('data-base="'+id+'"'),id);
     assert.ok(plain.includes('</svg>'),id);
     assert.ok(!plain.includes('style="filter:'),'No recolor filter allowed: '+id);
-    assert.ok(pathGeometry(plain).length>100,id);
+    assert.ok((plain.match(/<(path|rect|ellipse|circle)\\b/g)||[]).length>=7,id);
     portraits.add(pathGeometry(plain));
   }
   assert.equal(portraits.size,ids.length,'Different towers must have distinct body/weapon geometry');
