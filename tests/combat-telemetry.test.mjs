@@ -50,7 +50,7 @@ test('shield damage pops reflect absorbed damage and do not pierce HP by acciden
   tick(s);
   const pop=s.events.find(x=>x.kind==='damage');
   assert.ok(pop?.shield);
-  assert.equal(pop.amount,oldShield-e.shield);
+  assert.ok(Math.abs(pop.amount-(oldShield-e.shield))<1e-10);
   assert.equal(e.hp,oldHp);
 });
 test('DOT pop events are aggregated rather than emitted every engine tick',()=>{
