@@ -92,6 +92,13 @@ function expansionPortrait(id,skin){
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 210" aria-hidden="true"><ellipse cx="92" cy="191" rx="57" ry="11" fill="#142b4a" opacity=".25"/><g stroke-linejoin="round" stroke-linecap="round"><path d="M67 139L58 184 82 183 93 149 108 185 130 182 119 138Z" fill="${shade}" stroke="#263655" stroke-width="5"/><path d="M70 93L48 116 58 143 72 127 67 163 120 161 118 125 137 143 145 113 117 91Z" fill="${coat}" stroke="#253e60" stroke-width="5"/><path d="M78 113L108 113M87 132h18" stroke="${trim}" stroke-width="6"/><path d="M62 64Q59 30 94 29Q129 30 126 66L121 94 69 92Z" fill="${hat==='robot'?'#84cad1':'#f8d5af'}" stroke="#324568" stroke-width="5"/><path d="M77 76h8m22 0h8" stroke="#283e54" stroke-width="6"/><path d="M89 89q6 5 12 0" fill="none" stroke="#c48d83" stroke-width="3"/>${headgear[hat]}${items[id]}</g></svg>`;
 }
 
+// Cosmetic skins recolor existing character artwork without altering gameplay.
+function cosmeticPortrait(svg,skin){
+  if(!['neon','royal'].includes(skin))return svg;
+  const tint=skin==='neon'?'hue-rotate(145deg) saturate(1.5)':'sepia(.65) saturate(1.8) hue-rotate(340deg)';
+  const aura=skin==='neon'?'#fe8aff':'#ffe3a1';
+  return svg.replace('<svg ',`<svg style="filter:${tint}" `).replace('</svg>',`<g fill="none" stroke="${aura}" stroke-width="2.6"><ellipse cx="92" cy="107" rx="75" ry="89" stroke-dasharray="10 13" opacity=".85"/></g></svg>`);
+}
 export function character(id,skin='default',level=0) {
   const expanded=expansionPortrait(id,skin);if(expanded)return evolvedPortrait(expanded,id,level);
   const white=skin==='arctic';
@@ -108,7 +115,7 @@ export function character(id,skin='default',level=0) {
     rail:`<path d="M69 101L42 174 80 168 93 189 107 168 141 175 116 98Z" fill="${white?'#d5f1ff':'#508dce'}"/><path d="M84 110L70 170 93 181 113 171 99 110Z" fill="#bbebff"/><path d="M67 65q-6-21 26-24 32 1 28 24l-9 27H76Z" fill="#31375e"/><path d="M76 71h10m16 0h10" stroke="#c6ffff" stroke-width="5"/><path d="M43 62L72 45 95 5 120 43 143 59 97 71Z" fill="#5c97e0"/><path d="M96 8L101 49 121 44Z" fill="#a7ceff"/><path d="M77 44L124 45" stroke="#ffe193" stroke-width="8"/><path d="M141 94l7-17 7 17 18 4-15 10 2 18-15-10-16 8 5-18-14-10Z" fill="#ffeaa1"/><path d="M54 121Q12 95 30 67" fill="none" stroke="#98e9ff" stroke-width="6"/><path d="M18 57l12-9 12 12-10 13Z" fill="#c8fbff"/><circle cx="54" cy="153" r="5" fill="#ffe699"/>`,
     sonic:`<path d="M66 143L52 178 76 186 93 152 109 181 136 171 115 138" fill="#302d68"/><path d="M50 174l29 9-6 12-36-7Zm59 2 28-10 12 11-36 14" fill="#5ff4ed"/><path d="M66 96L43 116 54 132 74 122 71 150 118 145 112 118 138 127 146 109 114 95Z" fill="${white?'#e2f6ff':'#ff64c4'}"/>${head('#f1efff')}<path d="M59 65Q52 26 91 24Q129 23 127 66" fill="none" stroke="#52f5ed" stroke-width="10"/><rect x="53" y="57" width="15" height="29" rx="5" fill="#ff8bda"/><rect x="118" y="56" width="15" height="29" rx="5" fill="#ff8bda"/><path d="M78 110l14 11 18-17-15 30Z" fill="#fff393"/><circle cx="147" cy="136" r="23" fill="#303464"/><circle cx="147" cy="136" r="14" fill="#62f7e5"/><circle cx="147" cy="136" r="6" fill="#41426d"/><path d="M28 49v30m-8-22v14m16-20v25" stroke="#f893ed" stroke-width="5"/>`
   };
-  return cosmeticPortrait(evolvedPortrait(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 210" aria-hidden="true"><ellipse cx="93" cy="193" rx="62" ry="12" fill="#101738" opacity=".3"/><g stroke="${ink}" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">${bodies[id]||bodies.scout}</g></svg>`,id,level);
+  return cosmeticPortrait(evolvedPortrait(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 210" aria-hidden="true"><ellipse cx="93" cy="193" rx="62" ry="12" fill="#101738" opacity=".3"/><g stroke="${ink}" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">${bodies[id]||bodies.scout}</g></svg>`,id,level),skin);
 }
 // Pack portraits reuse battle enemy silhouettes, colors, armor, shields and features.
 export function monsterPortrait(type){
