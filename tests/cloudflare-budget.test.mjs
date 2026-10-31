@@ -85,7 +85,7 @@ test('room storage writes are throttled while command responses remain immediate
     await game.action('pulse',{},alice);
   }
   assert.equal(counters.writes,before,'no repeated DO storage writes during same wave and save window');
-  const response=await game.action('command',{command:{kind:'skip',seq:1}},alice);
+  const response=await game.action('command',{command:{kind:'place',type:'scout',x:250,y:440,seq:1}},alice);
   assert.equal(response.ok,true);
   assert.ok(counters.writes>before,'mutating commands must be persisted immediately');
 });
