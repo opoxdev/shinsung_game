@@ -363,11 +363,15 @@ async function openRoom(code){
       if(!$('#battlefield'))beginGame();
       else{updateHud();inspector();}
     }else modal(waitingRoomMarkup(code,r,online.user.uid));
-  },e=>toast('실시간 연결: '+e.message));
+  },e=>{
+    toast('실시간 연결: '+e.message);
+    const status=$('.mm-waiting .mm-state');
+    if(status)status.innerHTML='<b>실시간 서버 연결을 확인해 주세요</b><p>'+esc(e.message)+'</p><button data-action="resumeRoom">다시 연결 ↻</button>';
+  });
 }
 async function pulse(now){if(!isOnlineMatch||!room||onlineBusy||now-lastPulse<2000||state?.status!=='playing')return;if(room.host!==playerId&&now-lastSnapshot<6500)return;lastPulse=now;onlineBusy=true;try{await online.call('pulse',{code:room.code});}catch(e){toast('동기화: '+e.message);}finally{onlineBusy=false;}}
 const actions={
-  noop(){},close(){if(!state)resetRenderer();closeModal();},account,help,
+  noop(){},close(){if(room&&!state)return actions.leaveRoom();if(!state)resetRenderer();closeModal();},account,help,
   mapPreview(){modal('<h2>'+MAPS.find(m=>m.id===config.map).name+'</h2><canvas id="world" class="terrain-preview" aria-label="실제 전투 맵"></canvas><p>빛나는 분홍 입구에서 시작해 파란 출구로 향합니다.</p>');resetRenderer();renderer=new Renderer($('#world'));},
   nav(id){page=id;config.type='solo';shell();},setCollectionTab(id){if(!['towers','packs'].includes(id))return;collectionTab=id;collection();},previewPack(id){if(!Object.hasOwn(PACKS,id))return;selectedPack=id;collection();},visitPackShop(id){if(!Object.hasOwn(PACKS,id))return;shopTab='packs';page='shop';shell();},map(id){config.map=id;home();},difficulty(id){config.difficulty=id;home();},mode(id){config.modes=config.modes.includes(id)?config.modes.filter(x=>x!==id):[...config.modes,id];home();},
   inspect(id){selectedTower=id;page='towers';collectionTab='towers';shell();},equip(id){mutate({kind:'equip',id});},shopTab(id){shopTab=id;shop();},buyTower(id){mutate({kind:'buyTower',id});},buyPack(id){mutate({kind:'buyPack',id});},pack(id){mutate({kind:'pack',id});},
