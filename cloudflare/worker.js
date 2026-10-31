@@ -2,6 +2,7 @@ import {authenticate} from './auth.js';
 import {getProfile,updateProfile,claimProfile} from './profile.js';
 import {GameRoom} from './room.js';
 import {Core} from '../dist/cloudflare/core.js';
+import {isAdmin,adminAction,assertActiveProfile} from './admin.js';
 export {GameRoom};
 const response=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json;charset=utf-8','cache-control':'no-store','access-control-allow-origin':'*'}});
 const cors={'access-control-allow-origin':'*','access-control-allow-methods':'POST,GET,OPTIONS','access-control-allow-headers':'authorization,content-type','access-control-max-age':'600'};
@@ -20,6 +21,16 @@ async function callRoom(env,code,action,payload,user){
 }
 async function applyAction(env,action,p,user){
   const db=env.DB;
+  if(action==='adminStatus')return {admin:isAdmin(user),emailVerified:user.emailVerified===true};
+  if(action.startsWith('admin')){
+    return adminAction(db,user,action,p,{
+      listRooms:()=>listRooms(env),
+      kick:(code,uid)=>callRoom(env,code,'adminKick',{uid},{uid:user.uid,admin:true})
+    });
+  }
+  // A ban applies to all regular HTTP APIs (including reward claims, room
+  // creation and tickets). Existing WebSockets are removed by adminKick.
+  await assertActiveProfile(db,user);
   if(action==='profile')return (await getProfile(db,user)).value;
   if(action==='listRooms')return listRooms(env);
   if(action==='diagnostic')return {name:(await getProfile(db,user)).value.name,serverTime:new Date().toISOString(),services:['Firebase Auth','Cloudflare Worker','D1','Durable Objects']};
@@ -71,7 +82,7 @@ async function applyAction(env,action,p,user){
 export default {
   async fetch(request,env){
     const url=new URL(request.url);
-    if(url.pathname==='/health')return response({ok:true,service:'shinsung-cloudflare',version:'0.9.3'});
+    if(url.pathname==='/health')return response({ok:true,service:'shinsung-cloudflare',version:'0.9.4'});
     // Browsing rooms is public; mutating a lobby still requires Firebase auth.
     if(url.pathname==='/rooms'&&request.method==='GET'){
       const mode=url.searchParams.get('mode');
