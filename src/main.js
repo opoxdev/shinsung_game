@@ -9,7 +9,7 @@ import { matchmakingMarkup, matchmakingCards, waitingRoomMarkup } from './matchm
 import {adminPageMarkup} from './admin-panel.js';
 import {visualPrediction} from './online-prediction.js';
 import {STORIES,sceneForWave,storySceneIndex,storyPreviewMarkup,storyGuideMarkup,dialogueMarkup,storyProgress} from './story.js';
-import {loadClientProfile,saveClientProfile,multiplayerLoadout,validProfile} from './client-profile.js';
+import {loadClientProfile,saveClientProfile,multiplayerLoadout,validProfile,exportSave,importSave} from './client-profile.js';
 const $=s=>document.querySelector(s), app=$('#app'), online=new Online();
 const fmt=n=>Math.floor(n).toLocaleString('ko-KR');
 const fmtHp=n=>Number.isFinite(n)?Number(Math.max(0,n).toFixed(Math.abs(n)<10?1:0)).toLocaleString('ko-KR'):'0';
@@ -121,7 +121,7 @@ function profileBar(){return `<div class="identity"><div class="insignia">S<span
 function loadout(inGame=false){return Array.from({length:5},(_,i)=>{const id=(inGame?state.players[playerId].loadout:profile.loadout)[i];return id?`<button class="loadout-slot ${placement===id?'selected':''}" data-action="${inGame?'selectPlace':'inspect'}" data-id="${id}" style="--rarity:${RARITIES[TOWERS[id].rarity].color}"><span class="slot-number">0${i+1}</span>${portrait(id,profile.equippedSkins[id])}<span class="slot-name">${TOWERS[id].name}</span><strong>₩ ${TOWERS[id].cost}</strong></button>`:`<button class="loadout-slot empty" data-action="${inGame?'noop':'nav'}" data-id="towers"><span class="slot-number">0${i+1}</span><span>＋</span><small>빈 슬롯</small></button>`;}).join('');}
 function shell(){
   const restore=preserveScroll();
-  app.innerHTML=`<div class="shell"><header class="topbar"><a class="brand" href="#" data-action="nav" data-id="home"><span class="brand-symbol">S</span><div>신성 디펜스<small>SHINSUNG DEFENSE</small></div></a><div class="build-label">ALPHA <span>01</span></div><div class="profilebar">${profileBar()}</div></header><aside class="sidebar"><div class="nav-caption">PLAY</div>${['home','towers','shop'].map(id=>`<button class="nav-item ${page===id?'active':''}" data-action="nav" data-id="${id}"><span>${icons[id]}</span>${{home:'로비',towers:'타워 구성',shop:'상점'}[id]}<i>›</i></button>`).join('')}<div class="nav-caption second">친구들과 더 재미있게</div><button class="nav-item" data-action="pvp"><span>⚔</span>대전 · PVP<i>›</i></button><button class="nav-item" data-action="coop"><span>♟</span>친구와 함께<i>›</i></button><button class="nav-item" data-action="events"><span>✧</span>도전 과제<i>›</i></button>${isAdminSession?`<div class="nav-caption second">ADMIN</div><button class="nav-item ${page==='admin'?'active':''}" data-action="adminOpen"><span>⚙</span>관리자 패널<i>›</i></button>`:''}<div class="sidebar-bottom"><span class="status-dot"></span>${online.user?'ONLINE ACCOUNT':'LOCAL PLAY'}<small>모으고, 키우고,<br>함께 지켜내자!</small><button data-action="help">조작 안내 <span>?</span></button></div></aside><main class="content" id="content"></main><footer class="loadout-bar"><div class="loadout-label"><span>MY TEAM</span><b>내 팀</b><small>${profile.loadout.length} / 5 SLOTS</small></div><div class="loadout-slots">${loadout()}</div><div class="footer-note">진행도는 이 브라우저에 저장됩니다.<br><span>BUILD 0.9.8 · OFFLINE-FIRST</span></div></footer></div>`;
+  app.innerHTML=`<div class="shell"><header class="topbar"><a class="brand" href="#" data-action="nav" data-id="home"><span class="brand-symbol">S</span><div>신성 디펜스<small>SHINSUNG DEFENSE</small></div></a><div class="build-label">ALPHA <span>01</span></div><div class="profilebar">${profileBar()}</div></header><aside class="sidebar"><div class="nav-caption">PLAY</div>${['home','towers','shop'].map(id=>`<button class="nav-item ${page===id?'active':''}" data-action="nav" data-id="${id}"><span>${icons[id]}</span>${{home:'로비',towers:'타워 구성',shop:'상점'}[id]}<i>›</i></button>`).join('')}<div class="nav-caption second">친구들과 더 재미있게</div><button class="nav-item" data-action="pvp"><span>⚔</span>대전 · PVP<i>›</i></button><button class="nav-item" data-action="coop"><span>♟</span>친구와 함께<i>›</i></button><button class="nav-item" data-action="events"><span>✧</span>도전 과제<i>›</i></button>${isAdminSession?`<div class="nav-caption second">ADMIN</div><button class="nav-item ${page==='admin'?'active':''}" data-action="adminOpen"><span>⚙</span>관리자 패널<i>›</i></button>`:''}<div class="sidebar-bottom"><span class="status-dot"></span>${online.user?'ONLINE ACCOUNT':'LOCAL PLAY'}<small>모으고, 키우고,<br>함께 지켜내자!</small><button data-action="backupMenu">진행도 백업 ↧</button><button data-action="help">조작 안내 <span>?</span></button></div></aside><main class="content" id="content"></main><footer class="loadout-bar"><div class="loadout-label"><span>MY TEAM</span><b>내 팀</b><small>${profile.loadout.length} / 5 SLOTS</small></div><div class="loadout-slots">${loadout()}</div><div class="footer-note">진행도는 이 브라우저에 저장됩니다.<br><span>BUILD 0.9.8 · OFFLINE-FIRST</span></div></footer></div>`;
   if(page==='home')home();else if(page==='towers')collection();else if(page==='admin'&&isAdminSession)adminRender();else shop();
   restore();
 }
@@ -580,6 +580,18 @@ const actions={
   selectPlace:selectPlacement,cancelPlace(){selectPlacement(null);},skip(){sendCommand({kind:'skip'});},send(id){sendCommand({kind:'send',type:id});},upgrade(){sendCommand({kind:'upgrade',id:renderer.selected});},sell(){sendCommand({kind:'sell',id:renderer.selected});},target(){const t=state.towers.find(t=>t.id===renderer.selected),targets=['first','strong','near'];if(t)sendCommand({kind:'target',id:t.id,target:targets[(targets.indexOf(t.target)+1)%3]});},battleMenu,leave,
   zoomIn(){renderer.zoomBy(1.2);},zoomOut(){renderer.zoomBy(1/1.2);},zoomReset(){renderer.camera={x:900+state.players[playerId].field*2100,y:550,zoom:1.18};},field(){renderer.camera.x=renderer.camera.x<1800?3000:900;},
   async diagnostic(){try{const result=await online.call('diagnostic');modal(`<span class="eyebrow">ONLINE CHECK</span><h2>서버 연결 정상</h2><p>Firebase 인증 ✓ · Cloudflare Worker 통신 ✓ · D1 프로필 읽기 ✓</p><p>계정: ${esc(result.name)} · 서버 시간: ${esc(result.serverTime)}</p><p>실시간 대전 확인은 별도 계정 두 개로 방에 입장해 점검하세요.</p><button class="primary wide" data-action="close">확인</button>`);}catch(e){toast('연결 진단 실패: '+e.message);}},
+  backupMenu(){
+    modal('<span class="eyebrow">OFFLINE ACCOUNT SAVE</span><h2>기기 진행도 백업·복원</h2><p>솔로 보상, 코인, 장착 타워와 상점 구매 기록은 이 브라우저에 저장됩니다. 기기 변경이나 브라우저 데이터 삭제에 대비해 백업 파일을 보관하세요.</p><button class="primary wide" data-action="exportProgress">진행도 파일 저장 (JSON)</button><label>기존 백업 파일 복원<input type="file" id="restore-progress" accept=".json,application/json" /></label><p>복원은 현재 사용 중인 계정의 기기 진행도를 덮어씁니다. 서버에는 전송되지 않습니다.</p>');
+  },
+  exportProgress(){
+    try{
+      const blob=new Blob([exportSave(profile)],{type:'application/json'});
+      const url=URL.createObjectURL(blob),a=document.createElement('a');
+      a.href=url;a.download='shinsung-save-'+new Date().toISOString().slice(0,10)+'.json';
+      document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+      toast('진행도 백업 파일을 저장했습니다.');
+    }catch(e){toast('백업 실패: '+e.message);}
+  },
   async importLegacyProfile(){
     if(!online.user||!window.confirm('기존 Cloudflare 프로필을 한 번 조회해 현재 기기 프로필에 보유 타워와 코인·경험치를 병합합니다. 이 버튼을 누른 경우에만 서버에 접속합니다. 계속할까요?'))return;
     try{
@@ -646,7 +658,19 @@ const actions={
 };
 document.addEventListener('click',async e=>{const b=e.target.closest('[data-action]');if(!b||b.disabled)return;e.preventDefault();try{await actions[b.dataset.action]?.(b.dataset.id);}catch(err){toast(err.message);}});
 document.addEventListener('input',e=>{if(e.target.id==='tower-search'){const pos=e.target.selectionStart;filter=e.target.value;collection();$('#tower-search').focus({preventScroll:true});$('#tower-search').setSelectionRange(pos,pos);}});
-document.addEventListener('change',e=>{if(e.target.id==='rarity-filter'){rarityFilter=e.target.value;collection();}else if(e.target.id==='lobby-map'&&MAPS.some(m=>m.id===e.target.value)){config.map=e.target.value;}else if(e.target.id==='lobby-difficulty'&&DIFFICULTIES.some(d=>d.id===e.target.value)){config.difficulty=e.target.value;}});
+document.addEventListener('change',async e=>{
+  if(e.target.id==='restore-progress'){
+    const file=e.target.files?.[0];
+    if(!file)return;
+    try{
+      if(file.size>256000)throw Error('256KB 이하의 백업 파일만 사용할 수 있습니다.');
+      const restored=importSave(await file.text());
+      if(!window.confirm('현재 기기의 진행도를 백업 파일로 덮어씁니다. 계속할까요?'))return;
+      profile=restored;saveLocal();closeModal();shell();toast('기기 진행도 복원 완료');
+    }catch(err){toast('복원 실패: '+err.message);}
+    return;
+  }
+  if(e.target.id==='rarity-filter'){rarityFilter=e.target.value;collection();}else if(e.target.id==='lobby-map'&&MAPS.some(m=>m.id===e.target.value)){config.map=e.target.value;}else if(e.target.id==='lobby-difficulty'&&DIFFICULTIES.some(d=>d.id===e.target.value)){config.difficulty=e.target.value;}});
 document.addEventListener('submit',async e=>{e.preventDefault();const f=new FormData(e.target);if(e.target.id==='auth-form'){const buttons=e.target.querySelectorAll('button');buttons.forEach(b=>b.disabled=true);try{const credential=await online.signIn(f.get('email'),f.get('password'),e.submitter?.value==='signup');switchAccountProfile(credential.user);closeModal();shell();if(pendingLobbyMode){const mode=pendingLobbyMode,code=pendingJoinCode;pendingLobbyMode=null;pendingJoinCode=null;special(mode);if(code)await actions.joinListedRoom(code);}}catch(err){$('#auth-error').textContent=err.message;}finally{buttons.forEach(b=>b.disabled=false);}}else if(e.target.id==='join-form'){try{const code=f.get('code').toUpperCase();await online.call('join',{code,loadout:multiplayerLoadout(profile)});profile.activeRoom=code;saveLocal();await openRoom(code);}catch(err){toast('방 참가 실패: '+err.message);}}else if(e.target.id==='admin-search-form'){
   adminData.search=String(f.get('search')||'');adminData.offset=0;adminData.selected=null;await adminLoad({selected:false});
 }else if(e.target.id==='admin-balance-form'){
