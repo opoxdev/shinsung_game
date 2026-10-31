@@ -15,3 +15,4 @@ jobs:
       - run: npm install --no-save playwright
       - run: npx playwright install --with-deps chromium
       - run: node scripts/browser-smoke.mjs
+      - run: node scripts/offline-browser-smoke.mjs
