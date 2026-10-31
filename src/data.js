@@ -1,3 +1,4 @@
+import { EVOLUTIONS } from './evolutions.js';
 export const VERSION = '0.4.0';
 export const WORLD = { width: 1800, height: 1100, road: 76 };
 export const RARITIES = {
@@ -31,6 +32,11 @@ export const TOWERS = {
   phoenix: {name:'불사조 조련사',role:'소환 · 불꽃',rarity:'mythic',cost:2600,price:11500,color:'#ff697c',damage:300,interval:4.4,range:350,kind:'summon',summons:2,unitSpeed:370,unitLife:9,dot:25,dotTime:3,cap:2,upgrades:[2500,5000,9500],desc:'붉은 깃털 두 장을 던지면 작은 불사조들이 목표를 향해 날아간다.'},
   aurora: {name:'오로라 정령',role:'불멸 · 성운 연쇄',rarity:'immortal',cost:3200,price:null,color:'#60fbd7',damage:260,interval:1.3,range:390,kind:'chain',chain:6,chainRange:210,pierce:true,slow:.6,slowTime:2,cap:1,upgrades:[3400,6900,13500],desc:'파멸 난이도의 수호자. 오로라의 빛줄기가 적 사이를 춤추며 흐른다.'},
 };
+// Evolution costs are authoritative and belong to each installed tower instance.
+for(const [id,def] of Object.entries(TOWERS)) {
+  if(!EVOLUTIONS[id])throw Error('타워 진화 데이터 누락: '+id);
+  def.upgrades=EVOLUTIONS[id].map(step=>step.cost);
+}
 export const ENEMIES = {
   zombie: { name: '좀비', hp: 18, speed: 48, color: '#8eae7d', leak: 1 },
   runner: { name: '빠른 좀비', hp: 28, speed: 90, color: '#d5bd64', leak: 1 },
