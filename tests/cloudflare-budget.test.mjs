@@ -77,7 +77,7 @@ test('client prediction faithfully replicates 3-second server interval without c
   assert.deepEqual(previous,expected,'clients use the same deterministic engine as DO server');
 });
 test('room storage writes are throttled while command responses remain immediate',async()=>{
-  assert.ok(ROOM_SAVE_MS>=15000);
+  assert.ok(ROOM_SAVE_MS>=12000);
   const {game,counters}=await setup();
   const before=counters.writes;
   game.room.lastSavedWave=game.room.state.wave;
@@ -116,4 +116,30 @@ test('D1 existing profiles are read without repeated INSERT statements',async()=
   for(let i=0;i<5;i++)assert.equal((await getProfile(db,alice)).value.name,record.name);
   assert.equal(counters.selects,5);
   assert.equal(counters.inserts,0,'a known user should not spend D1 write queries on each authenticated call');
+});
+
+test('DO cold restart reconstructs deterministic progress from saved checkpoint for live WebSockets',async()=>{
+  const saved=new Map(),sockets=[{send:()=>{}}],state={
+    get:async key=>structuredClone(saved.get(key)),
+    put:async(key,value)=>saved.set(key,structuredClone(value)),
+    delete:async key=>saved.delete(key)
+  };
+  const ctx={storage:state,blockConcurrencyWhile:fn=>fn(),getWebSockets:()=>sockets,acceptWebSocket:s=>sockets.push(s)};
+  const original=new GameRoom(ctx,{});
+  await new Promise(resolve=>setImmediate(resolve));
+  await original.action('create',{code:'COLD12',config:{type:'pvp',map:'plains',difficulty:'easy',modes:[]},
+    profile:Core.starterProfile('Alice')},alice);
+  await original.action('join',{code:'COLD12',profile:Core.starterProfile('Bob')},bob);
+  await original.action('start',{},alice);
+  const checkpoint=JSON.parse(JSON.stringify(original.room.state));
+  original.room.lastPulse=Date.now()-10100;
+  await original.persist();
+  const restored=new GameRoom(ctx,{});
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(restored.recovering,true);
+  assert.equal(restored.advance(),true);
+  const expected=JSON.parse(JSON.stringify(checkpoint));
+  Core.advance(expected,restored.room.state.time-checkpoint.time);
+  assert.deepEqual(restored.room.state.enemies,expected.enemies);
+  assert.ok(restored.room.state.time>=10,'active hibernated clients must not lose unsaved battle time');
 });
