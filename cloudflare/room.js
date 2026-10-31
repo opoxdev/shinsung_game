@@ -52,8 +52,10 @@ export class GameRoom {
   view(){
     const r=this.room;
     if(!r)return null;
-    const {profiles,claimed,state,...visible}=r;
-    return {...visible,stateJson:r.state?JSON.stringify(r.state):null};
+    // Only send data the client uses. Never send D1 profiles, claimed
+    // rewards, private membership IDs or persistence metadata over the socket.
+    return {code:r.code,config:r.config,host:r.host,names:r.names,
+      status:r.status,stateJson:r.state?JSON.stringify(r.state):null};
   }
   broadcast(){const payload=JSON.stringify({type:'room',room:this.view()});for(const sock of this.ctx.getWebSockets())try{sock.send(payload);}catch{}}
   ensure(uid){if(!this.room?.members?.[uid])throw Error('이 방의 참가자가 아닙니다.');}
