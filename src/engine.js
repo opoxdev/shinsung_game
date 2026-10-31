@@ -1,4 +1,4 @@
-import { WORLD, MAPS, TOWERS, ENEMIES, MODES, DIFFICULTIES, PACKS, SKIN_STYLES, CRATES, BOSS_ABILITIES, starterProfile } from './data.js';
+import { WORLD, MAPS, TOWERS, ENEMIES, MODES, DIFFICULTIES, PACKS, SKIN_STYLES, CRATES, BOSS_ABILITIES, starterProfile, skinCandidates, availableCrateStyles } from './data.js';
 import { evolutionAt } from './evolutions.js';
 export const STEP = .05;
 export function bounty(hp) {
@@ -353,6 +353,10 @@ export function profileAction(profile,a) {
     if(profile.coins<crate.price*count)throw Error('상자를 열 코인이 부족합니다.');
     const eligible=profile.owned.filter(id=>Object.hasOwn(TOWERS,id));
     if(!eligible.length)throw Error('상자를 열려면 타워를 한 개 이상 보유해야 합니다.');
+    // Each hand-authored skin fits only designated towers. Probability weights
+    // are renormalized over the currently obtainable styles and shown in UI.
+    const options=availableCrateStyles(crate,eligible);
+    if(!options.length)throw Error('이 상자에 맞는 타워를 먼저 보유해야 합니다.');
     const values=new Uint32Array(count*2);crypto.getRandomValues(values);
     const selectStyle=(value,options)=>{
       const total=options.reduce((n,key)=>n+crate.odds[key],0);
@@ -364,10 +368,11 @@ export function profileAction(profile,a) {
     const rolls=[];
     profile.coins-=crate.price*count;
     for(let i=0;i<count;i++){
-      const missing=crate.styles.filter(style=>eligible.some(id=>!profile.skins[id+':'+style]));
+      const missing=options.filter(style=>skinCandidates(style,eligible).some(id=>!profile.skins[id+':'+style]));
       const guaranteed=pity>=9&&missing.length>0;
-      const style=selectStyle(values[i*2],guaranteed?missing:crate.styles);
-      const towers=guaranteed?eligible.filter(id=>!profile.skins[id+':'+style]):eligible;
+      const style=selectStyle(values[i*2],guaranteed?missing:options);
+      const permitted=skinCandidates(style,eligible);
+      const towers=guaranteed?permitted.filter(id=>!profile.skins[id+':'+style]):permitted;
       const id=towers[values[i*2+1]%towers.length];
       const key=id+':'+style,duplicate=!!profile.skins[key];
       const refund=duplicate?Math.min(SKIN_STYLES[style].refund,Math.floor(crate.price/2)):0;
