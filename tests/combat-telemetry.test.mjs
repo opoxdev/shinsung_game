@@ -53,6 +53,38 @@ test('shield damage pops reflect absorbed damage and do not pierce HP by acciden
   assert.ok(Math.abs(pop.amount-(oldShield-e.shield))<1e-10);
   assert.equal(e.hp,oldHp);
 });
+test('lethal overkill shows full attack damage, not the last sliver of HP',()=>{
+  const s=make(),e=putEnemy(s,'zombie',{hp:0.1,maxHp:3});
+  putTower(s,'scout');
+  const fundsBefore=s.players.p.money;
+  tick(s);
+  const hit=s.events.find(v=>v.kind==='damage');
+  assert.ok(hit,'A lethal hit must still produce a damage number');
+  assert.equal(hit.amount,1,'Show the full 1-damage attack instead of 0.1 remaining HP');
+  assert.equal(e.hp,0,'Actual HP must still clamp at zero');
+  assert.equal(s.kills,1);
+  assert.ok(s.players.p.money>fundsBefore,'Kill payout must remain unchanged');
+});
+test('armor and a nearly depleted shield still show full post-mitigation strike damage',()=>{
+  const s=make(),e=putEnemy(s,'shieldling',{hp:0.1,maxHp:1,shield:0.2,maxShield:0.2});
+  putTower(s,'scout');
+  tick(s);
+  const pop=s.events.find(v=>v.kind==='damage');
+  const mitigated=TOWERS.scout.damage*(1-ENEMIES.shieldling.armor);
+  assert.ok(pop?.shield);
+  assert.ok(Math.abs(pop.amount-mitigated)<1e-10,'Display armor-adjusted hit, not tiny shield and HP remainder');
+  assert.equal(e.hp,0);
+  assert.equal(e.shield,0);
+});
+test('lethal damage over time numbers are not clamped to remaining health',()=>{
+  const s=make();
+  const e=putEnemy(s,'heavy',{hp:0.01,maxHp:5,dotDps:10,dotUntil:10,dotFrom:'chemist'});
+  tick(s);
+  const pop=s.events.find(v=>v.kind==='damage'&&v.dot);
+  assert.ok(pop);
+  assert.ok(Math.abs(pop.amount-10*0.05)<1e-10,'Show all damage from fatal poison tick');
+  assert.equal(e.hp,0);
+});
 test('DOT pop events are aggregated rather than emitted every engine tick',()=>{
   const s=make(),e=putEnemy(s,'heavy',{hp:10000,maxHp:10000});
   const chemist=putTower(s,'chemist');
