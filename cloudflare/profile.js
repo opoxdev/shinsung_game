@@ -1,8 +1,13 @@
 import {Core} from '../dist/cloudflare/core.js';
 export async function getProfile(db,user){
-  await db.prepare('INSERT OR IGNORE INTO profiles (uid,profile_json,version,updated_at) VALUES (?,?,0,?)')
-    .bind(user.uid,JSON.stringify(Core.starterProfile(user.name)),Date.now()).run();
-  const row=await db.prepare('SELECT profile_json,version FROM profiles WHERE uid=?').bind(user.uid).first();
+  // Most requests are for existing accounts. Avoid writing an INSERT OR IGNORE
+  // SQL statement on every authenticated API call: read first, create only once.
+  let row=await db.prepare('SELECT profile_json,version FROM profiles WHERE uid=?').bind(user.uid).first();
+  if(!row){
+    await db.prepare('INSERT OR IGNORE INTO profiles (uid,profile_json,version,updated_at) VALUES (?,?,0,?)')
+      .bind(user.uid,JSON.stringify(Core.starterProfile(user.name)),Date.now()).run();
+    row=await db.prepare('SELECT profile_json,version FROM profiles WHERE uid=?').bind(user.uid).first();
+  }
   if(!row)throw Error('프로필 읽기 실패');
   return {value:JSON.parse(row.profile_json),version:row.version};
 }
