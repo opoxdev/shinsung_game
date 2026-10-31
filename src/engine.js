@@ -1,4 +1,5 @@
 import { WORLD, MAPS, TOWERS, ENEMIES, MODES, DIFFICULTIES, PACKS, starterProfile } from './data.js';
+import { evolutionAt } from './evolutions.js';
 export const STEP = .05;
 export function bounty(hp) {
   if (!Number.isFinite(hp) || hp <= 0) return 0;
@@ -45,9 +46,18 @@ export function createMatch(config, players) {
   });
   nextWave(s); return s;
 }
+// Each tower instance resolves its own evolution; same-type siblings stay independent.
 export function towerStats(t) {
-  const d=TOWERS[t.type],l=t.level;
-  return {damage:d.damage*(1+l*.8+l*l*.15),interval:d.interval/(1+l*.13),range:d.range*(1+l*.10),splash:(d.splash||0)*(1+l*.1)};
+  const d=TOWERS[t.type];if(!d)throw Error('존재하지 않는 타워입니다.');
+  const step=evolutionAt(t.type,t.level||0);
+  return {...d,...step,
+    damage:d.damage*(step?.damageMult??1),
+    interval:d.interval/(step?.rateMult??1),
+    range:d.range*(step?.rangeMult??1),
+    splash:step?.splash??d.splash??0,
+    kind:step?.kind??d.kind,
+    stageName:step?.name??'기본 장비'
+  };
 }
 export function canPlace(s,field,x,y) {
   return Number.isFinite(x)&&Number.isFinite(y)&&x>=45&&y>=45&&x<=WORLD.width-45&&y<=WORLD.height-45&&pathDistance(mapOf(s).path,x,y)>WORLD.road/2+22&&!s.towers.some(t=>t.field===field&&Math.hypot(t.x-x,t.y-y)<50);
@@ -97,7 +107,7 @@ export function command(s,playerId,c) {
     const t=s.towers.find(t=>t.id===c.id);if(!t||t.owner!==playerId)return fail('자신의 타워를 선택하세요.');
     if(c.kind==='upgrade') {
       const cost=TOWERS[t.type].upgrades[t.level];if(cost===undefined)return fail('최대 레벨입니다.');if(p.money<cost)return fail('전투 자금이 부족합니다.');
-      p.money-=cost;t.level++;t.spent+=cost;event(s,{kind:'upgrade',x:t.x,y:t.y,field:t.field});
+      p.money-=cost;t.level++;t.spent+=cost;t.cd=Math.min(t.cd,towerStats(t).interval);event(s,{kind:'upgrade',x:t.x,y:t.y,field:t.field,type:t.type,level:t.level});
     } else if(c.kind==='sell') {p.money+=Math.floor(t.spent*7/10);s.towers=s.towers.filter(a=>a.id!==t.id);}
     else {if(!['first','strong','near'].includes(c.target))return fail('잘못된 타겟입니다.');t.target=c.target;}
   } else if(c.kind==='skip') {
@@ -121,7 +131,7 @@ export function command(s,playerId,c) {
 function damage(s,e,n,t,ignoreArmor=false) {
   if(e.hp<=0||!Number.isFinite(n)||n<=0)return;
   const source=TOWERS[t.type]||{};
-  let value=n*(ignoreArmor||source.pierce?1:1-(ENEMIES[e.type].armor||0));
+  let value=n*(ignoreArmor||towerStats(t).pierce?1:1-(ENEMIES[e.type].armor||0));
   if(e.shield>0){const absorbed=Math.min(e.shield,value);e.shield-=absorbed;value-=absorbed;}
   if(value>0)e.hp-=value;
   if(e.hp>0)return;
@@ -139,13 +149,13 @@ function damage(s,e,n,t,ignoreArmor=false) {
 }
 function applyHit(s,e,n,t,stats,scale=1){
   if(!e||e.hp<=0)return;
-  const def=TOWERS[t.type]||{};
+  const def=towerStats(t);
   const crit=def.critChance&&((t.id*17+(t.shots||0)*31)%100)<def.critChance;
   const execute=def.execute&&e.hp/e.maxHp<=def.execute;
   damage(s,e,n*scale*(crit?(def.critBonus||1.8):1)*(execute?(def.executeBonus||2):1),t);
   if(e.hp<=0)return;
   if(def.dot){
-    const dot=def.dot*(1+(t.level||0)*.65);
+    const dot=def.dot;
     if(!e.dotDps||dot>=e.dotDps){e.dotDps=dot;e.dotFrom=t.type;}
     e.dotUntil=Math.max(e.dotUntil||0,s.time+(def.dotTime||3));
   }
@@ -177,12 +187,12 @@ export function tick(s,dt=STEP) {
     }
   }
   for(const t of s.towers) {
-    const d=TOWERS[t.type],stats=towerStats(t);
-    if(d.kind==='buff')continue;
+    const stats=towerStats(t);
+    if(stats.kind==='buff')continue;
     t.cd-=dt;
-    if(d.kind==='income'){
+    if(stats.kind==='income'){
       if(t.cd<=0){
-        const owner=s.players[t.owner];if(owner)owner.money+=(d.income||0)*(1+t.level*.8);
+        const owner=s.players[t.owner];if(owner)owner.money+=(stats.income||0);
         t.cd=stats.interval;
         event(s,{kind:'income',x:t.x,y:t.y,field:t.field,type:t.type});
       }
@@ -192,32 +202,39 @@ export function tick(s,dt=STEP) {
     const candidates=s.enemies.filter(e=>e.field===t.field&&e.hp>0&&dist(t,e)<=stats.range);
     candidates.sort(t.target==='strong'?(a,b)=>b.hp-a.hp:t.target==='near'?(a,b)=>dist(a,t)-dist(b,t):(a,b)=>b.progress-a.progress);
     const e=candidates[0];if(!e)continue;
-    const buffs=s.towers.filter(b=>b.field===t.field&&TOWERS[b.type].kind==='buff'&&dist(b,t)<=towerStats(b).range);
-    const power=buffs.reduce((a,b)=>Math.max(a,1+(TOWERS[b.type].power??.2)+b.level*.1),1);
-    const haste=buffs.reduce((a,b)=>Math.max(a,1+(TOWERS[b.type].haste||0)*(1+b.level*.2)),1);
+    const buffs=s.towers.filter(b=>b.field===t.field&&towerStats(b).kind==='buff'&&dist(b,t)<=towerStats(b).range);
+    // Strongest aura of each category wins; different kinds may coexist.
+    const power=buffs.reduce((a,b)=>Math.max(a,1+(towerStats(b).power??(b.type==='workshop'?.2:0))),1);
+    const haste=buffs.reduce((a,b)=>Math.max(a,1+(towerStats(b).haste||0)),1);
     t.cd=stats.interval/haste;t.shots=(t.shots||0)+1;
     t.angle=Math.atan2(e.y-t.y,e.x-t.x);
-    event(s,{kind:d.kind,from:t.id,x:t.x,y:t.y,tx:e.x,ty:e.y,field:t.field,type:t.type});
-    if(d.kind==='summon'){
-      const count=d.summons||1;
-      for(let i=0;i<count&&s.units.length<80;i++)s.units.push({id:s.nextId++,x:t.x+i*12,y:t.y-i*6,field:t.field,target:e.id,damage:stats.damage*power,type:t.type,life:d.unitLife||8,speed:d.unitSpeed||210,level:t.level});
-    }else if(d.kind==='splash'){
+    event(s,{kind:stats.kind,from:t.id,x:t.x,y:t.y,tx:e.x,ty:e.y,field:t.field,type:t.type,level:t.level});
+    if(stats.kind==='summon'){
+      const count=stats.summons||1;
+      for(let i=0;i<count&&s.units.length<80;i++)s.units.push({id:s.nextId++,x:t.x+i*12,y:t.y-i*6,field:t.field,target:e.id,damage:stats.damage*power,type:t.type,life:stats.unitLife||8,speed:stats.unitSpeed||210,level:t.level});
+    }else if(stats.kind==='splash'){
       const hits=s.enemies.filter(a=>a.field===t.field&&a.hp>0&&dist(a,e)<=stats.splash);
       for(const a of hits)applyHit(s,a,stats.damage*power,t,stats);
-    }else if(d.kind==='melee'){
-      for(const a of candidates.slice(0,d.cleave||3))applyHit(s,a,stats.damage*power,t,stats);
-    }else if(d.kind==='chain'){
-      const targets=[e],left=new Set([e.id]),max=d.chain||3;
+    }else if(stats.kind==='melee'){
+      for(const a of candidates.slice(0,stats.cleave||3))applyHit(s,a,stats.damage*power,t,stats);
+    }else if(stats.kind==='chain'){
+      const targets=[e],left=new Set([e.id]),max=stats.chain||3;
       while(targets.length<max){
         const prev=targets[targets.length-1];
-        const next=s.enemies.filter(a=>a.field===t.field&&a.hp>0&&!left.has(a.id)&&dist(prev,a)<=(d.chainRange||120)).sort((a,b)=>dist(a,prev)-dist(b,prev))[0];
+        const next=s.enemies.filter(a=>a.field===t.field&&a.hp>0&&!left.has(a.id)&&dist(prev,a)<=(stats.chainRange||120)).sort((a,b)=>dist(a,prev)-dist(b,prev))[0];
         if(!next)break;targets.push(next);left.add(next.id);
       }
       targets.forEach((target,i)=>{
         applyHit(s,target,stats.damage*power,t,stats,Math.max(.35,1-i*.13));
         if(i>0)event(s,{kind:'arc',x:targets[i-1].x,y:targets[i-1].y,tx:target.x,ty:target.y,field:t.field,type:t.type});
       });
-    }else applyHit(s,e,stats.damage*power,t,stats);
+    }else{
+      const hits=candidates.slice(0,stats.multi||1);
+      for(const [i,target] of hits.entries()){
+        applyHit(s,target,stats.damage*power,t,stats,i===0?1:.82);
+        if(i>0)event(s,{kind:'ranged',from:t.id,x:t.x,y:t.y,tx:target.x,ty:target.y,field:t.field,type:t.type});
+      }
+    }
   }
   for(const u of s.units) {
     u.life-=dt;let e=s.enemies.find(e=>e.id===u.target&&e.hp>0);
