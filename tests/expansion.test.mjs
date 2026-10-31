@@ -86,3 +86,20 @@ test('serialized state with effects stays deterministic',()=>{
   advance(s,1);const restored=JSON.parse(JSON.stringify(s));
   advance(s,3);advance(restored,3);assert.deepEqual(s,restored);
 });
+
+test('long scripted waves account for complete spawn formation before timeout',()=>{
+  for(const diff of DIFFICULTIES){
+    const s=createMatch({map:'plains',difficulty:diff.id,type:'solo',modes:[]},[player()]);
+    const first=diff.waves[0],units=first.groups.reduce((n,[,count])=>n+count,0);
+    assert.ok(s.waveDeadline>=units*first.spacing+7.5,diff.id);
+    assert.ok(s.waveDeadline>=first.duration,diff.id);
+    assert.equal(s.wave,1);
+  }
+});
+test('boss abilities, evolution and scripted wave timer survive JSON roundtrip',()=>{
+ const s=createMatch({map:'plains',difficulty:'hell',type:'solo',modes:[]},[player()]);
+ assert.ok(Number.isFinite(s.waveDeadline));
+ const copy=JSON.parse(JSON.stringify(s));
+ assert.equal(copy.waveDeadline,s.waveDeadline);
+ assert.deepEqual(copy.queue,s.queue);
+});
