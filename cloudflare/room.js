@@ -1,13 +1,45 @@
 import {Core} from '../dist/cloudflare/core.js';
 const bad = message => new Response(JSON.stringify({ok:false,error:message}),{status:400,headers:{'content-type':'application/json'}});
 const ok = data => new Response(JSON.stringify({ok:true,data}),{headers:{'content-type':'application/json'}});
-const CODE_LIMIT=5000, ROOM_TTL=24*3600*1000;
+const CODE_LIMIT=5000, ROOM_TTL=24*3600*1000, LOBBY_TTL=2*3600*1000;
+const DIRECTORY_KEY='PUBLIC_ROOM_DIRECTORY_V1';
 export class GameRoom {
   constructor(ctx,env){
     this.ctx=ctx;this.env=env;this.room=null;this.lastSave=0;
     this.ctx.blockConcurrencyWhile(async()=>{this.room=await ctx.storage.get('room')||null;});
   }
   async persist(){this.room.lastSavedAt=Date.now();await this.ctx.storage.put('room',this.room);this.lastSave=this.room.lastSavedAt;}
+  // One Durable Object acts as the authoritative public lobby index.
+  // Room DOs publish only non-sensitive metadata after membership changes.
+  async syncDirectory(room=this.room){
+    if(!this.env?.ROOMS||!room?.code||room.config.type==='solo')return;
+    const entry=room.status==='lobby'&&Object.keys(room.members).length<(room.config.type==='pvp'?2:4)?
+      {code:room.code,name:room.names[room.host]||'방장',type:room.config.type,map:room.config.map,
+       difficulty:room.config.difficulty,count:Object.keys(room.members).length,capacity:room.config.type==='pvp'?2:4,createdAt:room.createdAt}:null;
+    const stub=this.env.ROOMS.get(this.env.ROOMS.idFromName(DIRECTORY_KEY));
+    const res=await stub.fetch('https://directory/action',{method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({action:'directorySync',payload:{code:room.code,entry}})});
+    const result=await res.json();if(!result.ok)throw Error('방 목록 동기화 실패');
+  }
+  async directoryAction(name,p){
+    const now=Date.now();
+    const entries=await this.ctx.storage.get('directory')||{};
+    let changed=false;
+    for(const [code,v] of Object.entries(entries))
+      if(now-v.createdAt>LOBBY_TTL||v.count>=v.capacity){delete entries[code];changed=true;}
+    if(name==='directorySync'){
+      if(!/^[A-Z0-9]{6}$/.test(p.code||''))throw Error('잘못된 방 코드');
+      if(p.entry&&p.entry.code===p.code&&p.entry.createdAt<=now&&now-p.entry.createdAt<LOBBY_TTL
+        &&['pvp','coop'].includes(p.entry.type)&&p.entry.count>0&&p.entry.count<p.entry.capacity)
+        entries[p.code]=p.entry;
+      else delete entries[p.code];
+      changed=true;
+    }
+    if(changed)await this.ctx.storage.put('directory',entries);
+    if(name==='directoryList')return Object.values(entries)
+      .sort((a,b)=>b.createdAt-a.createdAt).slice(0,100);
+    return {updated:true};
+  }
   view(){
     const r=this.room;
     if(!r)return null;
@@ -29,20 +61,21 @@ export class GameRoom {
     return true;
   }
   async action(name,p,user){
-    const r=this.room,uid=user.uid;
+    if(name==='directoryList'||name==='directorySync')return this.directoryAction(name,p);
+    const r=this.room,uid=user?.uid;
     if(name==='create'){
       if(r)throw Error('이미 사용 중인 방 코드입니다.');
       const cfg=Core.validateConfig(p.config);
-      this.room={config:cfg,host:uid,createdAt:Date.now(),lastPulse:Date.now(),members:{[uid]:true},names:{[uid]:user.name},profiles:{[uid]:p.profile},status:'lobby',state:null};
-      await this.persist();return {created:true};
+      this.room={code:p.code||'',config:cfg,host:uid,createdAt:Date.now(),lastPulse:Date.now(),members:{[uid]:true},names:{[uid]:user.name},profiles:{[uid]:p.profile},status:'lobby',state:null};
+      await this.persist();await this.syncDirectory().catch(e=>console.warn(e));return {created:true};
     }
     if(!r||name!=='leave'&&Date.now()-r.createdAt>ROOM_TTL)throw Error('존재하지 않거나 만료된 방입니다.');
     if(name==='join'){
       if(r.status!=='lobby'||r.config.type==='solo')throw Error('참가할 수 없는 대기실입니다.');
       if(Date.now()-r.createdAt>2*3600*1000)throw Error('대기실이 만료되었습니다.');
       if(!r.members[uid]&&Object.keys(r.members).length>=(r.config.type==='pvp'?2:4))throw Error('방이 가득 찼습니다.');
-      r.members[uid]=true;r.names[uid]=user.name;r.profiles[uid]=p.profile;
-      await this.persist();this.broadcast();return {joined:true};
+      r.code||=p.code||'';r.members[uid]=true;r.names[uid]=user.name;r.profiles[uid]=p.profile;
+      await this.persist();await this.syncDirectory().catch(e=>console.warn(e));this.broadcast();return {joined:true};
     }
     this.ensure(uid);
     if(name==='ticket'){
@@ -56,7 +89,7 @@ export class GameRoom {
       if(r.config.type==='coop'&&ids.length<2)throw Error('협동전에는 2명 이상 필요합니다.');
       r.state=Core.createMatch(r.config,ids.map(id=>({id,profile:r.profiles[id]})));
       r.status='playing';r.lastPulse=Date.now();
-      await this.persist();this.broadcast();return {started:true};
+      await this.persist();await this.syncDirectory().catch(e=>console.warn(e));this.broadcast();return {started:true};
     }
     if(name==='pulse'){
       if(r.status!=='playing'||Date.now()-r.lastPulse<1750)return {updated:false};
@@ -87,6 +120,7 @@ export class GameRoom {
       }
       if(r.host===uid)r.host=remaining[0]||'';
       if(!remaining.length){this.room=null;await this.ctx.storage.delete('room');}else await this.persist();
+      await this.syncDirectory(r).catch(e=>console.warn(e));
       for(const sock of this.ctx.getWebSockets())if(sock.deserializeAttachment()?.uid===uid)try{sock.close(1000,'Left room');}catch{}
       this.broadcast();return {left:true};
     }
