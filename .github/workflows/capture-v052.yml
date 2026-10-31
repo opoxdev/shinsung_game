@@ -50,12 +50,15 @@ jobs:
           const tierCounts={common:4,rare:7,epic:10,legendary:5,mythic:4};
           const artTiers={common:'everyday',rare:'craft',epic:'specialist',legendary:'iconic',mythic:'myth'};
           let rankIndex=25;
+          const cardBackgrounds=new Set();
           for(const [rarity,count] of Object.entries(tierCounts)){
             await page.locator('#rarity-filter').selectOption(rarity);
             if(await page.locator('.tower-card').count()!==count)throw Error('Roster count wrong for '+rarity);
             if(await page.locator('.tower-card svg[data-art-tier="'+artTiers[rarity]+'"]').count()!==count)throw Error('Wrong art tier for '+rarity);
+            cardBackgrounds.add(await page.locator('.tower-card').first().evaluate(el=>getComputedStyle(el).backgroundImage));
             await shot(String(rankIndex++)+'-'+rarity+'-identity');
           }
+          if(cardBackgrounds.size!==5)throw Error('Every rarity needs its own collection frame hierarchy');
           await page.locator('#rarity-filter').selectOption('all');
           await click('inspect','scout');await shot('30-simple-slingshot');
           await click('inspect','icewitch');await shot('31-frost-apprentice');
