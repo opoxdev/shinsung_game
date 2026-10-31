@@ -54,7 +54,17 @@ jobs:
           await click('previewPack','lab');await shot('08-monster-pack-preview');
           await click('nav','shop');await shot('09-shop-towers');
           await click('shopTab','packs');await shot('10-shop-monster-packs');
-          await click('shopTab','crates');await shot('11-skin-crates');
+          await click('shopTab','crates');
+          if(await page.locator('.crate-offer').count()!==5)throw Error('Five themed cosmetic crates must be displayed');
+          const expected={forest:400,wardrobe:1000,winter:1500,cyber:3000,astral:5000};
+          for(const [id,price] of Object.entries(expected)){
+            const one=page.locator('[data-action="openCrate"][data-id="'+id+':1"]');
+            const ten=page.locator('[data-action="openCrate"][data-id="'+id+':10"]');
+            if(await one.count()!==1||await ten.count()!==1)throw Error('Missing '+id+' crate controls');
+            if(!(await one.innerText()).includes(price.toLocaleString('en-US')))throw Error('Wrong price for '+id);
+            if(!(await ten.innerText()).includes((price*10).toLocaleString('en-US')))throw Error('Wrong 10-pull price for '+id);
+          }
+          await shot('11-skin-crates');
           await click('pvp');await shot('12-pvp-menu');await click('close');
           await click('coop');await shot('13-coop-menu');await click('close');
           await click('events');await shot('14-events');await click('close');
