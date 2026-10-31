@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { BOSS_ABILITIES, ENEMIES, starterProfile } from '../src/data.js';
+import { BOSS_ABILITIES, ENEMIES, MAPS, starterProfile } from '../src/data.js';
 import { createMatch, advance } from '../src/engine.js';
 const create=()=>{const p=starterProfile();const s=createMatch({map:'plains',difficulty:'easy',type:'solo',modes:[]},[{id:'p',profile:p}]);s.queue=[];s.enemies=[];return s;};
 function boss(s,type){const def=ENEMIES[type];const e={id:s.nextId++,type,field:0,hp:def.hp,maxHp:def.hp,shield:def.shield||0,maxShield:def.shield||0,progress:40,x:130,y:220,speed:0};s.enemies.push(e);return e;}
@@ -30,7 +30,8 @@ test('shield regeneration adds a limited amount even for depleted boss shields',
 });
 test('boss electromagnetic pulse only jams nearby towers on same battlefield',()=>{
  const s=create(),e=boss(s,'mecha');e.castReady=s.time+.1;
- s.towers=[{id:21,owner:'p',type:'scout',field:0,x:130,y:220,level:0,cd:0,spent:150},
+ const [startX,startY]=MAPS.find(m=>m.id==='plains').path[0];
+ s.towers=[{id:21,owner:'p',type:'scout',field:0,x:startX+30,y:startY+30,level:0,cd:0,spent:150},
  {id:22,owner:'p',type:'scout',field:0,x:1300,y:900,level:0,cd:0,spent:150}];
  advance(s,.15);
  assert.ok(s.towers[0].jammedUntil>s.time);
