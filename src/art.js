@@ -1,4 +1,39 @@
 // Original vector characters. The same silhouettes are used on cards and in battle.
+import { evolutionAt } from './evolutions.js';
+
+// Evolved equipment is baked into each instance's sprite: a new level creates a
+// different SVG image instead of only increasing numbers or applying a border.
+function evolvedPortrait(svg,id,level){
+  if(!level)return svg;
+  const stage=evolutionAt(id,level);if(!stage)return svg;
+  const gold='#ffe3a1', cyan='#9bf8e4', blue='#9ed7ff', ink='#263b68';
+  const looks={
+    bandanna:`<path d="M59 62L129 62 119 72 67 72Z" fill="#ee6478" stroke="${ink}" stroke-width="3"/><path d="M120 66Q142 67 151 92L136 87 117 74" fill="#ff7884"/>`,
+    goggles:`<rect x="61" y="65" width="29" height="17" rx="7" fill="#334d70" stroke="${gold}" stroke-width="4"/><rect x="98" y="65" width="29" height="17" rx="7" fill="#334d70" stroke="${gold}" stroke-width="4"/><path d="M90 73h8" stroke="${gold}" stroke-width="4"/><path d="M68 69h12m25 0h12" stroke="#afffea" stroke-width="3"/>`,
+    shades:`<path d="M58 66h36l-4 20-24 0ZM97 66h35l-8 20-24 0Z" fill="#101e38" stroke="#d6e8ff" stroke-width="3"/><path d="M92 71h8" stroke="#fee7ba" stroke-width="4"/><path d="M70 71h12m21 0h12" stroke="#83e4ff" stroke-width="2"/>`,
+    star:`<path d="M96 15l9 21 23 3-17 15 4 23-19-12-20 12 5-23-18-15 24-3Z" fill="${gold}" stroke="#ef8d5e" stroke-width="4"/><circle cx="145" cy="119" r="14" fill="${cyan}" opacity=".8"/>`,
+    crown:`<path d="M56 54L50 20 76 35 95 10 113 35 139 20 132 54Z" fill="${gold}" stroke="#b77d68" stroke-width="5"/><path d="M59 51h72" stroke="#fff7db" stroke-width="8"/><circle cx="95" cy="43" r="6" fill="#a5faff"/>`,
+    antenna:`<path d="M67 45L52 16M119 44l16-28" stroke="${blue}" stroke-width="7"/><circle cx="51" cy="13" r="9" fill="${gold}"/><circle cx="136" cy="14" r="9" fill="#84ecfe"/><path d="M63 63h62" stroke="#d4faff" stroke-width="4"/>`,
+    gear:`<circle cx="96" cy="36" r="23" fill="${gold}" stroke="${ink}" stroke-width="5"/><circle cx="96" cy="36" r="11" fill="#608aaa"/><path d="M96 5v12m0 38v13M65 36h13m37 0h13M74 14l9 10m25 23 9 10m1-44-10 11M83 47l-9 10" stroke="${gold}" stroke-width="7"/>`,
+    double:`<path d="M41 113L19 95 20 142 41 151M138 112l25-18-3 49-25 10" fill="${blue}" stroke="#5571a6" stroke-width="4"/><path d="M20 120h25m92 0h27" stroke="${gold}" stroke-width="5"/>`,
+    mask:`<path d="M62 69L93 61 126 68 119 91 96 101 70 91Z" fill="#f9f7f7" stroke="#5e5b91" stroke-width="4"/><path d="M74 75l12 7m22 0 12-7" stroke="#f07588" stroke-width="5"/>`,
+    aura:`<ellipse cx="94" cy="130" rx="74" ry="88" fill="none" stroke="${cyan}" stroke-width="7" stroke-dasharray="12 13" opacity=".8"/><circle cx="20" cy="108" r="8" fill="${gold}"/><circle cx="163" cy="143" r="8" fill="${blue}"/>`,
+    flame:`<path d="M47 129Q16 91 44 69 40 102 66 107M143 129q34-38 6-65 5 33-25 43" fill="#ff966d" stroke="#ffdc8e" stroke-width="4"/><path d="M65 40Q73 5 93 19q18-22 27 20Z" fill="#ffca67"/>`,
+    orb:`<circle cx="153" cy="117" r="23" fill="${cyan}" opacity=".88" stroke="${blue}" stroke-width="5"/><circle cx="153" cy="117" r="11" fill="#fff5ba"/><path d="M146 95l6-12 7 13" fill="#c6f8ff"/>`,
+    thorns:`<path d="M50 144l-21-15 13-6-12-15 28 7m82 28 18-17-15-4 13-15-27 8" fill="#94e890" stroke="#3e9171" stroke-width="4"/><path d="M63 35l14-21 13 20m12 0 14-21 13 23" fill="#83d878"/>`,
+    crystal:`<path d="M95 4L121 33 110 76 76 76 63 33Z" fill="${cyan}" stroke="#74a6ec" stroke-width="5"/><path d="M95 4L95 76 121 33Z" fill="#a2c5ff"/><path d="M95 4L63 33 95 76Z" fill="#e4ffef"/>`,
+    wings:`<path d="M64 122Q18 41 12 85q-14 50 47 60m58-23q48-84 56-38 11 52-48 61" fill="${blue}" opacity=".72" stroke="${cyan}" stroke-width="6"/><path d="M22 91l36 25m108-25-36 25" stroke="#fff1a3" stroke-width="4"/>`,
+    cape:`<path d="M73 104Q38 117 31 190L77 175M112 104q47 12 52 86l-46-13" fill="#9358bd" stroke="#cfb6ef" stroke-width="6"/><path d="M68 106h52" stroke="${gold}" stroke-width="5"/>`,
+    halo:`<ellipse cx="95" cy="16" rx="38" ry="12" fill="none" stroke="${gold}" stroke-width="8"/><ellipse cx="95" cy="16" rx="25" ry="6" fill="none" stroke="${cyan}" stroke-width="3"/><path d="M45 96l-21-8m123 8 20-8" stroke="${cyan}" stroke-width="5"/><circle cx="38" cy="133" r="9" fill="${gold}"/><circle cx="154" cy="147" r="7" fill="${cyan}"/>`,
+    gold:`<circle cx="95" cy="41" r="31" fill="${gold}" stroke="#ab8040" stroke-width="6"/><path d="M95 23v36m-12-28h23m-23 21h23" stroke="#b88b3f" stroke-width="6"/>`,
+    coral:`<path d="M56 55L47 21 64 32 78 9 95 40 118 11 128 32 148 23 133 62Z" fill="#ffb5b4" stroke="#ae81a8" stroke-width="5"/><circle cx="95" cy="32" r="7" fill="${cyan}"/>`
+  };
+  const look=looks[stage.look]||looks.aura;
+  const gems=Array.from({length:level},(_,i)=>`<path d="M${55+i*16} 179l6-7 6 7-6 8Z" fill="${level>=4?cyan:gold}" stroke="#243b5e" stroke-width="1.7"/>`).join('');
+  const wings=level>=3?`<path d="M54 113q-21-27-30-8m115 9q21-29 30-8" fill="none" stroke="${level>=4?cyan:gold}" stroke-width="5" opacity=".85"/>`:'';
+  const aura=level>=4?`<ellipse cx="94" cy="117" rx="79" ry="88" fill="none" stroke="${cyan}" stroke-width="3" stroke-dasharray="9 13" opacity=".7"/>`:'';
+  return svg.replace('</svg>',`<g stroke-linecap="round" stroke-linejoin="round">${aura}${look}${wings}${gems}</g></svg>`);
+}
 // v0.4 silhouettes: lightweight original SVG art; no external image assets.
 // Each roster member has a recognizable prop and headgear, not a military uniform.
 function expansionPortrait(id,skin){
@@ -56,8 +91,8 @@ function expansionPortrait(id,skin){
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 210" aria-hidden="true"><ellipse cx="92" cy="191" rx="57" ry="11" fill="#142b4a" opacity=".25"/><g stroke-linejoin="round" stroke-linecap="round"><path d="M67 139L58 184 82 183 93 149 108 185 130 182 119 138Z" fill="${shade}" stroke="#263655" stroke-width="5"/><path d="M70 93L48 116 58 143 72 127 67 163 120 161 118 125 137 143 145 113 117 91Z" fill="${coat}" stroke="#253e60" stroke-width="5"/><path d="M78 113L108 113M87 132h18" stroke="${trim}" stroke-width="6"/><path d="M62 64Q59 30 94 29Q129 30 126 66L121 94 69 92Z" fill="${hat==='robot'?'#84cad1':'#f8d5af'}" stroke="#324568" stroke-width="5"/><path d="M77 76h8m22 0h8" stroke="#283e54" stroke-width="6"/><path d="M89 89q6 5 12 0" fill="none" stroke="#c48d83" stroke-width="3"/>${headgear[hat]}${items[id]}</g></svg>`;
 }
 
-export function character(id,skin='default') {
-  const expanded=expansionPortrait(id,skin);if(expanded)return expanded;
+export function character(id,skin='default',level=0) {
+  const expanded=expansionPortrait(id,skin);if(expanded)return evolvedPortrait(expanded,id,level);
   const white=skin==='arctic';
   const ink='#192445', face='#ffdbb0';
   const head=(hair,extra='')=>`<path d="M65 67Q64 39 92 39Q120 40 118 70L113 88Q92 101 72 86Z" fill="${face}"/><path d="M65 63L61 42 78 25 105 28 123 47 115 67 104 49 91 58 83 47 72 65Z" fill="${hair}"/><path d="M79 73v5m25-5v5" stroke="${ink}" stroke-width="5"/>${extra}`;
@@ -72,7 +107,7 @@ export function character(id,skin='default') {
     rail:`<path d="M69 101L42 174 80 168 93 189 107 168 141 175 116 98Z" fill="${white?'#d5f1ff':'#508dce'}"/><path d="M84 110L70 170 93 181 113 171 99 110Z" fill="#bbebff"/><path d="M67 65q-6-21 26-24 32 1 28 24l-9 27H76Z" fill="#31375e"/><path d="M76 71h10m16 0h10" stroke="#c6ffff" stroke-width="5"/><path d="M43 62L72 45 95 5 120 43 143 59 97 71Z" fill="#5c97e0"/><path d="M96 8L101 49 121 44Z" fill="#a7ceff"/><path d="M77 44L124 45" stroke="#ffe193" stroke-width="8"/><path d="M141 94l7-17 7 17 18 4-15 10 2 18-15-10-16 8 5-18-14-10Z" fill="#ffeaa1"/><path d="M54 121Q12 95 30 67" fill="none" stroke="#98e9ff" stroke-width="6"/><path d="M18 57l12-9 12 12-10 13Z" fill="#c8fbff"/><circle cx="54" cy="153" r="5" fill="#ffe699"/>`,
     sonic:`<path d="M66 143L52 178 76 186 93 152 109 181 136 171 115 138" fill="#302d68"/><path d="M50 174l29 9-6 12-36-7Zm59 2 28-10 12 11-36 14" fill="#5ff4ed"/><path d="M66 96L43 116 54 132 74 122 71 150 118 145 112 118 138 127 146 109 114 95Z" fill="${white?'#e2f6ff':'#ff64c4'}"/>${head('#f1efff')}<path d="M59 65Q52 26 91 24Q129 23 127 66" fill="none" stroke="#52f5ed" stroke-width="10"/><rect x="53" y="57" width="15" height="29" rx="5" fill="#ff8bda"/><rect x="118" y="56" width="15" height="29" rx="5" fill="#ff8bda"/><path d="M78 110l14 11 18-17-15 30Z" fill="#fff393"/><circle cx="147" cy="136" r="23" fill="#303464"/><circle cx="147" cy="136" r="14" fill="#62f7e5"/><circle cx="147" cy="136" r="6" fill="#41426d"/><path d="M28 49v30m-8-22v14m16-20v25" stroke="#f893ed" stroke-width="5"/>`
   };
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 210" aria-hidden="true"><ellipse cx="93" cy="193" rx="62" ry="12" fill="#101738" opacity=".3"/><g stroke="${ink}" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">${bodies[id]||bodies.scout}</g></svg>`;
+  return evolvedPortrait(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 210" aria-hidden="true"><ellipse cx="93" cy="193" rx="62" ry="12" fill="#101738" opacity=".3"/><g stroke="${ink}" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">${bodies[id]||bodies.scout}</g></svg>`,id,level);
 }
 export function landscape(map){
   const palettes={plains:['#65baf4','#bdedff','#6ec963','#2e9260','#a9eb71'],mountains:['#303466','#8d7bb7','#524a77','#292b51','#9380b6'],crystal:['#252253','#6a58b8','#54448b','#302955','#a183f6'],volcano:['#5a2349','#f57d67','#6e4254','#362a42','#bb5861'],snow:['#69bde7','#e9faff','#b4e3f3','#6399bc','#edfaff']};
