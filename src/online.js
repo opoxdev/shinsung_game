@@ -28,6 +28,22 @@ export class Online {
     const res=await fetch(this.api+'/api',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify({action,payload})});
     const r=await res.json();if(!r.ok)throw Error(r.error||'서버 통신 오류');return r.data;
   }
+  // Anonymous public discovery keeps room browsing independent of sign-in.
+  async publicRooms(mode){
+    if(!['pvp','coop'].includes(mode))throw Error('잘못된 방 목록 유형입니다.');
+    if(!/^https:\/\//.test(this.api))throw Error('온라인 서버 주소가 설정되지 않았습니다.');
+    const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),8000);
+    try{
+      const res=await fetch(this.api+'/rooms?mode='+mode,{method:'GET',cache:'no-store',signal:abort.signal});
+      const result=await res.json();
+      if(!res.ok||!result.ok)throw Error(result.error||'공개 방 목록 요청 실패');
+      if(!Array.isArray(result.data))throw Error('방 목록 응답이 올바르지 않습니다.');
+      return result.data;
+    }catch(e){
+      if(e.name==='AbortError')throw Error('서버 응답 시간이 초과되었습니다. 다시 시도해 주세요.');
+      throw e;
+    }finally{clearTimeout(timer);}
+  }
   async call(action,payload={}){
     if(['command','pulse'].includes(action)&&this.room===payload.code&&this.socket?.readyState===WebSocket.OPEN){
       if(action==='pulse'){this.socket.send(JSON.stringify({type:'pulse'}));return {updated:true};}
