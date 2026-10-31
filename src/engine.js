@@ -279,6 +279,10 @@ export function applyReward(profile,reward) {
 }
 export function profileAction(profile,a) {
   if(!a||typeof a!=='object')throw Error('잘못된 요청입니다.');
+  // Legacy profiles predate crates and can lack cosmetic dictionaries.
+  profile.skins=profile.skins&&typeof profile.skins==='object'?profile.skins:{};
+  profile.equippedSkins=profile.equippedSkins&&typeof profile.equippedSkins==='object'?profile.equippedSkins:{};
+  if(!Number.isSafeInteger(profile.cratePity)||profile.cratePity<0)profile.cratePity=0;
   if(a.kind==='equip') {
     if(!profile.owned.includes(a.id))throw Error('보유하지 않은 타워입니다.');
     if(profile.loadout.includes(a.id)){if(profile.loadout.length===1)throw Error('타워를 최소 1개 장착하세요.');profile.loadout=profile.loadout.filter(x=>x!==a.id);}
@@ -304,7 +308,9 @@ export function profileAction(profile,a) {
     // Never trust client-provided outcomes. The server performs every roll.
     // Roll bytes using Web Crypto on Workers and in modern browsers.
     const values=new Uint32Array(count);crypto.getRandomValues(values);
-    const available=()=>profile.owned.flatMap(id=>crate.styles.filter(style=>!profile.skins[id+':'+style]).map(style=>({id,style})));
+    const available=()=>profile.owned.filter(id=>Object.hasOwn(TOWERS,id)).flatMap(id=>crate.styles.filter(style=>!profile.skins[id+':'+style]).map(style=>({id,style})));
+    const eligible=profile.owned.filter(id=>Object.hasOwn(TOWERS,id));
+    if(!eligible.length)throw Error('상자를 열려면 타워를 한 개 이상 보유해야 합니다.');
     const weightTotal=crate.styles.reduce((n,id)=>n+SKIN_STYLES[id].weight,0);
     const rolls=[];
     profile.coins-=crate.price*count;
@@ -319,7 +325,7 @@ export function profileAction(profile,a) {
       }else{
         let ticket=values[i]%weightTotal;
         style=crate.styles.find(key=>{ticket-=SKIN_STYLES[key].weight;return ticket<0;})||crate.styles[0];
-        id=profile.owned[(Math.floor(values[i]/weightTotal))%profile.owned.length];
+        id=eligible[(Math.floor(values[i]/weightTotal))%eligible.length];
       }
       const key=id+':'+style,duplicate=!!profile.skins[key],refund=duplicate?SKIN_STYLES[style].refund:0;
       if(!duplicate){profile.skins[key]=true;profile.cratePity=0;}else profile.cratePity++;
