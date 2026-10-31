@@ -74,6 +74,7 @@ function inspector(){
   const compare=(now,after,unit='')=>`<strong>${typeof now==='number'&&unit!=='s'?fmt(now):Number(now).toFixed(2)}${unit}</strong>${after!==undefined?` <span class="evo-delta">→ ${unit==='s'?Number(after).toFixed(2):fmt(after)}${unit}</span>`:''}`;
   const info=next?`<section class="evo-next"><div class="evo-next-header"><small>다음 진화 / LEVEL ${t.level+2}</small><b>${esc(next.name)}</b></div><p>${esc(next.desc)}</p><span class="evo-effect">${esc(future||'무기·의상·이펙트가 진화하며 성능 강화')}</span></section>`
     :'<section class="evo-next max"><b>✦ 최종 진화 달성</b><p>이 개체는 더 이상 업그레이드할 수 없습니다.</p></section>';
+  $('#tower-inspector').dataset.evolutionKey=t.id+':'+t.level;
   $('#tower-inspector').innerHTML=`<span class="eyebrow">${esc(state.players[t.owner].name)} / ${t.level+1} / ${max+1} 단계</span>
     <h2>${d.name}</h2><div class="evo-stage">${esc(stats.stageName)}</div>
     <div class="inspector-art evolved">${portrait(t.type,t.skin,t.level)}<span class="evo-sparks">✦</span></div>
@@ -92,6 +93,21 @@ function inspector(){
     <button class="sell wide" data-action="sell" ${own?'':'disabled'}>판매 · ₩ ${fmt(Math.floor(t.spent*7/10))}</button>`;
 }
 let previousWave=0;function updateHud(){if(!state||!$('#cash'))return;const p=state.players[playerId],d=DIFFICULTIES.find(d=>d.id===state.config.difficulty);$('#base-hp').textContent=`${state.fields[p.field]} / 100`;if(state.config.type==='pvp')$('#opponent-hp').textContent=`${state.fields[1-p.field]} / 100`;$('#cash').textContent='₩ '+fmt(p.money);$('#tower-count').textContent=state.towers.filter(t=>t.field===p.field).length+' / '+modifiers(state.config).cap;$('#wave-label').textContent=`WAVE ${String(state.wave).padStart(2,'0')} / ${d.waves.length}`;const wave=d.waves[state.wave-1];const next=d.waves[state.wave];const intel=$('#wave-intel');if(intel)intel.textContent=wave.title+' · '+wave.groups.map(([id,n])=>ENEMIES[id].name+' '+n).join(' / ')+(next?' · 다음: '+next.groups.slice(0,2).map(([id])=>ENEMIES[id].name).join('·'):'');$('#wave-clock').textContent=`${Math.max(0,Math.ceil(d.waves[state.wave-1].duration-state.waveTime))}s · 적 ${state.enemies.length}`;const skip=$('#skip');skip.disabled=state.waveTime<8||state.wave===d.waves.length||state.votes.includes(playerId);skip.innerHTML=state.waveTime<8?`스킵 가능까지 ${Math.ceil(8-state.waveTime)}초`:`웨이브 스킵 <span>${state.votes.length} / ${requiredVotes(state)}</span>`;
+  // Keep the per-instance evolution button in sync with earned combat money.
+  const selected=renderer&&state.towers.find(t=>t.id===renderer.selected);
+  const pane=$('#tower-inspector');
+  if(pane){
+    if(selected&&pane.dataset.evolutionKey!==selected.id+':'+selected.level)inspector();
+    else if(!selected&&pane.dataset.evolutionKey){pane.replaceChildren();delete pane.dataset.evolutionKey;}
+    if(selected){
+      const upgrade=pane.querySelector('[data-action="upgrade"]'),cost=TOWERS[selected.type].upgrades[selected.level];
+      if(upgrade){
+        const own=selected.owner===playerId;
+        upgrade.disabled=cost===undefined||!own||p.money<cost;
+        upgrade.textContent=cost===undefined?'MAX · 진화 완료':!own?'다른 플레이어의 타워':p.money<cost?'자금 부족 · ₩ '+fmt(cost):'진화 · ₩ '+fmt(cost);
+      }
+    }
+  }
   if(state.wave!==previousWave){previousWave=state.wave;$('#wave-notice').textContent=`WAVE ${String(state.wave).padStart(2,'0')} · ${d.waves[state.wave-1].title}`;$('#wave-notice').classList.remove('animate');void $('#wave-notice').offsetWidth;$('#wave-notice').classList.add('animate');}
   if(isOnlineMatch)$('#connection-status').textContent=online.socket?.readyState!==WebSocket.OPEN?'재연결 중':performance.now()-lastSnapshot>7000?'동기화 대기 · 연결 확인 중':'Cloudflare 실시간 동기화';
   if(state.config.type==='pvp')PACKS[p.pack].monsters.forEach(([id,cost])=>{const b=$('#send-'+id),left=Math.max(0,(p.cooldowns[id]||0)-state.time);b.disabled=left>0||p.money<cost;b.querySelector('small').textContent=left>0?Math.ceil(left)+'s':'₩ '+cost;});
