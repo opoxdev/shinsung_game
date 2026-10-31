@@ -77,6 +77,7 @@ test('admin ban denies API access and kicks an active room; unban restores acces
     kick:async(code,uid)=>calls.push({code,uid})
   });
   assert.equal(changed.profile.banned,true);
+  assert.equal(changed.profile.activeRoom,null,'banning clears stale lobby membership so unbanned users can play again');
   assert.deepEqual(calls,[{code:'FIGHT1',uid:'user-1'}]);
   await assert.rejects(assertActiveProfile(db,normal),/이용이 제한/);
   await assert.rejects(adminAction(db,admin,'adminChange',{uid:'admin',operation:'ban',reason:'self'}),/자기 자신/);
