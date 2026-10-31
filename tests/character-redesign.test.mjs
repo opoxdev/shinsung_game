@@ -49,6 +49,31 @@ test('common and rare are modest, profession-specific characters rather than eli
   assert.equal(TOWERS.drone.name,'번개 발명가');
   assert.equal(TOWERS.lullaby.name,'음향 조율사');
 });
+test('every common and rare default head is rounded or soft-square and outfits use game-like color accents',()=>{
+  const ids=Object.keys(TOWERS).filter(id=>['common','rare'].includes(TOWERS[id].rarity));
+  assert.equal(ids.length,11);
+  const seen=new Set();
+  for(const id of ids){
+    const style=CHARACTER_DESIGNS[id];
+    const portrait=character(id);
+    assert.match(portrait,/<g data-head-shape="rounded">/,id);
+    assert.ok(portrait.includes('M74 57Q74 43')||portrait.includes('M72 65Q72 43'),id);
+    assert.match(style.main,/^#[0-9a-f]{6}$/i,id);
+    assert.match(style.dark,/^#[0-9a-f]{6}$/i,id);
+    assert.match(style.trim,/^#[0-9a-f]{6}$/i,id);
+    const [r,g,b]=[1,3,5].map(k=>parseInt(style.main.slice(k,k+2),16));
+    assert.ok(Math.max(r,g,b)-Math.min(r,g,b)>=25,id+' should not be drab gray or brown');
+    seen.add(style.main);
+    assert.ok(!portrait.includes('data-upgrade="practical"'),'Base appearance should have no heroic upgrade overlay');
+    assert.ok(!character(id,'default',0).includes('data-costume="kitsune"'));
+  }
+  assert.equal(seen.size,ids.length,'Each class gets a different primary color');
+  for(const id of ['scout','blade','chef']){
+    const limited=id==='scout'?'solstice':id==='blade'?'kitsune':'donut';
+    assert.ok(!character(id,limited).includes('data-head-shape="rounded"'),
+      'Full-body collectible skins preserve their separately authored silhouette: '+id);
+  }
+});
 test('prestige art is explicitly different by rarity even if a mythic is inexpensive to deploy',()=>{
   assert.deepEqual(BASE_ART_TIERS,{
     common:'everyday',rare:'craft',epic:'specialist',legendary:'iconic',mythic:'myth'
