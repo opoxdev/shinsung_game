@@ -24,19 +24,8 @@ body{background:#15203d;color:var(--text)}button{border:2px solid #101a35;border
   white-space:nowrap;color:#e6d4a2;font:600 10px/15px 'Noto Sans KR',sans-serif;letter-spacing:.1px}
 .tower-card.mythic{position:relative;isolation:isolate;box-shadow:inset 0 0 0 1px #e85c71aa,0 0 24px #f455752e;animation:mythicGlow 2.8s ease-in-out infinite}
 .tower-card.mythic:after{content:"";pointer-events:none;position:absolute;inset:3px;border:1px solid #ffabb599;border-radius:8px;box-shadow:0 0 13px #ef3f6555;animation:mythicGlow 2s ease-in-out infinite}
-.tower-card.immortal{position:relative;isolation:isolate;overflow:hidden;border:1px solid #65ffd0;
-  box-shadow:inset 0 0 19px #5affd034,0 0 20px #59dff73e}
-.tower-card.immortal:before{content:"";pointer-events:none;position:absolute;inset:-120% -70%;z-index:0;
-  background:repeating-linear-gradient(118deg,transparent 0 19px,#58ffe828 20px,#68baff66 22px,transparent 25px 46px);
-  animation:immortalTwist 7s linear infinite}
-.tower-card.immortal:after{content:"✧";pointer-events:none;position:absolute;top:10px;right:10px;
-  font-size:27px;color:#9dffe9;filter:drop-shadow(0 0 8px #57c8f8);animation:immortalBreathe 2.5s ease-in-out infinite}
-.tower-card.immortal > *{position:relative;z-index:1}
-.tower-detail:has(.eyebrow) .art-ring{animation:immortalBreathe 4s ease-in-out infinite}
 @keyframes mythicGlow{0%,100%{box-shadow:inset 0 0 0 1px #d9526b77,0 0 8px #fc496933}50%{box-shadow:inset 0 0 0 1px #ffc1cd,0 0 29px #ef557a8c}}
-@keyframes immortalTwist{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
-@keyframes immortalBreathe{0%,100%{opacity:.55;transform:scale(.96)}50%{opacity:1;transform:scale(1.08)}}
-@media(prefers-reduced-motion:reduce){.tower-card.mythic,.tower-card.mythic:after,.tower-card.immortal:before,.tower-card.immortal:after{animation:none!important}}
+@media(prefers-reduced-motion:reduce){.tower-card.mythic,.tower-card.mythic:after,{animation:none!important}}
 
 /* v0.5 individual unit evolution viewer. It scrolls instead of hiding upgrade data. */
 .battle-inspector{overflow-y:auto;scrollbar-width:thin;scrollbar-color:#93bcda66 transparent}
@@ -162,3 +151,10 @@ body{background:#15203d;color:var(--text)}button{border:2px solid #101a35;border
 @media(max-width:1080px){.pack-detail-panel{grid-template-columns:155px minmax(0,1fr)}.pack-detail-metrics{grid-column:1/-1;grid-template-columns:repeat(3,minmax(0,1fr));border-left:0;border-top:1px solid #668bb0;padding:10px 0 0}.pack-detail-metrics div{grid-template-columns:1fr;gap:3px}}
 @media(max-width:740px){.collection-switch{max-width:100%}.collection-switch button{font-size:13px;padding:10px 6px;flex-wrap:wrap}.collection-switch button small{font-size:9px}.pack-config-screen{overflow:visible;padding:14px 11px}.pack-config-title{flex-direction:column;align-items:flex-start;gap:8px}.pack-choice-list{grid-template-columns:repeat(2,minmax(0,1fr))}.pack-choice{min-height:76px}.pack-choice-art{flex-basis:54px}.pack-detail-panel{grid-template-columns:1fr;padding:12px;gap:10px}.pack-detail-art{min-height:113px}.pack-detail-art svg{height:103px}.pack-detail-metrics{grid-column:auto}.pack-monster-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.pack-monster-heading{flex-direction:column;gap:3px}}
 @media(max-width:420px){.pack-choice-list{grid-template-columns:1fr}.pack-detail-metrics{grid-template-columns:1fr}.pack-monster-grid{gap:6px}.pack-monster-art{height:80px}.pack-monster-art svg{height:78px}}
+
+/* v0.6.0 — five rarity tiers; placement cost is independent from rarity. */
+.tower-card>small{max-width:calc(100% - 16px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:9px}
+.tier-hint{font-size:10px!important;color:#a4e4db!important;border-left:3px solid #74d9d3;padding:7px 10px;margin-top:8px!important;background:#162c4d85;line-height:1.65!important}
+.feature-card .battle-cost{font-weight:700;color:#ffe19b;font-size:12px;margin:8px 0 0}
+.supply-card p{line-height:1.55}
+@media(max-width:700px){.tier-hint{font-size:10px!important}.feature-card .battle-cost{font-size:11px}.tower-card>small{font-size:8px}}
