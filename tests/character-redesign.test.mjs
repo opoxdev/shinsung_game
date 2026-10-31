@@ -1,13 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { TOWERS, RARITIES, SKIN_STYLES, CRATES, starterProfile, skinCandidates, availableCrateStyles, skinOdds } from '../src/data.js';
-import { CHARACTER_DESIGNS, COSTUME_SCHEMES } from '../src/visual-design.js';
+import { CHARACTER_DESIGNS, COSTUME_SCHEMES, BASE_ART_TIERS } from '../src/visual-design.js';
 import { character } from '../src/art.js';
 import { profileAction } from '../src/engine.js';
 
 const pathGeometry=svg=>Array.from(svg.matchAll(/<path d="([^"]+)"/g),m=>m[1]).join('|');
 
-test('all thirty baseline characters have unique v2 tactical or advanced silhouettes',()=>{
+test('all thirty baseline characters have unique silhouettes across five rarity tiers',()=>{
   const ids=Object.keys(TOWERS);
   assert.equal(ids.length,30);
   assert.deepEqual(Object.keys(CHARACTER_DESIGNS).sort(),ids.sort());
@@ -24,24 +24,48 @@ test('all thirty baseline characters have unique v2 tactical or advanced silhoue
   }
   assert.equal(portraits.size,ids.length,'Different towers must have distinct body/weapon geometry');
 });
-test('low tier identities are practical defenders, preserving their roster keys',()=>{
-  assert.equal(TOWERS.scout.name,'정찰병');
-  assert.equal(TOWERS.blade.name,'검술병');
-  assert.equal(TOWERS.chef.name,'수류탄병');
-  assert.equal(TOWERS.archer.name,'정밀 사수');
-  assert.equal(TOWERS.icewitch.name,'냉각병');
-  assert.equal(TOWERS.spirit.name,'드론 운용병');
-  assert.equal(TOWERS.scrap.name,'중화기병');
-  assert.equal(TOWERS.banker.name,'보급 기지');
-  assert.equal(TOWERS.blade.rarity,'rare');
-  assert.equal(TOWERS.chef.rarity,'common');
-  assert.ok(!character('blade').includes('data-costume="kitsune"'));
-  assert.ok(!character('chef').includes('data-costume="donut"'));
-  for(const id of Object.keys(TOWERS).filter(t=>['common','rare'].includes(TOWERS[t].rarity))){
-    const evolved=character(id,'default',TOWERS[id].upgrades.length);
-    assert.ok(!evolved.includes('#ffe3a1'),'Early-tier upgrade must not get the high-tier gold crown: '+id);
-    assert.notEqual(evolved,character(id),id);
+test('common and rare are modest, profession-specific characters rather than elite-looking heroes',()=>{
+  const baseline={
+    scout:'새총잡이',archer:'궁수',chef:'투척병',scrap:'포수',
+    soldier:'전기공',blade:'검객',chemist:'약제사',icewitch:'서리 견습생',
+    spirit:'드론 조작원',hunter:'사냥꾼',marker:'관측원'
+  };
+  for(const [id,name] of Object.entries(baseline)){
+    assert.equal(TOWERS[id].name,name,id);
+    const rarity=TOWERS[id].rarity,portrait=character(id);
+    assert.ok(['common','rare'].includes(rarity),id);
+    assert.equal(CHARACTER_DESIGNS[id].helmet,'none',id+' should not have a premium helmet');
+    assert.ok(portrait.includes('data-art-tier="'+BASE_ART_TIERS[rarity]+'"'),id);
+    assert.ok(!portrait.includes('data-upgrade="practical"'),id);
+    assert.ok(!portrait.includes('data-costume="kitsune"'),id);
+    assert.ok(!portrait.includes('<filter'),id);
+    const maxLevel=TOWERS[id].upgrades.length;
+    const evolved=character(id,'default',maxLevel);
+    assert.ok(evolved.includes('data-upgrade="practical"'),id);
+    assert.ok(!evolved.includes('#ffe3a1'),'No generic gold crown for '+id);
+    assert.notEqual(evolved,portrait,id);
   }
+  assert.equal(TOWERS.banker.name,'황금 공방');
+  assert.equal(TOWERS.drone.name,'번개 발명가');
+  assert.equal(TOWERS.lullaby.name,'음향 조율사');
+});
+test('prestige art is explicitly different by rarity even if a mythic is inexpensive to deploy',()=>{
+  assert.deepEqual(BASE_ART_TIERS,{
+    common:'everyday',rare:'craft',epic:'specialist',legendary:'iconic',mythic:'myth'
+  });
+  for(const [id,tower] of Object.entries(TOWERS)){
+    const svg=character(id);
+    assert.ok(svg.includes('data-art-tier="'+BASE_ART_TIERS[tower.rarity]+'"'),id);
+    if(tower.rarity==='legendary'||tower.rarity==='mythic'){
+      assert.ok(!svg.includes('data-upgrade="practical"'),id);
+      assert.ok(svg.length>1000,id+' needs a fully authored prestige design');
+    }
+  }
+  assert.equal(TOWERS.starseed.rarity,'mythic');
+  assert.ok(TOWERS.starseed.cost<TOWERS.scout.cost,'Rarity is not in-battle deployment price');
+  assert.ok(character('scout','solstice').includes('data-art-tier="costume"'));
+  assert.ok(character('blade','kitsune').includes('data-art-tier="costume"'));
+  assert.ok(character('chef','donut').includes('data-art-tier="costume"'));
 });
 test('only explicitly supported towers have newly obtainable skins',()=>{
   assert.equal(Object.keys(SKIN_STYLES).length,15);
