@@ -42,3 +42,16 @@ export function multiplayerLoadout(profile){
   }
   return {loadout,pack,equippedSkins};
 }
+
+export function exportSave(profile){
+  if(!validProfile(profile))throw Error('내보낼 진행도가 올바르지 않습니다.');
+  return JSON.stringify({game:'shinsung-defense',format:1,exportedAt:new Date().toISOString(),profile});
+}
+export function importSave(text){
+  if(typeof text!=='string'||text.length>256000)throw Error('진행도 백업 파일이 너무 큽니다.');
+  let input;
+  try{input=JSON.parse(text);}catch{throw Error('진행도 백업 JSON 파일이 아닙니다.');}
+  if(input?.game!=='shinsung-defense'||input.format!==1||!validProfile(input.profile))
+    throw Error('신성 디펜스 진행도 백업 파일이 아닙니다.');
+  return clone(input.profile);
+}
