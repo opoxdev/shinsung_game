@@ -104,6 +104,10 @@ jobs:
           await page.reload({waitUntil:'domcontentloaded'});await page.waitForSelector('[data-action="start"]');
           await page.setViewportSize({width:390,height:844});await shot('18-mobile-lobby');
           await click('nav','towers');await click('setCollectionTab','packs');await shot('19-mobile-monster-loadout');
+          await click('setCollectionTab','towers');
+          await click('inspect','scout');await click('skin','scout');
+          if(await page.locator('.skin-wardrobe-item').count()<=2)throw Error('Mobile custom wardrobe did not load');
+          await shot('22-mobile-custom-skins');await click('close');
           if(errors.length)throw Error('Game page errors: '+errors.join(' | '));
           await browser.close();
           EOF
