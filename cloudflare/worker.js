@@ -7,6 +7,13 @@ const response=(data,status=200)=>new Response(JSON.stringify(data),{status,head
 const cors={'access-control-allow-origin':'*','access-control-allow-methods':'POST,GET,OPTIONS','access-control-allow-headers':'authorization,content-type','access-control-max-age':'600'};
 const validCode=code=>{if(typeof code!=='string'||!/^[A-Z0-9]{6}$/.test(code))throw Error('6자리 방 코드를 입력하세요.');return code;};
 const stubFor=(env,code)=>env.ROOMS.get(env.ROOMS.idFromName(validCode(code)));
+const directoryStub=env=>env.ROOMS.get(env.ROOMS.idFromName('PUBLIC_ROOM_DIRECTORY_V1'));
+async function listRooms(env){
+  const r=await directoryStub(env).fetch('https://directory/action',{method:'POST',
+    headers:{'content-type':'application/json'},body:JSON.stringify({action:'directoryList',payload:{}})});
+  const result=await r.json();if(!result.ok)throw Error(result.error||'공개 방 목록을 불러올 수 없습니다.');
+  return result.data;
+}
 async function callRoom(env,code,action,payload,user){
   const r=await stubFor(env,code).fetch('https://room/action',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action,payload,user})});
   const result=await r.json();if(!result.ok)throw Error(result.error||'게임방 오류');return result.data;
@@ -14,6 +21,7 @@ async function callRoom(env,code,action,payload,user){
 async function applyAction(env,action,p,user){
   const db=env.DB;
   if(action==='profile')return (await getProfile(db,user)).value;
+  if(action==='listRooms')return listRooms(env);
   if(action==='diagnostic')return {name:(await getProfile(db,user)).value.name,serverTime:new Date().toISOString(),services:['Firebase Auth','Cloudflare Worker','D1','Durable Objects']};
   if(action==='profileAction'){
     return updateProfile(db,user,profile=>{
@@ -28,7 +36,7 @@ async function applyAction(env,action,p,user){
     for(let attempt=0;attempt<4;attempt++){
       const code=Array.from(crypto.getRandomValues(new Uint8Array(6)),n=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[n%32]).join('');
       try{
-        await callRoom(env,code,'create',{config:p.config,profile},user);
+        await callRoom(env,code,'create',{config:p.config,profile,code},user);
         await updateProfile(db,user,v=>{v.activeRoom=code;return v;});
         return {code};
       }catch(e){if(!String(e.message).includes('이미 사용'))throw e;}
@@ -38,7 +46,7 @@ async function applyAction(env,action,p,user){
   if(action==='join'){
     const code=validCode(p.code),profile=(await getProfile(db,user)).value;
     if(profile.activeRoom&&profile.activeRoom!==code)throw Error('기존 방을 먼저 나가세요.');
-    await callRoom(env,code,'join',{profile},user);
+    await callRoom(env,code,'join',{profile,code},user);
     await updateProfile(db,user,v=>{v.activeRoom=code;return v;});
     return {code};
   }
@@ -63,7 +71,7 @@ async function applyAction(env,action,p,user){
 export default {
   async fetch(request,env){
     const url=new URL(request.url);
-    if(url.pathname==='/health')return response({ok:true,service:'shinsung-cloudflare',version:'0.8.0'});
+    if(url.pathname==='/health')return response({ok:true,service:'shinsung-cloudflare',version:'0.9.0'});
     if(request.method==='OPTIONS')return new Response(null,{status:204,headers:cors});
     if(url.pathname==='/socket'){
       try{
