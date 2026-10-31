@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {GUEST_PROFILE_KEY,profileKey,loadClientProfile,saveClientProfile,
-  validProfile,multiplayerLoadout} from '../src/client-profile.js';
+  validProfile,multiplayerLoadout,exportSave,importSave} from '../src/client-profile.js';
 import {starterProfile,TOWERS} from '../src/data.js';
 import {profileAction,createMatch,advance,rewardFor,applyReward} from '../src/engine.js';
 import {roomLoadout} from '../cloudflare/worker.js';
@@ -82,4 +82,14 @@ test('old v2 browser profiles can load intact; broken values cannot overwrite a 
   assert.equal(validProfile({...p,owned:['__proto__']}),false);
   assert.equal(validProfile({...p,loadout:[]}),false);
   assert.equal(validProfile({...p,coins:-20}),false);
+});
+
+test('local profile can be backed up and restored on another device without any server',()=>{
+  const p=starterProfile('BackedUp');p.coins=9111;p.owned.push('rail');
+  const backup=exportSave(p);
+  const loaded=importSave(backup);
+  assert.deepEqual(loaded,p);
+  loaded.coins=0;assert.equal(p.coins,9111,'restored progress is independent');
+  assert.throws(()=>importSave('{bad-json'),/JSON/);
+  assert.throws(()=>importSave(JSON.stringify({game:'x',format:1,profile:p})),/신성 디펜스/);
 });
