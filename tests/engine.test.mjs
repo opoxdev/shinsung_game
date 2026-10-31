@@ -15,7 +15,20 @@ test('PvP sends to opponent, validates money and cooldown',()=>{const s=match({t
 test('PvP wave can advance when only one field is clear',()=>{const s=match({type:'pvp'},['a','b']);advance(s,10);s.queue=s.queue.filter(e=>e.field===1);s.enemies=s.enemies.filter(e=>e.field===1);assert.ok(s.enemies.length);tick(s);assert.equal(s.wave,2);});
 test('coop kill income is divided among participants without money duplication',()=>{const s=match({type:'coop'},['a','b']);s.queue=[];s.enemies=[{id:999,type:'zombie',field:0,hp:1,maxHp:10,x:200,y:200,progress:10,speed:0}];s.towers=[{id:1000,type:'scout',field:0,owner:'a',x:200,y:120,level:0,cd:0,target:'first'}];s.wave=10;tick(s);assert.equal(s.players.a.money,502.5);assert.equal(s.players.b.money,502.5);});
 test('six campaigns have distinct wave compositions, lengths and rewards; five valid maps',()=>{assert.equal(new Set(DIFFICULTIES.map(d=>d.waves.length)).size,6);assert.equal(new Set(DIFFICULTIES.map(d=>JSON.stringify(d.waves))).size,6);for(const m of MAPS){const s=match({map:m.id});assert.ok(m.path.length>=5);assert.ok(Number.isFinite(m.path[0][0]));advance(s,5);assert.ok(s.enemies.length>0);}});
-test('shop ownership, negative/prototype IDs, capacity and cosmetic spend',()=>{const p=starterProfile();assert.throws(()=>profileAction(p,{kind:'buyTower',id:'rail'}));assert.throws(()=>profileAction(p,{kind:'buyTower',id:'__proto__'}));assert.throws(()=>profileAction(p,{kind:'buyTower',id:'scout'}));profileAction(p,{kind:'skin',id:'scout',skin:'arctic'});assert.equal(p.coins,300);profileAction(p,{kind:'skin',id:'scout',skin:'arctic'});assert.equal(p.coins,300);assert.throws(()=>profileAction(p,{kind:'skin',id:'sonic',skin:'arctic'}));});
+test('shop ownership, prototype IDs, capacity and crate-only cosmetic ownership',()=>{
+ const p=starterProfile();
+ assert.throws(()=>profileAction(p,{kind:'buyTower',id:'rail'}));
+ assert.throws(()=>profileAction(p,{kind:'buyTower',id:'__proto__'}));
+ assert.throws(()=>profileAction(p,{kind:'buyTower',id:'scout'}));
+ assert.throws(()=>profileAction(p,{kind:'skin',id:'scout',skin:'arctic'}),/상자/);
+ assert.equal(p.coins,600);
+ profileAction(p,{kind:'skin',id:'scout',skin:'default'});
+ p.skins['scout:arctic']=true;
+ profileAction(p,{kind:'skin',id:'scout',skin:'arctic'});
+ assert.equal(p.equippedSkins.scout,'arctic');
+ assert.equal(p.coins,600);
+ assert.throws(()=>profileAction(p,{kind:'skin',id:'sonic',skin:'arctic'}));
+});
 test('clear reward and Sonic unlock are conditional; PvP has no currency payout',()=>{const s=match({difficulty:'extreme',modes:['supersonic']});s.status='victory';s.winner=0;const r=rewardFor(s,'a');assert.equal(r.coins,2200);assert.equal(r.sonic,true);const p=starterProfile();applyReward(p,r);assert.ok(p.owned.includes('sonic'));s.status='defeat';assert.equal(rewardFor(s,'a').coins,0);const v=match({type:'pvp'},['a','b']);v.status='complete';v.winner=0;assert.equal(rewardFor(v,'a').coins,0);});
 test('fixed-step simulation survives serialization and remains deterministic',()=>{const s=match();command(s,'a',{kind:'place',type:'scout',x:240,y:400});advance(s,10);const copy=JSON.parse(JSON.stringify(s));advance(s,20);advance(copy,20);assert.deepEqual(s,copy);assert.throws(()=>tick(s,100));});
 test('final wave requires queued and living enemies to be cleared',()=>{const s=match();s.wave=10;s.queue=[];s.enemies=[];tick(s);assert.equal(s.status,'victory');const v=match();v.wave=10;v.queue=[{type:'boss',field:0,at:100}];v.enemies=[];tick(v);assert.equal(v.status,'playing');});
