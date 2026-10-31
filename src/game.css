@@ -158,3 +158,23 @@ body{background:#15203d;color:var(--text)}button{border:2px solid #101a35;border
 .feature-card .battle-cost{font-weight:700;color:#ffe19b;font-size:12px;margin:8px 0 0}
 .supply-card p{line-height:1.55}
 @media(max-width:700px){.tier-hint{font-size:10px!important}.feature-card .battle-cost{font-size:11px}.tower-card>small{font-size:8px}}
+
+/* Five distinct cosmetic shops, each driven by its own rate and price table. */
+.crate-catalog{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:15px;padding:5px 3px 18px}
+.crate-offer{--crate-color:#c6b5ff;min-width:0;border:1px solid color-mix(in srgb,var(--crate-color) 75%,#30466c);border-radius:15px;background:radial-gradient(ellipse at 5% 0%,color-mix(in srgb,var(--crate-color) 19%,transparent),transparent 65%),linear-gradient(150deg,#283b64,#182944);padding:18px;box-shadow:inset 0 1px #effaff18,0 4px 12px #0c183629}
+.crate-offer-head{display:flex;gap:14px;align-items:center;min-height:115px}
+.crate-offer-icon{flex-shrink:0;display:grid;place-items:center;width:76px;height:76px;border:1px solid var(--crate-color);border-radius:15px;font-size:39px;background:#1c3153;box-shadow:0 0 17px color-mix(in srgb,var(--crate-color) 25%,transparent)}
+.crate-offer-head h2{font-size:23px;margin:4px 0 5px}
+.crate-offer-head p{color:#b8c9e9;font-size:11px;line-height:1.6}
+.crate-offer-odds{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:13px 0 15px}
+.crate-offer-odds span{display:flex;flex-direction:column;gap:4px;min-width:0;background:#152a48;border:1px solid color-mix(in srgb,var(--rarity) 65%,#27466e);border-radius:8px;padding:8px}
+.crate-offer-odds b{color:var(--rarity);font-size:12px}
+.crate-offer-odds small{font-size:10px;color:#aebfd9}
+.crate-offer-info{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 13px;border-top:1px solid #657ba95a;padding-top:12px}
+.crate-offer-info strong{font:21px var(--display);color:#ffe398}
+.crate-offer-info small{font:10px var(--body);color:#b7c6df}
+.crate-offer-info>span{font-size:10px;color:#b6c9e8}
+.crate-offer .crate-actions{margin:0;gap:7px}
+.crate-offer .crate-actions button{flex:1;min-width:130px;padding:11px 5px;font-size:11px}
+.crate-catalog-note{font-size:11px;line-height:1.8;color:#b3d5e7;padding:10px 3px 18px}
+@media(max-width:740px){.crate-catalog{grid-template-columns:1fr}.crate-offer{padding:14px}.crate-offer-head{min-height:100px}}
