@@ -127,6 +127,16 @@ export const DIFFICULTIES = [
   {id:'hell',name:'지옥',color:'#f47f9b',reward:1800,hp:1.5,waves:compileWaves(WAVE_SCRIPTS.hell,58,.68,210)},
   {id:'ruin',name:'파멸',color:'#b491ea',reward:3000,hp:1.8,waves:compileWaves(WAVE_SCRIPTS.ruin,60,.58,270)}
 ];
+// Cosmetic crates: transparent probabilities, duplicate refunds and a guaranteed
+// new item when an eligible owned tower still has an unowned skin after 10 misses.
+export const SKIN_STYLES={
+  arctic:{name:'눈꽃',rarity:'rare',color:'#a6edff',weight:65,refund:90},
+  neon:{name:'네온',rarity:'epic',color:'#f79eff',weight:28,refund:170},
+  royal:{name:'왕실',rarity:'legendary',color:'#ffe19a',weight:7,refund:320}
+};
+export const CRATES={
+  wardrobe:{name:'반짝 의상 상자',price:240,description:'보유한 타워의 눈꽃·네온·왕실 스킨을 뽑습니다.',styles:['arctic','neon','royal']}
+};
 export function starterProfile(name='새로운 모험가') {
-  return { name, coins:600, xp:0, wins:0, owned:['scout','blade'], loadout:['scout','blade'], packs:['basic'], pack:'basic', skins:{}, equippedSkins:{}, schema:1 };
+  return { name, coins:600, xp:0, wins:0, owned:['scout','blade'], loadout:['scout','blade'], packs:['basic'], pack:'basic', skins:{}, equippedSkins:{}, cratePity:0, lastCrate:null, schema:1 };
 }
