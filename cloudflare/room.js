@@ -59,11 +59,11 @@ export class GameRoom {
     const r=this.room;
     if(!r||r.status!=='playing')return false;
     const now=Date.now(),secs=Math.max(0,(now-r.lastPulse)/1000);
-    const steps=Math.min(55,Math.floor(secs/Core.STEP+1e-7));
+    const steps=Math.min(80,Math.floor(secs/Core.STEP+1e-7));
     if(!steps)return false;
     // A disconnected match pauses after a short bounded catch-up; no runaway CPU use.
     Core.advance(r.state,steps*Core.STEP);
-    r.lastPulse=secs>3?now:r.lastPulse+steps*Core.STEP*1000;
+    r.lastPulse=secs>4?now:r.lastPulse+steps*Core.STEP*1000;
     if(r.state.status!=='playing')r.status='finished';
     return true;
   }
@@ -106,8 +106,8 @@ export class GameRoom {
       await this.persist();await this.syncDirectory().catch(e=>console.warn(e));this.broadcast();return {started:true};
     }
     if(name==='pulse'){
-      if(r.status!=='playing'||Date.now()-r.lastPulse<1750)return {updated:false};
-      if(r.host!==uid && Date.now()-r.lastPulse<6000)return {updated:false};
+      if(r.status!=='playing'||Date.now()-r.lastPulse<750)return {updated:false};
+      if(r.host!==uid && Date.now()-r.lastPulse<4500)return {updated:false};
       if(r.host!==uid)r.host=uid;
       if(!this.advance())return {updated:false};
       if(Date.now()-(r.lastSavedAt||0)>8000||r.status!=='playing')await this.persist();
@@ -167,7 +167,7 @@ export class GameRoom {
     socket.serializeAttachment(a);
     let obj;
     try{obj=JSON.parse(message);if(!['command','pulse'].includes(obj.type))return;
-      if(obj.type==='pulse'&&this.room?.host!==a.uid&&Date.now()-this.room?.lastPulse<6000)return;
+      if(obj.type==='pulse'&&this.room?.host!==a.uid&&Date.now()-this.room?.lastPulse<4500)return;
       const data=await this.action(obj.type,obj.type==='command'?{command:obj.command}:{},{uid:a.uid});
       if(obj.id)socket.send(JSON.stringify({type:'ack',id:obj.id,data}));
     }catch(e){if(obj?.id)socket.send(JSON.stringify({type:'ack',id:obj.id,error:String(e.message).slice(0,180)}));}
