@@ -6,7 +6,7 @@ export const GUEST_PROFILE_KEY='shinsung.profile.v1';
 export const profileKey=uid=>uid?'shinsung.profile.account.v2.'+encodeURIComponent(uid):GUEST_PROFILE_KEY;
 const clone=x=>JSON.parse(JSON.stringify(x));
 export function validProfile(value){
-  return !!value&&value.schema===1&&
+  return !!value&&[1,2].includes(value.schema)&&
     Number.isSafeInteger(value.coins)&&value.coins>=0&&
     Number.isSafeInteger(value.xp)&&value.xp>=0&&
     Array.isArray(value.owned)&&Array.isArray(value.loadout)&&value.loadout.length>=1&&value.loadout.length<=5&&
@@ -19,7 +19,7 @@ export function loadClientProfile(storage,uid=null,{name='',seed=null}={}){
     try{const p=JSON.parse(saved);if(validProfile(p))return p;}catch{}
   }
   const base=seed&&validProfile(seed)?clone(seed):starterProfile(name||'모험가');
-  if(name&&base.name==='모험가')base.name=name.slice(0,20);
+  if(name&&(base.name==='모험가'||base.name==='새로운 모험가'))base.name=name.slice(0,20);
   return base;
 }
 export function saveClientProfile(storage,uid,profile){
