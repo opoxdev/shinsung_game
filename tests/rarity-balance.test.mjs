@@ -14,7 +14,7 @@ const match=()=>{
  return s;
 };
 function target(s,hp=100000){
- const e={id:s.nextId++,type:'heavy',field:0,hp,maxHp:hp,shield:0,maxShield:0,x:240,y:150,progress:10,speed:0};
+ const e={id:s.nextId++,type:'heavy',field:0,hp,maxHp:hp,shield:0,maxShield:0,x:240,y:560,progress:240,speed:0};
  s.enemies.push(e);return e;
 }
 test('only five rarity tiers remain; no tower uses discontinued immortal tier',()=>{
@@ -53,7 +53,7 @@ test('cheap mythic and legendary towers can be deployed at the starting wallet a
 });
 test('rare late-game sniper fires a deterministic third-shot charged projectile',()=>{
  const s=match();const e=target(s,100000);
- const result=command(s,'p',{kind:'place',type:'hunter',x:240,y:100});
+ const result=command(s,'p',{kind:'place',type:'hunter',x:240,y:400});
  assert.equal(result.ok,true,JSON.stringify(result));
  const t=s.towers[0],hits=[];
  for(let i=0;i<3;i++){
@@ -65,14 +65,14 @@ test('rare late-game sniper fires a deterministic third-shot charged projectile'
 });
 test('rare marks amplify ally damage only while active and survive save/restore',()=>{
  const s=match();const e=target(s,100000);
- const mark={id:s.nextId++,owner:'p',field:0,type:'marker',x:240,y:100,level:0,cd:0,shots:0,target:'first'};
+ const mark={id:s.nextId++,owner:'p',field:0,type:'marker',x:240,y:400,level:0,cd:0,shots:0,target:'first'};
  s.towers.push(mark);
  tick(s);
  assert.ok(e.markUntil>s.time);
  assert.equal(e.markAmp,TOWERS.marker.markAmp);
  assert.ok(s.events.some(e=>e.kind==='mark'));
  mark.cd=100;
- const scout={id:s.nextId++,owner:'p',field:0,type:'scout',x:300,y:100,level:0,cd:0,shots:0,target:'first'};
+ const scout={id:s.nextId++,owner:'p',field:0,type:'scout',x:300,y:400,level:0,cd:0,shots:0,target:'first'};
  s.towers.push(scout);
  const before=e.hp;tick(s);
  assert.ok(before-e.hp>TOWERS.scout.damage);
