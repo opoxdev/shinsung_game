@@ -11,10 +11,10 @@ function enemy(s,type,hp,rest={}){return {id:s.nextId++,type,field:0,hp,maxHp:hp
 function tower(s,type,x=240,y=100){const t={id:s.nextId++,owner:'hero',field:0,type,x,y,cd:0,level:0,shots:0,target:'first'};s.towers.push(t);return t;}
 
 test('expanded roster, collectibles, PvP packs and unique character artwork',()=>{
-  assert.ok(Object.keys(TOWERS).length>=24);
+  assert.equal(Object.keys(TOWERS).length,30);
   assert.ok(Object.keys(ENEMIES).length>=33);
   assert.ok(Object.keys(PACKS).length>=5);
-  assert.ok(RARITIES.immortal);
+  assert.deepEqual(Object.keys(RARITIES),['common','rare','epic','legendary','mythic']);
   for(const [id,t] of Object.entries(TOWERS)){
     assert.ok(RARITIES[t.rarity],id);
     assert.ok(t.cap>=1&&t.cap<=20&&t.interval>0,id);
@@ -71,7 +71,7 @@ test('spirit and phoenix each summon two unique animated helpers',()=>{
   assert.equal(s.units.length,4);
   assert.deepEqual(new Set(s.units.map(u=>u.type)),new Set(['spirit','phoenix']));
 });
-test('immortal reward requires ruin and elite; never purchasable',()=>{
+test('aurora remains an unlock-only mythic and existing reward rules survive',()=>{
   const p=starterProfile();
   assert.throws(()=>profileAction(p,{kind:'buyTower',id:'aurora'}));
   const s=createMatch({...config('ruin'),modes:['elite']},[player()]);
