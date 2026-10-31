@@ -6,6 +6,7 @@ import { monsterPortrait } from './art.js';
 import { Online } from './online.js';
 import { MotionView } from './presentation.js';
 import { matchmakingMarkup, matchmakingCards, waitingRoomMarkup } from './matchmaking.js';
+import {adminPageMarkup} from './admin-panel.js';
 const $=s=>document.querySelector(s), app=$('#app'), online=new Online();
 const fmt=n=>Math.floor(n).toLocaleString('ko-KR');
 const fmtHp=n=>Number.isFinite(n)?Number(Math.max(0,n).toFixed(Math.abs(n)<10?1:0)).toLocaleString('ko-KR'):'0';
@@ -15,6 +16,8 @@ let localProfile;
 try{const raw=JSON.parse(localStorage.getItem('shinsung.profile.v1'));localProfile=raw?.schema===1&&Array.isArray(raw.owned)&&Array.isArray(raw.loadout)&&raw.loadout.length?raw:starterProfile();}catch{localProfile=starterProfile();}
 let profile=localProfile,page='home',selectedTower='scout',shopTab='towers',filter='',rarityFilter='all';
 let collectionTab='towers',selectedPack=null;
+let isAdminSession=false;
+let adminData={summary:null,listing:null,selected:null,audit:null,diagnostics:null,search:'',offset:0,busy:false,error:'',status:''};
 let openCrateBusy=false,roomListBusy=false,roomListNext=0,hoverVisual=null;
 let motion=new MotionView(),placementRevision=0;
 function resetRenderer(){renderer?.dispose();renderer=null;}
@@ -29,7 +32,7 @@ function closeModal(){if(room&&!state)return;$('#modal-root').innerHTML='';if(!i
 // Keep both the viewport and nested scroll areas steady when a tab, tower,
 // filter or purchase re-renders its markup. Never resurrect focus-induced jumps.
 function preserveScroll(){
-  const selectors=['.content','.briefing','.tower-groups','.tower-detail','.shop-scroll','.pack-config-screen','.collection-list'];
+  const selectors=['.content','.briefing','.tower-groups','.tower-detail','.shop-scroll','.pack-config-screen','.collection-list','.admin-user-list'];
   const positions=selectors.map(selector=>[selector,$(selector)?.scrollTop??0]);
   const x=window.scrollX,y=window.scrollY;
   return ()=>{
@@ -41,10 +44,61 @@ function profileBar(){return `<div class="identity"><div class="insignia">S<span
 function loadout(inGame=false){return Array.from({length:5},(_,i)=>{const id=(inGame?state.players[playerId].loadout:profile.loadout)[i];return id?`<button class="loadout-slot ${placement===id?'selected':''}" data-action="${inGame?'selectPlace':'inspect'}" data-id="${id}" style="--rarity:${RARITIES[TOWERS[id].rarity].color}"><span class="slot-number">0${i+1}</span>${portrait(id,profile.equippedSkins[id])}<span class="slot-name">${TOWERS[id].name}</span><strong>₩ ${TOWERS[id].cost}</strong></button>`:`<button class="loadout-slot empty" data-action="${inGame?'noop':'nav'}" data-id="towers"><span class="slot-number">0${i+1}</span><span>＋</span><small>빈 슬롯</small></button>`;}).join('');}
 function shell(){
   const restore=preserveScroll();
-  app.innerHTML=`<div class="shell"><header class="topbar"><a class="brand" href="#" data-action="nav" data-id="home"><span class="brand-symbol">S</span><div>신성 디펜스<small>SHINSUNG DEFENSE</small></div></a><div class="build-label">ALPHA <span>01</span></div><div class="profilebar">${profileBar()}</div></header><aside class="sidebar"><div class="nav-caption">PLAY</div>${['home','towers','shop'].map(id=>`<button class="nav-item ${page===id?'active':''}" data-action="nav" data-id="${id}"><span>${icons[id]}</span>${{home:'로비',towers:'타워 구성',shop:'상점'}[id]}<i>›</i></button>`).join('')}<div class="nav-caption second">친구들과 더 재미있게</div><button class="nav-item" data-action="pvp"><span>⚔</span>대전 · PVP<i>›</i></button><button class="nav-item" data-action="coop"><span>♟</span>친구와 함께<i>›</i></button><button class="nav-item" data-action="events"><span>✧</span>도전 과제<i>›</i></button><div class="sidebar-bottom"><span class="status-dot"></span>${online.user?'ONLINE ACCOUNT':'LOCAL PLAY'}<small>모으고, 키우고,<br>함께 지켜내자!</small><button data-action="help">조작 안내 <span>?</span></button></div></aside><main class="content" id="content"></main><footer class="loadout-bar"><div class="loadout-label"><span>MY TEAM</span><b>내 팀</b><small>${profile.loadout.length} / 5 SLOTS</small></div><div class="loadout-slots">${loadout()}</div><div class="footer-note">${online.user?'서버 계정 진행도':'진행도는 이 브라우저에 저장됩니다.'}<br><span>BUILD 0.9.3 · PLAY WITH FRIENDS</span></div></footer></div>`;
-  if(page==='home')home();else if(page==='towers')collection();else shop();
+  app.innerHTML=`<div class="shell"><header class="topbar"><a class="brand" href="#" data-action="nav" data-id="home"><span class="brand-symbol">S</span><div>신성 디펜스<small>SHINSUNG DEFENSE</small></div></a><div class="build-label">ALPHA <span>01</span></div><div class="profilebar">${profileBar()}</div></header><aside class="sidebar"><div class="nav-caption">PLAY</div>${['home','towers','shop'].map(id=>`<button class="nav-item ${page===id?'active':''}" data-action="nav" data-id="${id}"><span>${icons[id]}</span>${{home:'로비',towers:'타워 구성',shop:'상점'}[id]}<i>›</i></button>`).join('')}<div class="nav-caption second">친구들과 더 재미있게</div><button class="nav-item" data-action="pvp"><span>⚔</span>대전 · PVP<i>›</i></button><button class="nav-item" data-action="coop"><span>♟</span>친구와 함께<i>›</i></button><button class="nav-item" data-action="events"><span>✧</span>도전 과제<i>›</i></button>${isAdminSession?`<div class="nav-caption second">ADMIN</div><button class="nav-item ${page==='admin'?'active':''}" data-action="adminOpen"><span>⚙</span>관리자 패널<i>›</i></button>`:''}<div class="sidebar-bottom"><span class="status-dot"></span>${online.user?'ONLINE ACCOUNT':'LOCAL PLAY'}<small>모으고, 키우고,<br>함께 지켜내자!</small><button data-action="help">조작 안내 <span>?</span></button></div></aside><main class="content" id="content"></main><footer class="loadout-bar"><div class="loadout-label"><span>MY TEAM</span><b>내 팀</b><small>${profile.loadout.length} / 5 SLOTS</small></div><div class="loadout-slots">${loadout()}</div><div class="footer-note">${online.user?'서버 계정 진행도':'진행도는 이 브라우저에 저장됩니다.'}<br><span>BUILD 0.9.3 · PLAY WITH FRIENDS</span></div></footer></div>`;
+  if(page==='home')home();else if(page==='towers')collection();else if(page==='admin'&&isAdminSession)adminRender();else shop();
   restore();
 }
+
+function adminRender(){
+  if(!isAdminSession){page='home';shell();return;}
+  const target=$('#content');if(!target)return;
+  const saved=preserveScroll();
+  target.innerHTML=adminPageMarkup(adminData);
+  saved();
+}
+async function adminLoad({selected=true}={}){
+  if(!isAdminSession||!online.user)return;
+  adminData.busy=true;adminData.error='';adminRender();
+  try{
+    const [summary,listing,audit]=await Promise.all([
+      online.call('adminOverview'),
+      online.call('adminUsers',{search:adminData.search,offset:adminData.offset}),
+      online.call('adminAudit')
+    ]);
+    adminData.summary=summary;adminData.listing=listing;adminData.audit=audit;
+    if(selected&&adminData.selected){
+      const match=listing.items.find(u=>u.uid===adminData.selected.uid);
+      adminData.selected=match?await online.call('adminUser',{uid:match.uid}):null;
+    }
+  }catch(e){adminData.error='관리자 정보 조회 실패: '+e.message;}
+  finally{adminData.busy=false;adminRender();}
+}
+async function adminSelect(uid){
+  if(adminData.busy||!isAdminSession)return;
+  try{adminData.selected=await online.call('adminUser',{uid});adminData.error='';adminRender();}
+  catch(e){adminData.error=e.message;adminRender();}
+}
+async function adminChange(operation,details={},uid=adminData.selected?.uid){
+  if(!isAdminSession||adminData.busy||!uid)return;
+  const labels={coins:'코인 변경',xp:'경험치 변경',grantTower:'타워 지급',revokeTower:'타워 회수',grantAllSelf:'전체 타워 테스트 해금',ban:'계정 제재',unban:'제재 해제'};
+  const target=adminData.selected?.uid===uid?adminData.selected.name:uid;
+  if(!window.confirm(target+' 계정에 '+labels[operation]+' 작업을 실행합니까?'))return;
+  adminData.busy=true;adminData.error='';adminData.status='';adminRender();
+  try{
+    const result=await online.call('adminChange',{uid,operation,...details});
+    adminData.selected=result.profile;
+    adminData.status=labels[operation]+' 완료'+(result.auditWarning?' · '+result.auditWarning:'')+(result.kickWarning?' · '+result.kickWarning:'');
+    if(uid===online.user?.uid)profile=await online.call('profile');
+    const [summary,listing,audit]=await Promise.all([
+      online.call('adminOverview'),
+      online.call('adminUsers',{search:adminData.search,offset:adminData.offset}),
+      online.call('adminAudit')
+    ]);
+    Object.assign(adminData,{summary,listing,audit});
+  }catch(e){adminData.error=labels[operation]+' 실패: '+e.message;}
+  finally{adminData.busy=false;adminRender();}
+}
+
 function home(){
   const restore=preserveScroll();
   const map=MAPS.find(m=>m.id===config.map),diff=DIFFICULTIES.find(d=>d.id===config.difficulty),mods=modifiers(config);
@@ -372,6 +426,16 @@ async function openRoom(code){
 async function pulse(now){if(!isOnlineMatch||!room||onlineBusy||now-lastPulse<2000||state?.status!=='playing')return;if(room.host!==playerId&&now-lastSnapshot<6500)return;lastPulse=now;onlineBusy=true;try{await online.call('pulse',{code:room.code});}catch(e){toast('동기화: '+e.message);}finally{onlineBusy=false;}}
 const actions={
   noop(){},close(){if(room&&!state)return actions.leaveRoom();if(!state)resetRenderer();closeModal();},account,help,
+  async adminOpen(){if(!isAdminSession)return;page='admin';shell();await adminLoad({selected:false});},
+  async adminReload(){await adminLoad();},
+  async adminSelect(uid){await adminSelect(uid);},
+  async adminPrev(){adminData.offset=Math.max(0,adminData.offset-20);await adminLoad({selected:false});},
+  async adminNext(){adminData.offset+=20;await adminLoad({selected:false});},
+  async adminQuickCoins(){await adminChange('coins',{amount:50000},online.user?.uid);},
+  async adminQuickTowers(){await adminChange('grantAllSelf',{},online.user?.uid);},
+  async adminDiagnostics(){try{adminData.diagnostics=await online.call('adminDiagnostics');adminData.error='';}catch(e){adminData.error=e.message;}adminRender();},
+  async adminBan(){const reason=$('#admin-ban-reason')?.value.trim();if(!reason){adminData.error='제재 사유를 입력하세요.';adminRender();return;}await adminChange('ban',{reason});},
+  async adminUnban(){await adminChange('unban');},
   mapPreview(){modal('<h2>'+MAPS.find(m=>m.id===config.map).name+'</h2><canvas id="world" class="terrain-preview" aria-label="실제 전투 맵"></canvas><p>빛나는 분홍 입구에서 시작해 파란 출구로 향합니다.</p>');resetRenderer();renderer=new Renderer($('#world'));},
   nav(id){page=id;config.type='solo';shell();},setCollectionTab(id){if(!['towers','packs'].includes(id))return;collectionTab=id;collection();},previewPack(id){if(!Object.hasOwn(PACKS,id))return;selectedPack=id;collection();},visitPackShop(id){if(!Object.hasOwn(PACKS,id))return;shopTab='packs';page='shop';shell();},map(id){config.map=id;home();},difficulty(id){config.difficulty=id;home();},mode(id){config.modes=config.modes.includes(id)?config.modes.filter(x=>x!==id):[...config.modes,id];home();},
   inspect(id){selectedTower=id;page='towers';collectionTab='towers';shell();},equip(id){mutate({kind:'equip',id});},shopTab(id){shopTab=id;shop();},buyTower(id){mutate({kind:'buyTower',id});},buyPack(id){mutate({kind:'buyPack',id});},pack(id){mutate({kind:'pack',id});},
@@ -403,7 +467,7 @@ const actions={
   selectPlace:selectPlacement,cancelPlace(){selectPlacement(null);},skip(){sendCommand({kind:'skip'});},send(id){sendCommand({kind:'send',type:id});},upgrade(){sendCommand({kind:'upgrade',id:renderer.selected});},sell(){sendCommand({kind:'sell',id:renderer.selected});},target(){const t=state.towers.find(t=>t.id===renderer.selected),targets=['first','strong','near'];if(t)sendCommand({kind:'target',id:t.id,target:targets[(targets.indexOf(t.target)+1)%3]});},battleMenu,leave,
   zoomIn(){renderer.zoomBy(1.2);},zoomOut(){renderer.zoomBy(1/1.2);},zoomReset(){renderer.camera={x:900+state.players[playerId].field*2100,y:550,zoom:1.18};},field(){renderer.camera.x=renderer.camera.x<1800?3000:900;},
   async diagnostic(){try{const result=await online.call('diagnostic');modal(`<span class="eyebrow">ONLINE CHECK</span><h2>서버 연결 정상</h2><p>Firebase 인증 ✓ · Cloudflare Worker 통신 ✓ · D1 프로필 읽기 ✓</p><p>계정: ${esc(result.name)} · 서버 시간: ${esc(result.serverTime)}</p><p>실시간 대전 확인은 별도 계정 두 개로 방에 입장해 점검하세요.</p><button class="primary wide" data-action="close">확인</button>`);}catch(e){toast('연결 진단 실패: '+e.message);}},
-  async logout(){await online.signOut();profile=localProfile;closeModal();shell();},
+  async logout(){await online.signOut();isAdminSession=false;adminData.selected=null;profile=localProfile;closeModal();page='home';shell();},
   async resumeRoom(){await openRoom(profile.activeRoom);},async abandonRoom(){try{await online.call('leave',{code:profile.activeRoom});profile=await online.call('profile');closeModal();shell();}catch(e){toast(e.message);}},
 
   refreshRooms(){roomListNext=0;return refreshRooms();},
@@ -454,7 +518,13 @@ const actions={
 document.addEventListener('click',async e=>{const b=e.target.closest('[data-action]');if(!b||b.disabled)return;e.preventDefault();try{await actions[b.dataset.action]?.(b.dataset.id);}catch(err){toast(err.message);}});
 document.addEventListener('input',e=>{if(e.target.id==='tower-search'){const pos=e.target.selectionStart;filter=e.target.value;collection();$('#tower-search').focus({preventScroll:true});$('#tower-search').setSelectionRange(pos,pos);}});
 document.addEventListener('change',e=>{if(e.target.id==='rarity-filter'){rarityFilter=e.target.value;collection();}else if(e.target.id==='lobby-map'&&MAPS.some(m=>m.id===e.target.value)){config.map=e.target.value;}else if(e.target.id==='lobby-difficulty'&&DIFFICULTIES.some(d=>d.id===e.target.value)){config.difficulty=e.target.value;}});
-document.addEventListener('submit',async e=>{e.preventDefault();const f=new FormData(e.target);if(e.target.id==='auth-form'){const buttons=e.target.querySelectorAll('button');buttons.forEach(b=>b.disabled=true);try{await online.signIn(f.get('email'),f.get('password'),e.submitter?.value==='signup');profile=await online.call('profile');closeModal();if(pendingLobbyMode){const mode=pendingLobbyMode,code=pendingJoinCode;pendingLobbyMode=null;pendingJoinCode=null;special(mode);if(code)await actions.joinListedRoom(code);}}catch(err){$('#auth-error').textContent=err.message;}finally{buttons.forEach(b=>b.disabled=false);}}else if(e.target.id==='join-form'){try{const code=f.get('code').toUpperCase();await online.call('join',{code});profile.activeRoom=code;await openRoom(code);}catch(err){toast('방 참가 실패: '+err.message);}}});
+document.addEventListener('submit',async e=>{e.preventDefault();const f=new FormData(e.target);if(e.target.id==='auth-form'){const buttons=e.target.querySelectorAll('button');buttons.forEach(b=>b.disabled=true);try{await online.signIn(f.get('email'),f.get('password'),e.submitter?.value==='signup');profile=await online.call('profile');closeModal();if(pendingLobbyMode){const mode=pendingLobbyMode,code=pendingJoinCode;pendingLobbyMode=null;pendingJoinCode=null;special(mode);if(code)await actions.joinListedRoom(code);}}catch(err){$('#auth-error').textContent=err.message;}finally{buttons.forEach(b=>b.disabled=false);}}else if(e.target.id==='join-form'){try{const code=f.get('code').toUpperCase();await online.call('join',{code});profile.activeRoom=code;await openRoom(code);}catch(err){toast('방 참가 실패: '+err.message);}}else if(e.target.id==='admin-search-form'){
+  adminData.search=String(f.get('search')||'');adminData.offset=0;adminData.selected=null;await adminLoad({selected:false});
+}else if(e.target.id==='admin-balance-form'){
+  await adminChange(String(f.get('field')),{amount:Number(f.get('amount'))});
+}else if(e.target.id==='admin-tower-form'){
+  await adminChange(String(f.get('operation')),{tower:String(f.get('tower'))});
+}});
 document.addEventListener('keydown',e=>{if(['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName))return;const key=e.key.toLowerCase();if(state){if(e.code==='Space'||key==='e'||key==='r')e.preventDefault();if(renderer&&!$('#modal-root').innerHTML)renderer.keys.add(key);if(e.repeat)return;if(key==='escape'){if($('#modal-root').innerHTML)closeModal();else battleMenu();}else if(!$('#modal-root').innerHTML){if(key==='q')selectPlacement(null);if('12345'.includes(key)){const id=state.players[playerId].loadout[Number(key)-1];if(id)selectPlacement(id);}if(e.code==='Space')sendCommand({kind:'skip'});}}});
 document.addEventListener('keyup',e=>renderer?.keys.delete(e.key.toLowerCase()));window.addEventListener('blur',()=>renderer?.keys.clear());
 document.addEventListener('visibilitychange',()=>{lastTime=0;renderer?.keys.clear();});
@@ -480,5 +550,19 @@ function frame(now){
   requestAnimationFrame(frame);
 }
 shell();requestAnimationFrame(frame);online.onError=e=>toast(e.message);
-online.init(async user=>{if(user){profile=await online.call('profile');if(!state)shell();}else {profile=localProfile;if(!state)shell();}}).catch(e=>toast('계정 서비스: '+e.message));
+online.init(async user=>{
+  if(user){
+    const isCandidate=user.email?.toLowerCase()==='joehw0405@gmail.com';
+    const [updated,admin]=await Promise.all([
+      online.call('profile'),
+      isCandidate?online.call('adminStatus').catch(()=>({admin:false})):Promise.resolve({admin:false})
+    ]);
+    profile=updated;isAdminSession=admin.admin===true;
+    if(page==='admin'&&!isAdminSession)page='home';
+    if(!state)shell();
+  }else{
+    isAdminSession=false;adminData.selected=null;profile=localProfile;
+    if(page==='admin')page='home';if(!state)shell();
+  }
+}).catch(e=>toast('계정 서비스: '+e.message));
 
