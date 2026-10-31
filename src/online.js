@@ -20,13 +20,19 @@ export class Online {
       this.user=user;try{await onUser(user);}catch(e){this.onError?.(e);}
     });
   }
-  async signIn(email,password,signup){if(!this.auth)throw Error('온라인 서버 설정이 필요합니다. DEPLOY.md를 확인하세요.');return signup?this.authSDK.createUserWithEmailAndPassword(this.auth,email,password):this.authSDK.signInWithEmailAndPassword(this.auth,email,password);}
+  async signIn(email,password,signup){if(!this.auth)throw Error('온라인 서버 설정이 필요합니다. DEPLOY.md를 확인하세요.');const credential=await (signup?this.authSDK.createUserWithEmailAndPassword(this.auth,email,password):this.authSDK.signInWithEmailAndPassword(this.auth,email,password));this.user=credential.user;return credential;}
   async signOut(){this.stop();if(this.auth)await this.authSDK.signOut(this.auth);}
   async apiCall(action,payload={}){
     if(!this.user)throw Error('먼저 계정에 로그인하세요.');
     const token=await this.user.getIdToken();
-    const res=await fetch(this.api+'/api',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify({action,payload})});
-    const r=await res.json();if(!r.ok)throw Error(r.error||'서버 통신 오류');return r.data;
+    const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),12000);
+    try{
+      const res=await fetch(this.api+'/api',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify({action,payload}),signal:abort.signal});
+      const r=await res.json();if(!res.ok||!r.ok)throw Error(r.error||'서버 통신 오류');return r.data;
+    }catch(e){
+      if(e.name==='AbortError')throw Error('서버 연결 시간이 초과되었습니다. 다시 시도해 주세요.');
+      throw e;
+    }finally{clearTimeout(timer);}
   }
   // Anonymous public discovery keeps room browsing independent of sign-in.
   async publicRooms(mode){
