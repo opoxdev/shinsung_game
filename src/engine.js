@@ -295,8 +295,12 @@ export function tick(s,dt=STEP) {
       }
     }
   }
+  // Summon units are capped at 80, enemies at 350. Index by stable ID
+  // once per tick instead of searching up to 350 enemies for each summon.
+  const enemyById=new Map(s.enemies.map(e=>[e.id,e]));
   for(const u of s.units) {
-    u.life-=dt;let e=s.enemies.find(e=>e.id===u.target&&e.hp>0);
+    u.life-=dt;let e=enemyById.get(u.target);
+    if(e?.hp<=0)e=null;
     if(!e){e=s.enemies.find(e=>e.field===u.field&&e.hp>0);if(e)u.target=e.id;}
     if(!e)continue;
     const distance=dist(u,e),move=(u.speed||210)*dt;
