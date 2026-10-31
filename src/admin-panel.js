@@ -18,7 +18,7 @@ export function adminPageMarkup(data){
   return '<div class="admin-console">'+
     '<header class="admin-hero"><div><span class="admin-kicker">OPERATIONS / VERIFIED ADMIN</span>'+
       '<h1>관리자 패널 <span>⚙</span></h1>'+
-      '<p>온라인 멀티플레이 계정은 서버에서 관리합니다. 솔로·상점 진행도는 각 기기에 저장됩니다.</p></div>'+
+      '<p>로그인 계정의 코인·타워·진행도는 서버 D1에 저장됩니다. 솔로 전투 계산만 클라이언트에서 진행합니다.</p></div>'+
       '<button class="admin-refresh" data-action="adminReload" '+(busy?'disabled':'')+'>↻ 새로고침</button></header>'+
     (error?'<div class="admin-message danger" role="alert">'+escAdmin(error)+'</div>':'')+
     (status?'<div class="admin-message" role="status">'+escAdmin(status)+'</div>':'')+
