@@ -49,12 +49,14 @@ export class MotionView {
       const progress=online?target+correction:previous?previous.progress+(e.progress-previous.progress)*alpha:target;
       Object.assign(v,e,pointOnPath(path,progress),{progress,correction});return v;
     });
+    // Summon targeting is O(1) per unit instead of scanning every enemy.
+    const enemyById=new Map(enemies.map(e=>[e.id,e]));
     const units=state.units.map(u=>{
       liveUnits.add(u.id);let v=this.units.get(u.id);
       if(!v){v={...u,dx:0,dy:0};this.units.set(u.id,v);}
       let x=u.x,y=u.y;
       if(online&&active){
-        const target=enemies.find(e=>e.id===u.target);
+        const target=enemyById.get(u.target);
         if(target){const dx=target.x-x,dy=target.y-y,length=Math.hypot(dx,dy),ratio=Math.min(1,(u.speed||210)*ahead/(length||1));x+=dx*ratio;y+=dy*ratio;}
       }
       if(online&&changed){v.dx=v.x-x;v.dy=v.y-y;}
