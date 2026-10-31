@@ -28,7 +28,14 @@ export class Renderer {
         state.enemies.filter(e=>e.field===f).forEach(e=>this.enemy(g,e,now,state.time));
         state.units.filter(e=>e.field===f).forEach(e=>this.summon(g,e,now));
         for(const e of state.events){const age=state.time-e.time;if(e.field!==f||age<0||age>.45)continue;g.globalAlpha=1-age/.45;g.strokeStyle=TOWERS[e.type]?.color||ENEMIES[e.type]?.color||'#ffd88c';g.lineWidth=e.type==='rail'?5:3;g.shadowColor=g.strokeStyle;g.shadowBlur=8;
-          if(e.kind==='kill'){
+          if(e.kind==='boss-skill'){
+            const r=Math.min(260,e.radius||85)*Math.min(1,age/.3);
+            g.strokeStyle=e.skill==='jam'?'#e7a2ff':e.skill==='shield'?'#80eeff':'#ffc47e';
+            g.lineWidth=7*(1-age/.45);
+            g.beginPath();g.arc(e.x,e.y,r,0,Math.PI*2);g.stroke();
+            g.font='bold 17px sans-serif';g.fillStyle=g.strokeStyle;
+            g.fillText(e.name||'BOSS SKILL',e.x-60,e.y-42-age*25);
+          }else if(e.kind==='kill'){
             const pieces=e.split?9:e.size>=28?13:5;
             g.strokeStyle=e.color||'#fff3b9';g.lineWidth=2+Math.max(0,4-age*10);
             g.beginPath();g.arc(e.x,e.y,5+age*(e.size>=28?100:60),0,7);g.stroke();
@@ -73,6 +80,10 @@ export class Renderer {
       g.beginPath();g.ellipse(0,6,31+lev*3+Math.sin(phase)*2,17+lev*1.6,0,0,Math.PI*2);g.stroke();
       if(lev>=3){for(let i=0;i<lev;i++){const ang=phase+i*Math.PI*2/lev;g.fillStyle=i%2?'#ffefb5':'#a9ecff';g.beginPath();g.arc(Math.cos(ang)*(32+lev*2),-28+Math.sin(ang)*(20+lev*2),3+lev*.3,0,7);g.fill();}}
       g.restore();
+    }
+    if(t.jammedUntil>time){
+      g.strokeStyle='#ef9dff';g.lineWidth=3;g.beginPath();g.arc(0,-20,30,0,7);g.stroke();
+      g.fillStyle='#fcceff';g.font='bold 20px sans-serif';g.fillText('⚡',-10,-54);
     }
     const img=sprite(t.type,t.skin||'default',lev),size=75+lev*3,bob=Math.sin(time*(t.type==='sonic'?5:2)+t.x)*1.6;
     if(img.complete&&img.naturalWidth)g.drawImage(img,-size*.5,-size*.87+bob,size,size*210/180);
@@ -194,6 +205,10 @@ export class Renderer {
         g.save();g.strokeStyle='#fb93da';g.lineWidth=3;g.translate(0,-r*.5);g.rotate(time*.7);
         g.strokeRect(-r*.55,-r*.55,r*1.1,r*1.1);g.restore();
       }
+    }
+    if(e.rushUntil>clock){
+      g.strokeStyle='#ffcd81';g.lineWidth=4;g.globalAlpha=.65;
+      g.beginPath();g.arc(0,-5,r+14+Math.sin(time*12)*3,0,7);g.stroke();g.globalAlpha=1;
     }
     if(e.shield>0){
       g.strokeStyle='#a1e6ff';g.lineWidth=2.7;g.shadowColor='#65d6ff';g.shadowBlur=8;
