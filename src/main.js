@@ -31,6 +31,15 @@ let predictionState=null,predictionBase=null,lastPaintTime=0;
 // All story state lives in this browser, never in Firebase/D1/DO/WebSockets.
 let storyEnabled=true;
 try{storyEnabled=localStorage.getItem('shinsung.story.enabled')!=='false';}catch{}
+// Device-only journal progress: no D1 writes or additional Cloudflare traffic.
+const storyArchive={};
+try{
+  const saved=JSON.parse(localStorage.getItem('shinsung.story.archive.v1')||'{}');
+  for(const diff of DIFFICULTIES){
+    const value=Number(saved?.[diff.id]);
+    if(Number.isInteger(value)&&value>=0)storyArchive[diff.id]=Math.min(value,diff.waves.length);
+  }
+}catch{}
 let storyChapter='easy',storyHighestWave=0,storyObservedWave=0,storyCurrent=-1,storyLine=0,storyAdvanceAt=0;
 let storyLastScene=-1,storyShown=new Set();
 function setStoryEnabled(value){
@@ -59,6 +68,10 @@ function storyTick(wave,now=performance.now()){
   // A source reconnect or a low-FPS catch-up must never replay a past scene.
   if(wave!==storyObservedWave){
     storyObservedWave=wave;
+    if(wave>(storyArchive[storyChapter]||0)){
+      storyArchive[storyChapter]=wave;
+      try{localStorage.setItem('shinsung.story.archive.v1',JSON.stringify(storyArchive));}catch{}
+    }
     const index=storySceneIndex(storyChapter,wave);
     if(index>=0&&!storyShown.has(wave)){
       storyShown.add(wave);storyLastScene=index;updateStoryButton();
@@ -149,7 +162,7 @@ async function adminChange(operation,details={},uid=adminData.selected?.uid){
 function home(){
   const restore=preserveScroll();
   const map=MAPS.find(m=>m.id===config.map),diff=DIFFICULTIES.find(d=>d.id===config.difficulty),mods=modifiers(config);
-  $('#content').innerHTML=`<div class="page-heading lobby-heading"><div><span class="eyebrow">모험을 떠날 시간!</span><h1>어디부터 지켜볼까?</h1></div><div class="edition">5개의 세계 · 6개의 난이도<b>너만의 최강 팀을 만들어봐!</b></div></div><div class="mission-layout"><section class="map-stage"><div class="world-art">${landscape(map)}</div><div class="floating-motes"><i></i><i></i><i></i><i></i><i></i></div><div class="hero-team"><div>${portrait('summoner')}</div><div>${portrait('blade')}</div><div>${portrait('scout')}</div></div><div class="stage-top"><span class="tag">${config.type==='solo'?'★ 모험 모드':config.type==='pvp'?'⚔ 대전':'친구와 함께'}</span><button class="stage-index" data-action="mapPreview">실제 맵 보기 ↗</button></div><div class="map-copy"><span class="eyebrow">${map.tag}</span><h2>${map.name}</h2><p>${map.desc}</p></div><div class="map-picker">${MAPS.map((m,i)=>`<button class="map-pick ${m.id===map.id?'selected':''}" style="--map:${m.color}" data-action="map" data-id="${m.id}"><span>0${i+1}</span><div class="map-mini">${landscape(m)}</div><b>${m.name}</b></button>`).join('')}</div></section><section class="briefing"><div class="panel-title"><span>⚑ 도전 준비!</span><span>★</span></div><h2>게임 설정</h2><div class="field-label">01 <b>난이도</b><span>${diff.waves.length} WAVES</span></div><div class="difficulties">${DIFFICULTIES.map(d=>`<button class="difficulty ${d.id===diff.id?'selected':''}" style="--diff:${d.color}" data-action="difficulty" data-id="${d.id}" title="시작 자금 ₩ ${fmt(d.startMoney)}">${d.name}<span>${'Ⅰ'.repeat(Math.min(3,DIFFICULTIES.indexOf(d)+1))}</span></button>`).join('')}</div><div class="field-label">02 <b>추가 모드</b><span>중복 선택 가능</span></div><div class="modes">${Object.entries(MODES).map(([id,m])=>`<button title="${m.desc}" class="mode ${config.modes.includes(id)?'selected':''}" data-action="mode" data-id="${id}"><span class="checkbox">${config.modes.includes(id)?'✓':''}</span>${m.name}<b>×${m.reward}</b></button>`).join('')}</div>${storyPreviewMarkup(config.difficulty)}<div class="reward-preview"><span>클리어 보상<small>모드 배수 ×${mods.reward.toFixed(2)}</small></span><b><i>◈</i> ${fmt(diff.reward*mods.reward)}</b></div><p class="defeat-reward-note">방어 실패 시 클리어 보너스를 제외한 보상 × 50% × 도달 웨이브 비율 지급</p><button class="deploy" data-action="start">게임 시작 <span>→</span></button><div class="deploy-note">${online.user?'서버 검증 솔로':'로컬 플레이'} · 시작 자금 ₩ ${fmt(diff.startMoney)} · 최대 ${mods.cap}기</div></section></div>`;
+  $('#content').innerHTML=`<div class="page-heading lobby-heading"><div><span class="eyebrow">모험을 떠날 시간!</span><h1>어디부터 지켜볼까?</h1></div><div class="edition">5개의 세계 · 6개의 난이도<b>너만의 최강 팀을 만들어봐!</b></div></div><div class="mission-layout"><section class="map-stage"><div class="world-art">${landscape(map)}</div><div class="floating-motes"><i></i><i></i><i></i><i></i><i></i></div><div class="hero-team"><div>${portrait('summoner')}</div><div>${portrait('blade')}</div><div>${portrait('scout')}</div></div><div class="stage-top"><span class="tag">${config.type==='solo'?'★ 모험 모드':config.type==='pvp'?'⚔ 대전':'친구와 함께'}</span><button class="stage-index" data-action="mapPreview">실제 맵 보기 ↗</button></div><div class="map-copy"><span class="eyebrow">${map.tag}</span><h2>${map.name}</h2><p>${map.desc}</p></div><div class="map-picker">${MAPS.map((m,i)=>`<button class="map-pick ${m.id===map.id?'selected':''}" style="--map:${m.color}" data-action="map" data-id="${m.id}"><span>0${i+1}</span><div class="map-mini">${landscape(m)}</div><b>${m.name}</b></button>`).join('')}</div></section><section class="briefing"><div class="panel-title"><span>⚑ 도전 준비!</span><span>★</span></div><h2>게임 설정</h2><div class="field-label">01 <b>난이도</b><span>${diff.waves.length} WAVES</span></div><div class="difficulties">${DIFFICULTIES.map(d=>`<button class="difficulty ${d.id===diff.id?'selected':''}" style="--diff:${d.color}" data-action="difficulty" data-id="${d.id}" title="시작 자금 ₩ ${fmt(d.startMoney)}">${d.name}<span>${'Ⅰ'.repeat(Math.min(3,DIFFICULTIES.indexOf(d)+1))}</span></button>`).join('')}</div><div class="field-label">02 <b>추가 모드</b><span>중복 선택 가능</span></div><div class="modes">${Object.entries(MODES).map(([id,m])=>`<button title="${m.desc}" class="mode ${config.modes.includes(id)?'selected':''}" data-action="mode" data-id="${id}"><span class="checkbox">${config.modes.includes(id)?'✓':''}</span>${m.name}<b>×${m.reward}</b></button>`).join('')}</div>${storyPreviewMarkup(config.difficulty,storyArchive[config.difficulty]||0)}<div class="reward-preview"><span>클리어 보상<small>모드 배수 ×${mods.reward.toFixed(2)}</small></span><b><i>◈</i> ${fmt(diff.reward*mods.reward)}</b></div><p class="defeat-reward-note">방어 실패 시 클리어 보너스를 제외한 보상 × 50% × 도달 웨이브 비율 지급</p><button class="deploy" data-action="start">게임 시작 <span>→</span></button><div class="deploy-note">${online.user?'서버 검증 솔로':'로컬 플레이'} · 시작 자금 ₩ ${fmt(diff.startMoney)} · 최대 ${mods.cap}기</div></section></div>`;
   resetRenderer();
   restore();
 }
@@ -475,8 +488,8 @@ async function openRoom(code){
 }
 async function pulse(now){if(!isOnlineMatch||!room||onlineBusy||now-lastPulse<2000||state?.status!=='playing')return;if(room.host!==playerId&&now-lastSnapshot<6500)return;lastPulse=now;onlineBusy=true;try{await online.call('pulse',{code:room.code});}catch(e){toast('동기화: '+e.message);}finally{onlineBusy=false;}}
 const actions={
-  storyGuide(){modal(storyGuideMarkup(config.difficulty,0));},
-  storyJournal(){if(!state)return;modal(storyGuideMarkup(storyChapter,storyHighestWave));},
+  storyGuide(){modal(storyGuideMarkup(config.difficulty,storyArchive[config.difficulty]||0));},
+  storyJournal(){if(!state)return;modal(storyGuideMarkup(storyChapter,Math.max(storyHighestWave,storyArchive[storyChapter]||0)));},
   storyToggle(){setStoryEnabled(!storyEnabled);},
   storyNext(){advanceStory();},
   storyDismiss(){storyCurrent=-1;paintDialogue();},
