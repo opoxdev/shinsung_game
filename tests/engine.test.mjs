@@ -6,6 +6,19 @@ const config=(extra={})=>({map:'plains',difficulty:'easy',type:'solo',modes:[],.
 const player=(id='a')=>({id,profile:{...starterProfile(),owned:Object.keys(TOWERS),loadout:Object.keys(TOWERS)}});
 const match=(extra={},ids=['a'])=>createMatch(config(extra),ids.map(player));
 test('starting cash, legal placement and rejection have exact economy',()=>{const s=match();assert.equal(s.players.a.money,500);assert.equal(command(s,'a',{kind:'place',type:'scout',x:300,y:560}).ok,false);assert.equal(s.players.a.money,500);assert.equal(command(s,'a',{kind:'place',type:'scout',x:240,y:400}).ok,true);assert.equal(s.players.a.money,350);assert.equal(command(s,'a',{kind:'place',type:'scout',x:240,y:400}).ok,false);assert.equal(s.towers.length,1);assert.equal(command(s,'a',{kind:'place',type:'scout',x:NaN,y:10}).ok,false);});
+test('starting cash rises with campaign difficulty for solo, co-op, and PvP alike',()=>{
+  const expected={easy:500,normal:650,hard:850,extreme:1100,hell:1400,ruin:1800};
+  assert.deepEqual(Object.fromEntries(DIFFICULTIES.map(d=>[d.id,d.startMoney])),expected);
+  for(const [difficulty,money] of Object.entries(expected)){
+    for(const type of ['solo','coop','pvp']){
+      const ids=type==='solo'?['a']:['a','b'];
+      const s=match({difficulty,type},ids);
+      for(const id of ids)assert.equal(s.players[id].money,money,difficulty+' '+type+' '+id);
+      const costs=type==='pvp'?0:TOWERS.scout.cost;
+      assert.ok(money>=costs);
+    }
+  }
+});
 test('ownership, loadout, replay and target inputs are checked',()=>{const s=match({type:'coop'},['a','b']);command(s,'a',{kind:'place',type:'scout',x:240,y:400,seq:1});assert.equal(command(s,'a',{kind:'place',type:'scout',x:400,y:400,seq:1}).ok,false);assert.equal(command(s,'b',{kind:'sell',id:s.towers[0].id}).ok,false);assert.equal(command(s,'a',{kind:'target',id:s.towers[0].id,target:'bad'}).ok,false);s.players.a.loadout=['blade'];assert.equal(command(s,'a',{kind:'place',type:'rail',x:700,y:700}).ok,false);});
 test('upgrade and sell return 70% of total expenditure',()=>{const s=match();s.players.a.money=10000;command(s,'a',{kind:'place',type:'scout',x:240,y:400});const id=s.towers[0].id;command(s,'a',{kind:'upgrade',id});assert.equal(s.towers[0].level,1);command(s,'a',{kind:'sell',id});assert.equal(s.players.a.money,10000-330+231);});
 test('tower cap is shared by coop players; mode and strong tower caps enforced',()=>{const s=match({type:'coop',modes:['shortage']},['a','b']);Object.values(s.players).forEach(p=>p.money=1e6);for(let i=0;i<5;i++)assert.equal(command(s,i%2?'a':'b',{kind:'place',type:'scout',x:100+i*80,y:100}).ok,true);assert.equal(command(s,'a',{kind:'place',type:'scout',x:700,y:100}).ok,false);const t=match();t.players.a.money=1e6;for(let i=0;i<3;i++)assert.equal(command(t,'a',{kind:'place',type:'rail',x:100+i*80,y:100}).ok,true);assert.equal(command(t,'a',{kind:'place',type:'rail',x:700,y:100}).ok,false);});
