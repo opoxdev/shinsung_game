@@ -339,3 +339,112 @@ body{background:#15203d;color:var(--text)}button{border:2px solid #101a35;border
 @media(max-height:600px) and (min-width:621px){
   .battle-inspector{top:84px;max-height:calc(100% - 158px)}
 }
+
+
+/* v0.9.3 — arcade-inspired public matchmaking, separate PvP and co-op lobbies. */
+.modal:has(.matchmaking-page){width:min(970px,calc(100vw - 28px));max-height:min(94dvh,980px);overflow-y:auto;
+  background:linear-gradient(160deg,#203253,#111b30 55%,#0e192b);border:2px solid #6887ae;border-radius:20px;
+  padding:29px 34px;color:#eff6ff;box-shadow:0 30px 100px #020914bb,inset 0 0 55px #5478aa14}
+.modal:has(.matchmaking-page)>.close{right:15px;top:14px;width:38px;height:38px;border:1px solid #c17c9b;
+  border-radius:10px;background:#ba466e;color:#fff;font-size:29px}
+.matchmaking-page{display:flex;flex-direction:column;gap:0;min-width:0}
+.mm-overline{font:700 12px var(--display);letter-spacing:2.1px;color:#89cfff;display:flex;align-items:center;gap:8px}
+.mm-light{width:9px;height:9px;border-radius:50%;background:#80e8b6;box-shadow:0 0 14px #80e8b6}
+.mm-capacity{border:1px solid #7693b8;border-radius:30px;font:700 11px var(--body);
+  letter-spacing:0;margin-left:12px;padding:5px 12px;color:#d8eafc;background:#182c46}
+.matchmaking-page h2{font-size:clamp(27px,3.2vw,40px);line-height:1.25;margin:16px 45px 8px 0;letter-spacing:-.7px}
+.modal .matchmaking-page .mm-intro{font-size:13px;color:#c3d2e5;line-height:1.65;margin:2px 0 16px}
+.mm-account{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:10px 14px;
+  border:1px solid #526c90;border-radius:11px;background:#182940;margin-bottom:19px}
+.mm-status{font-size:12px;color:#b7c6da;display:flex;align-items:center;gap:9px}
+.mm-status i{width:8px;height:8px;background:#edbd76;border-radius:50%;flex:none}
+.mm-status.online i{background:#80e0ad}
+.mm-signin{flex-shrink:0;border:1px solid #8adabb;background:#275a5c;color:#e5fff4;
+  border-radius:9px;padding:8px 13px;font-size:12px;font-weight:800}
+.mm-section-label{font:700 12px var(--display);letter-spacing:1.5px;color:#a8c6e9}
+.mm-config{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 1.2fr;gap:12px;align-items:end;
+  background:#111e32;border:1px solid #415c80;border-radius:13px;padding:12px;margin:9px 0 13px}
+.modal .mm-config label{margin:0;color:#a9cbe8;font-size:11px}
+.mm-config select{display:block;width:100%;margin-top:7px;background:#213c5f;color:#fff;padding:10px 12px;
+  border:1px solid #6589af;border-radius:8px;font:700 13px var(--body)}
+.mm-form-help{font-size:11px;line-height:1.6;color:#9ab0ca;padding-bottom:3px}
+.mm-actions{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:12px}
+.mm-create{width:100%;min-height:53px;border-radius:10px!important;background:linear-gradient(#9df58b,#4ddc72)!important;
+  border:2px solid #a4ffc0!important;box-shadow:0 4px 0 #183c29;color:#0a3222!important;
+  font:900 16px var(--display);text-shadow:none;transition:filter .15s,transform .15s}
+.mm-create:hover:not(:disabled),.mm-join:hover:not(:disabled){filter:brightness(1.12);transform:translateY(-1px)}
+.mm-create:disabled{opacity:.55;cursor:not-allowed;filter:grayscale(.6)}
+.mm-join-code{background:#29456a;border:1px solid #7295bb;border-radius:10px;color:#eff9ff;font-weight:800;font-size:15px}
+.mm-resume{margin-top:11px;width:100%;padding:12px;border-radius:9px;background:#49694e;color:#f3ffe8;
+  border:1px solid #91c787;font-weight:800}
+.mm-list-head{display:flex;justify-content:space-between;align-items:end;gap:12px;margin:22px 0 10px}
+.mm-list-head h3{font-size:24px;line-height:1.15;margin:6px 0 0;font-weight:900}
+.mm-list-head h3 span{font:800 13px var(--body);color:#a4d8fc;margin-left:4px}
+.mm-refresh{border:1px solid #5f83a8;border-radius:9px;background:#1b3150;color:#cae6fd;
+  padding:10px 13px;font-size:12px;font-weight:800}
+.mm-refresh:disabled{opacity:.5}
+.public-room-list.mm-room-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-content:start;
+  gap:12px;background:#0b1424;border:1px solid #486b91;border-radius:14px;padding:13px;
+  min-height:184px;max-height:380px;overflow-y:auto;scrollbar-gutter:stable}
+.mm-room-card{min-width:0;border:1px solid #617da1;border-radius:12px;background:linear-gradient(145deg,#2e4160,#1a2b46);
+  padding:15px;box-shadow:inset 0 1px #ffffff18}
+.mm-room-top{display:flex;justify-content:space-between;align-items:center;gap:7px}
+.mm-card-mode{font:800 10px var(--display);color:#b1dffc;letter-spacing:1.1px}
+.mm-occupancy{font:800 12px var(--body);color:#ebf8ff;white-space:nowrap}
+.mm-room-card h4{font-size:18px;margin:10px 0 4px;overflow-wrap:anywhere}
+.modal .mm-room-map{font-size:11px;color:#b6c9dc;margin:0 0 13px}
+.mm-player-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:0 0 12px}
+.mm-player{display:flex;align-items:center;gap:6px;min-width:0;min-height:30px;background:#15243b;
+  border:1px solid #435a78;border-radius:6px;color:#93a8c1;padding:5px 7px;font-size:11px}
+.mm-player.occupied{color:#e7f7ff;background:#314862;border-color:#6786a3}
+.mm-player-icon{color:#6c849e}
+.mm-player.occupied .mm-player-icon{color:#7defa6}
+.mm-player span:last-child{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.mm-card-bottom{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.mm-card-bottom code{font:800 13px var(--display);color:#ffdea0;letter-spacing:1px}
+.mm-join{border-radius:8px;background:#65e97d!important;border:2px solid #a1ffc0!important;color:#103623!important;
+  padding:9px 13px;font:900 12px var(--display);white-space:nowrap}
+.mm-state{grid-column:1/-1;display:flex;min-height:158px;flex-direction:column;align-items:center;
+  justify-content:center;gap:8px;text-align:center;color:#cbdcf0;padding:20px}
+.mm-state b{font-size:17px}.modal .mm-state p{font-size:12px;margin:2px;color:#a9c8df}
+.mm-state small{font-size:11px;color:#9cbed4}
+.mm-empty-icon{font-size:38px;color:#75adcc}
+.mm-spinner{width:25px;height:25px;border-radius:50%;border:3px solid #476489;border-top-color:#98eda3;
+  animation:mmSpin .8s linear infinite}
+@keyframes mmSpin{to{transform:rotate(360deg)}}
+.mm-error b{color:#ffd4c6}
+.mm-error button{padding:9px 17px;color:#ecf6ff;border:1px solid #7699c2;border-radius:8px;background:#294466}
+.modal .matchmaking-page .mm-footnote{font-size:11px;line-height:1.6;margin:11px 0 10px;color:#9ab9d3}
+.mm-practice{width:100%;min-height:41px;border-radius:9px;background:#1e324f;border:1px solid #5b7596;
+  color:#bcd0e9;font-weight:700;font-size:12px}
+.mm-code-dialog .mm-create{margin-top:15px}
+.mm-code-dialog label{font-size:12px}
+.mm-waiting .mm-room-share{display:flex;gap:12px;align-items:center;justify-content:space-between;background:#0c192e;
+  padding:16px 20px;border:1px solid #6e94bd;border-radius:12px;margin:12px 0}
+.mm-room-share small{display:block;color:#abcbe4;font-size:11px;margin-bottom:4px}
+.mm-room-share strong{font:900 clamp(27px,4vw,42px) var(--display);letter-spacing:5px;color:#ffe7aa}
+.mm-room-share button{border:1px solid #a6dcc0;background:#235a55;color:#eaffef;border-radius:8px;
+  padding:12px;font-weight:800;flex-shrink:0}
+.mm-wait-settings{display:flex;justify-content:space-between;color:#c4daeb;font-size:13px;margin:5px 0 12px}
+.mm-wait-settings b{color:#a9f1ba}
+.mm-wait-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:6px}
+.mm-wait-player{display:flex;align-items:center;gap:12px;padding:13px;background:#12233c;
+  border:1px dashed #4b6888;border-radius:8px;color:#849db9}
+.mm-wait-player.ready{background:#2b4664;border:1px solid #7cacbb;color:#fff}
+.mm-wait-player span{color:#88e7a6}.mm-wait-player small{margin-left:auto;color:#a3d8f3}
+.mm-waiting>.mm-create{margin-top:10px}.mm-waiting>.mm-practice{margin-top:12px}
+@media(max-width:680px){
+  .modal:has(.matchmaking-page){width:calc(100vw - 16px);padding:20px 14px;border-radius:12px}
+  .matchmaking-page h2{font-size:27px}
+  .mm-config{grid-template-columns:1fr 1fr}.mm-form-help{grid-column:1/-1}
+  .public-room-list.mm-room-grid{grid-template-columns:1fr;max-height:48dvh}
+  .mm-room-card{padding:12px}.mm-list-head h3{font-size:20px}
+  .mm-actions{grid-template-columns:1fr 1fr}.mm-create,.mm-join-code{min-height:49px;font-size:12px}
+  .mm-account{align-items:flex-start;flex-wrap:wrap}
+}
+@media(max-width:420px){
+  .mm-config,.mm-actions{grid-template-columns:1fr}
+  .mm-form-help{grid-column:auto}.mm-room-share strong{letter-spacing:2px;font-size:26px}
+  .mm-wait-list{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){.mm-spinner{animation:none}}
