@@ -13,8 +13,8 @@ test('purchased packs stay in the collection until explicitly equipped',()=>{
  assert.throws(()=>profileAction(p,{kind:'pack',id:'__proto__'}));
 });
 test('skin crate uses honest odds, charges the right price, and reveals server-defined items',()=>{
- const p=starterProfile();p.coins=5000;
- assert.equal(Object.values(SKIN_STYLES).reduce((sum,v)=>sum+v.weight,0),100);
+ const p=starterProfile();p.coins=20000;
+ for(const crate of Object.values(CRATES))assert.equal(Object.values(crate.odds).reduce((sum,n)=>sum+n,0),100);
  assert.throws(()=>profileAction(p,{kind:'openCrate',id:'wardrobe',count:11}));
  assert.throws(()=>profileAction(p,{kind:'openCrate',id:'__proto__',count:1}));
  const before=p.coins;
@@ -26,7 +26,7 @@ test('skin crate uses honest odds, charges the right price, and reveals server-d
  for(const r of p.lastCrate.rolls)assert.equal(p.skins[r.id+':'+r.style],true);
 });
 test('ten consecutive duplicates guarantee a missing cosmetic where available',()=>{
- const p=starterProfile();p.coins=10000;p.cratePity=9;
+ const p=starterProfile();p.coins=10000;p.cratePities.wardrobe=9;
  p.skins['scout:arctic']=true;p.skins['blade:arctic']=true;
  const missingBefore=p.owned.flatMap(id=>['arctic','neon','royal'].filter(k=>!p.skins[id+':'+k]));
  assert.ok(missingBefore.length);
@@ -59,7 +59,7 @@ test('existing account profiles migrate safely when cosmetic fields are absent',
  assert.equal(p.lastCrate.rolls.length,1);
 });
 test('a full 10-pull never exceeds available coins and gives exactly ten outcomes',()=>{
- const p=starterProfile();p.coins=2400;
+ const p=starterProfile();p.coins=10000;
  profileAction(p,{kind:'openCrate',id:'wardrobe',count:10});
  assert.equal(p.lastCrate.rolls.length,10);
  assert.ok(p.coins>=0);
