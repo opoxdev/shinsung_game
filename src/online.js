@@ -64,7 +64,7 @@ export class Online {
     return this.apiCall(action,payload);
   }
   async watch(code,callback,onError){
-    this.stop();this.room=code;this.closed=false;this.cb=callback;this.err=onError;
+    this.stop();this.room=code;this.closed=false;this.cb=callback;this.err=onError;this.matchStatus='lobby';this.hostId=null;this.lastRoomPush=0;
     const serial=++this.serial;
     await this.connect(serial);
     // Heartbeats are independent of requestAnimationFrame. Background tabs
