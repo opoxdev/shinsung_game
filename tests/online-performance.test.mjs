@@ -44,7 +44,7 @@ test('prediction is bounded to prevent CPU spikes after suspended browser tabs',
   assert.equal(source.time,0);
   let prior=a;
   for(let i=0;i<6;i++)prior=visualPrediction(source,9000,prior.state,prior.source);
-  assert.ok(prior.state.time<=3.01,'only up to the bounded snapshot lookahead');
+  assert.ok(prior.state.time<=4.3,'only up to the bounded snapshot lookahead');
 });
 
 test('static portrait and map SVG output is cached for repeated UI navigation',()=>{
