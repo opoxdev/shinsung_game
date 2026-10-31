@@ -128,9 +128,11 @@ export class Renderer {
     }
     const img=sprite(t.type,t.skin||'default',lev),size=75+lev*3,bob=Math.sin(time*(t.type==='sonic'?5:2)+t.x)*1.6;
     if(img.complete&&img.naturalWidth){
-      // Keep the character upright while facing left/right toward its target.
-      // The sword wave above follows the precise full-circle attack angle.
-      const mirror=stats.kind==='melee'&&Number.isFinite(t.angle)&&Math.cos(t.angle)<-1e-6;
+      // Keep tactical weapons pointing toward their actual targets, rather
+      // than leaving non-melee fighters aiming right while they shoot left.
+      // Buildings and stationary relics remain orientation-independent.
+      const stationary=['banker','workshop','starseed'].includes(t.type);
+      const mirror=!stationary&&Number.isFinite(t.angle)&&Math.cos(t.angle)<-1e-6;
       if(mirror){g.save();g.scale(-1,1);}
       g.drawImage(img,-size*.5,-size*.87+bob,size,size*210/180);
       if(mirror)g.restore();
