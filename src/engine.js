@@ -171,8 +171,15 @@ export function tick(s,dt=STEP) {
   if(s.status!=='playing')return;
   if(!Number.isFinite(dt)||dt<=0||dt>.1)throw Error('고정 스텝은 0~0.1초여야 합니다.');
   s.time+=dt;s.waveTime+=dt;
-  const ready=s.queue.filter(q=>q.at<=s.time).slice(0,Math.max(0,350-s.enemies.length));
-  const set=new Set(ready);s.queue=s.queue.filter(q=>!set.has(q));ready.forEach(q=>spawn(s,q.type,q.field));
+  // Single-pass bounded wave spawner: no double full-array filtering per 50ms tick.
+  // A long skipped-wave queue is kept intact; only due entries can enter the battlefield.
+  const capacity=Math.max(0,350-s.enemies.length),ready=[],pending=[];
+  for(const queued of s.queue){
+    if(ready.length<capacity&&queued.at<=s.time)ready.push(queued);
+    else pending.push(queued);
+  }
+  s.queue=pending;
+  for(const queued of ready)spawn(s,queued.type,queued.field);
   // Boss casts are resolved on the authoritative fixed-step timeline.
   // Skill charging is attached to each enemy instance, never to a global boss type.
   for(const e of s.enemies){
