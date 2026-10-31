@@ -25,7 +25,7 @@ try{
   await page.goto('http://offline-first.test/',{waitUntil:'domcontentloaded'});
   await page.waitForFunction(()=>document.body.textContent.includes('연결된 계정'));
   assert.equal(await page.locator('.wallet').count(),1);
-  await page.locator('[data-action="nav"][data-id="shop"]').click();
+  await page.locator('.sidebar .nav-item[data-action="nav"][data-id="shop"]').click();
   await page.locator('[data-action="buyTower"][data-id="archer"]').click();
   await page.waitForFunction(()=>document.querySelector('.wallet')?.textContent.includes('200'));
   const account=await page.evaluate(()=>JSON.parse(localStorage.getItem('shinsung.profile.account.v2.fixture-school-account')));
@@ -33,9 +33,9 @@ try{
   assert.ok(account.owned.includes('archer'));
   assert.equal(await page.evaluate(()=>localStorage.getItem('shinsung.profile.v1')),null,
     'account purchases must not leak into guest save');
-  await page.locator('[data-action="nav"][data-id="towers"]').click();
+  await page.locator('.sidebar .nav-item[data-action="nav"][data-id="towers"]').click();
   assert.ok(await page.locator('.tower-card[data-id="archer"]:not(.locked)').count());
-  await page.locator('[data-action="nav"][data-id="home"]').click();
+  await page.locator('.sidebar .nav-item[data-action="nav"][data-id="home"]').click();
   await page.locator('[data-action="start"]').click();
   await page.waitForSelector('#battlefield',{timeout:10000});
   await page.waitForFunction(()=>document.querySelector('#wave-clock')?.textContent?.includes('s'));
