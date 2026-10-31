@@ -6,7 +6,7 @@ export class Online {
     this.api=(globalThis.__CLOUDFLARE_API__||'').replace(/\/$/,'');
     this.enabled=!!(this.config?.apiKey&&this.config.projectId&&/^https:\/\//.test(this.api));
     this.user=null;this.room=null;this.socket=null;this.seq=0;this.pending=new Map();this.nextId=0;
-    this.retries=0;this.closed=true;this.serial=0;
+    this.retries=0;this.closed=true;this.serial=0;this.heartbeat=null;this.hostId=null;this.matchStatus='lobby';this.lastRoomPush=0;
   }
   async init(onUser){
     if(!this.enabled)return;
@@ -67,6 +67,14 @@ export class Online {
     this.stop();this.room=code;this.closed=false;this.cb=callback;this.err=onError;
     const serial=++this.serial;
     await this.connect(serial);
+    // Heartbeats are independent of requestAnimationFrame. Background tabs
+    // and expensive canvas frames must not stall authoritative match time.
+    this.heartbeat=setInterval(()=>{
+      if(this.closed||serial!==this.serial||this.socket?.readyState!==WebSocket.OPEN||this.matchStatus!=='playing')return;
+      const host=this.hostId===this.user?.uid;
+      if(!host&&Date.now()-this.lastRoomPush<4500)return;
+      try{this.socket.send(JSON.stringify({type:'pulse'}));}catch(e){this.err?.(e);}
+    },900);
   }
   async connect(serial){
     if(this.closed||serial!==this.serial||!this.user)return;
@@ -79,7 +87,7 @@ export class Online {
       sock.onmessage=e=>{
         try{
           const msg=JSON.parse(e.data);
-          if(msg.type==='room')this.cb(msg.room);
+          if(msg.type==='room'){this.hostId=msg.room?.host;this.matchStatus=msg.room?.status||'lobby';this.lastRoomPush=Date.now();this.cb(msg.room);}
           else if(msg.type==='ack'){
             const p=this.pending.get(msg.id);if(!p)return;
             clearTimeout(p.timer);this.pending.delete(msg.id);
@@ -102,7 +110,7 @@ export class Online {
     }
   }
   stop(){
-    this.closed=true;this.serial++;
+    this.closed=true;this.serial++;if(this.heartbeat!==null){clearInterval(this.heartbeat);this.heartbeat=null;}
     this.socket?.close(1000,'Leaving');this.socket=null;this.room=null;
     for(const p of this.pending.values()){clearTimeout(p.timer);p.reject(Error('방 연결 종료'));}this.pending.clear();
   }
