@@ -1,4 +1,4 @@
-import { MAPS, TOWERS, ENEMIES, DIFFICULTIES, MODES, PACKS, RARITIES, SKIN_STYLES, CRATES, starterProfile } from './data.js';
+import { MAPS, TOWERS, ENEMIES, DIFFICULTIES, MODES, PACKS, RARITIES, SKIN_STYLES, CRATES, BOSS_ABILITIES, starterProfile } from './data.js';
 import { evolutionAt } from './evolutions.js';
 import { createMatch, tick, command, modifiers, towerStats, requiredVotes, rewardFor, applyReward, profileAction, pointOnPath, STEP } from './engine.js';
 import { Renderer, portrait, landscape } from './render.js';
@@ -103,6 +103,14 @@ function evolutionItem(look){
   if(!assets[look])return `<span class="evo-item-symbol">${fallback[look]||'✦'}</span>`;
   const [color,paths]=assets[look];return `<svg viewBox="0 0 100 100" aria-hidden="true" style="--item-color:${color}">${paths}</svg>`;
 }
+function waveAdvice(wave){
+  if(!wave)return '';
+  const boss=wave.groups.map(([id])=>({id,ability:BOSS_ABILITIES[id]})).find(x=>x.ability);
+  if(!boss)return '';
+  const b=boss.ability;
+  const strategy=b.kind==='jam'?'타워를 여러 위치에 분산하면 교란 피해를 줄일 수 있어요.':b.kind==='shield'?'장갑 관통·연쇄 공격으로 추가 보호막에 대응하세요.':'감속 타워를 배치하고 출구 주변의 방어를 강화하세요.';
+  return ' ⚠ '+ENEMIES[boss.id].name+' · '+b.name+' — '+strategy;
+}
 function inspector(){
   if(!$('#tower-inspector')||!renderer||!state)return;
   const t=state.towers.find(t=>t.id===renderer.selected);
@@ -135,7 +143,7 @@ function inspector(){
     <button class="wide" data-action="target" ${own?'':'disabled'}>우선 공격: ${{first:'선두',strong:'강한 적',near:'가까운 적'}[t.target]} ⇄</button>
     <button class="sell wide" data-action="sell" ${own?'':'disabled'}>판매 · ₩ ${fmt(Math.floor(t.spent*7/10))}</button>`;
 }
-let previousWave=0;function updateHud(){if(!state||!$('#cash'))return;const p=state.players[playerId],d=DIFFICULTIES.find(d=>d.id===state.config.difficulty);$('#base-hp').textContent=`${state.fields[p.field]} / 100`;if(state.config.type==='pvp')$('#opponent-hp').textContent=`${state.fields[1-p.field]} / 100`;$('#cash').textContent='₩ '+fmt(p.money);$('#tower-count').textContent=state.towers.filter(t=>t.field===p.field).length+' / '+modifiers(state.config).cap;$('#wave-label').textContent=`WAVE ${String(state.wave).padStart(2,'0')} / ${d.waves.length}`;const wave=d.waves[state.wave-1];const next=d.waves[state.wave];const intel=$('#wave-intel');if(intel)intel.textContent=wave.title+' · '+wave.groups.map(([id,n])=>ENEMIES[id].name+' '+n).join(' / ')+(next?' · 다음: '+next.groups.slice(0,2).map(([id])=>ENEMIES[id].name).join('·'):'');$('#wave-clock').textContent=`${Math.max(0,Math.ceil((state.waveDeadline??d.waves[state.wave-1].duration)-state.waveTime))}s · 적 ${state.enemies.length}`;const skip=$('#skip');skip.disabled=state.waveTime<8||state.wave===d.waves.length||state.votes.includes(playerId);skip.innerHTML=state.waveTime<8?`스킵 가능까지 ${Math.ceil(8-state.waveTime)}초`:`웨이브 스킵 <span>${state.votes.length} / ${requiredVotes(state)}</span>`;
+let previousWave=0;function updateHud(){if(!state||!$('#cash'))return;const p=state.players[playerId],d=DIFFICULTIES.find(d=>d.id===state.config.difficulty);$('#base-hp').textContent=`${state.fields[p.field]} / 100`;if(state.config.type==='pvp')$('#opponent-hp').textContent=`${state.fields[1-p.field]} / 100`;$('#cash').textContent='₩ '+fmt(p.money);$('#tower-count').textContent=state.towers.filter(t=>t.field===p.field).length+' / '+modifiers(state.config).cap;$('#wave-label').textContent=`WAVE ${String(state.wave).padStart(2,'0')} / ${d.waves.length}`;const wave=d.waves[state.wave-1];const next=d.waves[state.wave];const intel=$('#wave-intel');if(intel)intel.textContent=wave.title+' · '+wave.groups.map(([id,n])=>ENEMIES[id].name+' '+n).join(' / ')+(next?' · 다음: '+next.groups.slice(0,2).map(([id])=>ENEMIES[id].name).join('·'):'')+waveAdvice(wave);$('#wave-clock').textContent=`${Math.max(0,Math.ceil((state.waveDeadline??d.waves[state.wave-1].duration)-state.waveTime))}s · 적 ${state.enemies.length}`;const skip=$('#skip');skip.disabled=state.waveTime<8||state.wave===d.waves.length||state.votes.includes(playerId);skip.innerHTML=state.waveTime<8?`스킵 가능까지 ${Math.ceil(8-state.waveTime)}초`:`웨이브 스킵 <span>${state.votes.length} / ${requiredVotes(state)}</span>`;
   // Keep the per-instance evolution button in sync with earned combat money.
   const selected=renderer&&state.towers.find(t=>t.id===renderer.selected);
   const pane=$('#tower-inspector');
