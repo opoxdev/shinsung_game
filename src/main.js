@@ -7,6 +7,7 @@ import { Online } from './online.js';
 import { MotionView } from './presentation.js';
 import { matchmakingMarkup, matchmakingCards, waitingRoomMarkup } from './matchmaking.js';
 import {adminPageMarkup} from './admin-panel.js';
+import {visualPrediction} from './online-prediction.js';
 const $=s=>document.querySelector(s), app=$('#app'), online=new Online();
 const fmt=n=>Math.floor(n).toLocaleString('ko-KR');
 const fmtHp=n=>Number.isFinite(n)?Number(Math.max(0,n).toFixed(Math.abs(n)<10?1:0)).toLocaleString('ko-KR'):'0';
@@ -529,20 +530,6 @@ document.addEventListener('submit',async e=>{e.preventDefault();const f=new Form
 document.addEventListener('keydown',e=>{if(['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName))return;const key=e.key.toLowerCase();if(state){if(e.code==='Space'||key==='e'||key==='r')e.preventDefault();if(renderer&&!$('#modal-root').innerHTML)renderer.keys.add(key);if(e.repeat)return;if(key==='escape'){if($('#modal-root').innerHTML)closeModal();else battleMenu();}else if(!$('#modal-root').innerHTML){if(key==='q')selectPlacement(null);if('12345'.includes(key)){const id=state.players[playerId].loadout[Number(key)-1];if(id)selectPlacement(id);}if(e.code==='Space')sendCommand({kind:'skip'});}}});
 document.addEventListener('keyup',e=>renderer?.keys.delete(e.key.toLowerCase()));window.addEventListener('blur',()=>renderer?.keys.clear());
 document.addEventListener('visibilitychange',()=>{lastTime=0;renderer?.keys.clear();});
-// Prediction runs on a CLONE of the authoritative state. Local ticks are
-// visual only; commands, balances, rewards and results remain server-owned.
-export function visualPrediction(authoritative,elapsed,previous=null,previousSource=null){
-  if(!authoritative||authoritative.status!=='playing')return {state:authoritative,source:authoritative};
-  let state=previousSource===authoritative&&previous?previous:JSON.parse(JSON.stringify(authoritative));
-  const target=authoritative.time+Math.min(2.9,Math.max(0,elapsed));
-  let steps=0;
-  // Keep the main thread responsive after tab restoration or slow devices.
-  while(steps<12&&state.status==='playing'&&state.time+STEP*.5<target){
-    tick(state);steps++;
-  }
-  return {state,source:authoritative};
-}
-
 function frame(now){
   // Cap expensive Canvas + SVG rendering; timing and network are independent.
   const interval=state?(window.innerWidth<700?34:22):48;
