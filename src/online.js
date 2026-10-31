@@ -6,7 +6,7 @@ export class Online {
     this.api=(globalThis.__CLOUDFLARE_API__||'').replace(/\/$/,'');
     this.enabled=!!(this.config?.apiKey&&this.config.projectId&&/^https:\/\//.test(this.api));
     this.user=null;this.room=null;this.socket=null;this.seq=0;this.pending=new Map();this.nextId=0;
-    this.retries=0;this.closed=true;this.serial=0;this.heartbeat=null;this.hostId=null;this.matchStatus='lobby';this.lastRoomPush=0;
+    this.retries=0;this.closed=true;this.serial=0;this.heartbeat=null;this.hostId=null;this.matchStatus='lobby';this.lastRoomPush=0;this.heartbeatMs=3000;
   }
   async init(onUser){
     if(!this.enabled)return;
@@ -72,9 +72,9 @@ export class Online {
     this.heartbeat=setInterval(()=>{
       if(this.closed||serial!==this.serial||this.socket?.readyState!==WebSocket.OPEN||this.matchStatus!=='playing')return;
       const host=this.hostId===this.user?.uid;
-      if(!host&&Date.now()-this.lastRoomPush<4500)return;
+      if(!host&&Date.now()-this.lastRoomPush<8500)return;
       try{this.socket.send(JSON.stringify({type:'pulse'}));}catch(e){this.err?.(e);}
-    },900);
+    },this.heartbeatMs);
   }
   async connect(serial){
     if(this.closed||serial!==this.serial||!this.user)return;
