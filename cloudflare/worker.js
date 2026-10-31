@@ -8,7 +8,7 @@ const cors={'access-control-allow-origin':'*','access-control-allow-methods':'PO
 const validCode=code=>{if(typeof code!=='string'||!/^[A-Z0-9]{6}$/.test(code))throw Error('6자리 방 코드를 입력하세요.');return code;};
 const stubFor=(env,code)=>env.ROOMS.get(env.ROOMS.idFromName(validCode(code)));
 const directoryStub=env=>env.ROOMS.get(env.ROOMS.idFromName('PUBLIC_ROOM_DIRECTORY_V1'));
-async function listRooms(env){
+export async function listRooms(env){
   const r=await directoryStub(env).fetch('https://directory/action',{method:'POST',
     headers:{'content-type':'application/json'},body:JSON.stringify({action:'directoryList',payload:{}})});
   const result=await r.json();if(!result.ok)throw Error(result.error||'공개 방 목록을 불러올 수 없습니다.');
