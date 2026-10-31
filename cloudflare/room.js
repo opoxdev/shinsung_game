@@ -15,7 +15,8 @@ export class GameRoom {
     if(!this.env?.ROOMS||!room?.code||room.config.type==='solo')return;
     const entry=room.status==='lobby'&&Object.keys(room.members).length<(room.config.type==='pvp'?2:4)?
       {code:room.code,name:room.names[room.host]||'방장',type:room.config.type,map:room.config.map,
-       difficulty:room.config.difficulty,count:Object.keys(room.members).length,capacity:room.config.type==='pvp'?2:4,createdAt:room.createdAt}:null;
+       difficulty:room.config.difficulty,count:Object.keys(room.members).length,capacity:room.config.type==='pvp'?2:4,
+       players:Object.keys(room.members).map(uid=>String(room.names[uid]||'모험가').slice(0,20)),createdAt:room.createdAt}:null;
     const stub=this.env.ROOMS.get(this.env.ROOMS.idFromName(DIRECTORY_KEY));
     const res=await stub.fetch('https://directory/action',{method:'POST',headers:{'content-type':'application/json'},
       body:JSON.stringify({action:'directorySync',payload:{code:room.code,entry}})});
