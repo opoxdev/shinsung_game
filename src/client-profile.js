@@ -14,7 +14,7 @@ export function validProfile(value){
     Array.isArray(value.packs)&&value.packs.every(id=>Object.hasOwn(PACKS,id));
 }
 export function loadClientProfile(storage,uid=null,{name='',seed=null}={}){
-  const saved=storage?.getItem(profileKey(uid));
+  let saved=null;try{saved=storage?.getItem(profileKey(uid));}catch{}
   if(saved){
     try{const p=JSON.parse(saved);if(validProfile(p))return p;}catch{}
   }
@@ -24,7 +24,8 @@ export function loadClientProfile(storage,uid=null,{name='',seed=null}={}){
 }
 export function saveClientProfile(storage,uid,profile){
   if(!validProfile(profile))throw Error('저장할 프로필 데이터가 올바르지 않습니다.');
-  storage?.setItem(profileKey(uid),JSON.stringify(profile));
+  if(!storage?.setItem)throw Error('브라우저 저장소를 사용할 수 없습니다.');
+  storage.setItem(profileKey(uid),JSON.stringify(profile));
   return profile;
 }
 // Send only the PvP/co-op loadout, never the wallet or skin inventory.
