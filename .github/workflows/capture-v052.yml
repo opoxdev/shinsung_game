@@ -1,4 +1,4 @@
-name: Capture actual v0.8.0 game screens
+name: Capture actual v0.9.0 game screens
 on:
   push:
     paths: ['.github/workflows/capture-v052.yml']
@@ -29,7 +29,7 @@ jobs:
           await page.waitForSelector('[data-action="start"]');
           const shot=async(name)=>{
             await page.waitForTimeout(350);
-            await page.screenshot({path:'screenshots/v080-'+name+'.png',fullPage:true,animations:'disabled'});
+            await page.screenshot({path:'screenshots/v090-'+name+'.png',fullPage:true,animations:'disabled'});
             console.log('CAPTURED',name);
           };
           const click=async(action,id)=>{
@@ -77,8 +77,13 @@ jobs:
             if(!(await ten.innerText()).includes((price*10).toLocaleString('en-US')))throw Error('Wrong 10-pull price for '+id);
           }
           await shot('11-skin-crates');
-          await click('pvp');await shot('12-pvp-menu');await click('close');
-          await click('coop');await shot('13-coop-menu');await click('close');
+          await click('pvp');
+          if(await page.locator('#public-room-list').count()!==1)throw Error('PvP public room browser is missing');
+          if(await page.locator('[data-action="refreshRooms"]').count()!==1)throw Error('PvP room refresh missing');
+          await shot('12-pvp-menu');await click('close');
+          await click('coop');
+          if(await page.locator('#public-room-list[data-mode="coop"]').count()!==1)throw Error('Co-op public room browser missing');
+          await shot('13-coop-menu');await click('close');
           await click('events');await shot('14-events');await click('close');
           await click('nav','home');await click('start');
           await page.waitForSelector('#battlefield');await page.waitForTimeout(800);
@@ -98,6 +103,19 @@ jobs:
           if(!(await page.locator('#tower-count').innerText()).startsWith('1 /'))throw Error('Failed to install tower for real combat screenshot');
           if(!(await page.locator('#tower-inspector h2').count()))throw Error('Upgrade inspector did not open');
           await shot('16-battle-upgrade');
+          await page.waitForTimeout(6300);
+          await shot('23-combat-damage');
+          let hovered=false;
+          for(const x of Array.from({length:30},(_,i)=>60+i*20)){
+            await page.mouse.move(x,460);await page.waitForTimeout(70);
+            if(await page.locator('#enemy-tooltip.visible').count()){
+              hovered=true;
+              const text=await page.locator('#enemy-tooltip').innerText();
+              if(!text.includes('체력'))throw Error('Enemy info lacks HP');
+              await shot('24-enemy-mouse-hover');break;
+            }
+          }
+          if(!hovered)console.warn('No enemy was under the scanned pointer during the capture window');
           await page.reload({waitUntil:'domcontentloaded'});await page.waitForSelector('[data-action="pvp"]');
           await click('pvp');await click('trainingPvp');
           await page.waitForSelector('.monster-tray');await shot('17-pvp-training');
@@ -117,8 +135,8 @@ jobs:
           rm capture.mjs
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add screenshots/v080-*.png
-          git commit -m 'Record actual v0.8.0 Chromium screenshots across game UI'
+          git add screenshots/v090-*.png
+          git commit -m 'Record actual v0.9.0 Chromium screenshots across game UI'
           git reset --hard HEAD
           git pull --rebase origin main
           git push origin HEAD:main
