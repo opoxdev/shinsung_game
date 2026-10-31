@@ -63,3 +63,43 @@ body{background:#15203d;color:var(--text)}button{border:2px solid #101a35;border
 .battle-inspector button:disabled{opacity:.5;cursor:not-allowed}
 @keyframes evoSpark{0%,100%{opacity:.4;transform:scale(.85) rotate(0deg)}50%{opacity:1;transform:scale(1.15) rotate(40deg)}}
 @media(prefers-reduced-motion:reduce){.battle-inspector .evo-sparks{animation:none}}
+
+/* 0.5.1 — Pack collection, crate reveals and upgrade equipment */
+.pack-loadout{margin:20px 0 100px;padding:22px;border:1px solid #6f98c580;border-radius:16px;background:#22324cc7}
+.pack-loadout h2{font-size:23px;margin:6px 0}.pack-loadout>p{color:#b4d4e1;font-size:12px}
+.pack-loadout-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin:18px 0}
+.pack-equip-option{display:flex;align-items:center;gap:9px;min-height:84px;text-align:left;background:#2b3f61;border:2px solid #506887;color:#eff6ff;padding:7px;border-radius:12px}
+.pack-equip-option.equipped{border-color:#bdf9dc;box-shadow:0 0 14px #58edaa55;background:#28516a}
+.pack-equip-option svg{width:62px;height:68px;flex-shrink:0}.pack-equip-option span{display:grid;gap:5px}
+.pack-equip-option b{font-size:14px}.pack-equip-option small{font-size:10px;color:#a9d7db}
+.monster-roster{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:7px;margin:14px 0 20px}
+.monster-portrait{display:flex;flex-direction:column;align-items:center;padding:7px 5px;background:#172c49;border:1px solid #65829b6c;border-radius:10px;text-align:center;min-width:0}
+.monster-art{height:80px;width:100%;display:grid;place-items:center}.monster-art svg{height:80px;max-width:90px;width:100%;filter:drop-shadow(0 5px 5px #101a2d)}
+.monster-portrait b{font-size:10px;color:#eef8ff}.monster-portrait small{font-size:9px;color:#ffe2a1}
+.monster-portrait span{font-size:9px;color:#a6f1dc;min-height:13px}
+.pack-card{min-width:0}.pack-card .monster-roster{grid-template-columns:repeat(3,minmax(0,1fr))}
+.pack-card .monster-art{height:67px}.pack-card .monster-art svg{height:65px}
+.pack-card .monster-portrait b{white-space:nowrap;text-overflow:ellipsis;overflow:hidden;max-width:100%}
+.crate-hero{display:grid;grid-template-columns:minmax(200px,40%) 1fr;gap:26px;padding:23px;border:1px solid #b2a3db8c;border-radius:18px;background:linear-gradient(135deg,#33366d,#202d4f)}
+.crate-visual{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:230px;border-radius:16px;background:radial-gradient(ellipse at center,#6e5b9580,#1c2b49)}
+.crate-icon{font-size:112px;z-index:1;filter:drop-shadow(0 18px 9px #0b1325);animation:crateFloat 3s ease-in-out infinite}
+.crate-glow{position:absolute;width:150px;height:150px;border-radius:50%;background:#b6ffdb55;filter:blur(31px);animation:cratePulse 2.4s infinite}
+.crate-visual b{color:#f6e0ba;letter-spacing:2px;font-size:12px}
+.crate-content h2{font-size:29px;margin:5px 0 10px}.crate-content p{line-height:1.55;color:#d6e2ed;font-size:13px}
+.crate-odds{display:flex;flex-wrap:wrap;gap:9px;margin:16px 0}
+.crate-odds span{border:1px solid var(--rarity);padding:7px 10px;border-radius:9px;color:var(--rarity);font-size:12px;background:#1b2441bb}
+.crate-odds i{display:inline-block;width:8px;height:8px;background:var(--rarity);border-radius:50%;margin-right:8px}
+.crate-note{font-size:11px!important;color:#bbd0df!important}
+.crate-actions{display:flex;flex-wrap:wrap;gap:10px;margin:15px 0}
+.crate-results{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:10px;max-height:50vh;overflow:auto;margin:14px 0}
+.crate-result{display:flex;flex-direction:column;align-items:center;border:2px solid var(--rarity);border-radius:12px;background:#223353;padding:7px;animation:crateReveal .48s backwards}
+.crate-result span svg{width:80px;height:95px}.crate-result b{font-size:12px}.crate-result small{color:var(--rarity)}.crate-result strong{color:#fff6cd;font-size:10px;margin:5px}
+.evo-upgrade-layout{display:grid;grid-template-columns:94px minmax(0,1fr);gap:10px;align-items:center}
+.evo-item-art{width:94px;height:104px;display:grid;place-items:center;background:radial-gradient(circle,#405b86,#1c2945);border:1px solid #c4bd8d;border-radius:11px;box-shadow:inset 0 0 20px #f6f2b92a}
+.evo-item-art svg{width:85px;height:85px;filter:drop-shadow(0 0 8px var(--item-color,#bdfadd))}
+.evo-item-symbol{font-size:64px;color:#fff4bc;text-shadow:0 0 13px #a4d4ec}
+@keyframes crateFloat{50%{transform:translateY(-11px) rotate(-4deg)}}
+@keyframes cratePulse{50%{opacity:.5;transform:scale(1.25)}}
+@keyframes crateReveal{from{opacity:0;transform:translateY(28px) scale(.8)}to{opacity:1;transform:none}}
+@media(max-width:740px){.crate-hero{grid-template-columns:1fr}.crate-visual{min-height:150px}.crate-icon{font-size:78px}.pack-card .monster-roster{grid-template-columns:repeat(2,minmax(0,1fr))}.evo-upgrade-layout{grid-template-columns:74px 1fr}.evo-item-art{width:74px;height:84px}.evo-item-art svg{width:68px}}
+@media(prefers-reduced-motion:reduce){.crate-icon,.crate-glow,.crate-result{animation:none!important}}
