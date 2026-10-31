@@ -1,4 +1,4 @@
-name: Capture v0.5.2 screenshots
+name: Capture and validate latest game UI
 on:
   push:
     paths: ['.github/workflows/capture-v052.yml']
@@ -33,6 +33,29 @@ jobs:
           }
           await click('nav','towers');
           await page.screenshot({path:'screenshots/v052-loadout.png',fullPage:true});
+          await click('setCollectionTab','packs');
+          if(await page.locator('.collection-layout').count())throw Error('Tower collection still overlaps monster pack page');
+          if(await page.locator('.pack-choice').count()!==5)throw Error('All five packs must be selectable for preview');
+          const checkLayout=async(label)=>{
+            const result=await page.evaluate(()=>{
+              const tabs=document.querySelector('.collection-switch').getBoundingClientRect();
+              const pack=document.querySelector('.pack-config-screen').getBoundingClientRect();
+              const detail=document.querySelector('.pack-detail-panel').getBoundingClientRect();
+              return {tabsBottom:tabs.bottom,packTop:pack.top,detailTop:detail.top,packBottom:pack.bottom};
+            });
+            if(result.packTop<result.tabsBottom-2||result.detailTop<result.packTop)
+              throw Error(label+' has overlapping panels: '+JSON.stringify(result));
+          };
+          await checkLayout('desktop');
+          await click('previewPack','lab');
+          if(await page.locator('[data-action="visitPackShop"]').count()!==1)throw Error('Locked pack purchase link missing');
+          await click('previewPack','basic');
+          await page.screenshot({path:'screenshots/monster-pack-fixed-desktop.png',fullPage:true});
+          await page.setViewportSize({width:390,height:844});
+          await page.waitForTimeout(500);
+          await checkLayout('mobile');
+          await page.screenshot({path:'screenshots/monster-pack-fixed-mobile.png',fullPage:true});
+          await page.setViewportSize({width:1440,height:900});
           await click('nav','shop');await click('shopTab','packs');
           await page.screenshot({path:'screenshots/v052-monster-packs.png',fullPage:true});
           await click('shopTab','crates');
@@ -48,6 +71,6 @@ jobs:
           rm capture.mjs
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add screenshots/v052-*.png
-          git commit -m 'Capture actual v0.5.2 Chromium screens'
+          git add screenshots/v052-*.png screenshots/monster-pack-fixed-*.png
+          git commit -m 'Validate monster pack UI geometry and save real Chromium screenshots'
           git push origin HEAD:main
