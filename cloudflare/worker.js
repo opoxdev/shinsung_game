@@ -19,6 +19,28 @@ async function callRoom(env,code,action,payload,user){
   const r=await stubFor(env,code).fetch('https://room/action',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action,payload,user})});
   const result=await r.json();if(!result.ok)throw Error(result.error||'게임방 오류');return result.data;
 }
+
+function roomLoadout(stored,requested){
+  // Client-scoped solo/shop progression is authoritative for the player's
+  // selected multiplayer loadout; never accept wallets/rewards/room flags.
+  if(!requested)return stored; // compatibility with older clients
+  if(!requested||typeof requested!=='object'||Array.isArray(requested))throw Error('잘못된 멀티플레이 타워 구성입니다.');
+  const loadout=requested.loadout;
+  if(!Array.isArray(loadout)||loadout.length<1||loadout.length>5||
+     new Set(loadout).size!==loadout.length||
+     loadout.some(id=>typeof id!=='string'||!Object.hasOwn(Core.TOWERS,id)))
+    throw Error('멀티플레이 장착 타워가 올바르지 않습니다.');
+  const pack=typeof requested.pack==='string'&&Object.hasOwn(Core.PACKS,requested.pack)?requested.pack:'basic';
+  const equippedSkins={};
+  if(requested.equippedSkins&&typeof requested.equippedSkins==='object'&&!Array.isArray(requested.equippedSkins)){
+    for(const id of loadout){
+      const skin=requested.equippedSkins[id];
+      if(typeof skin==='string'&&skin.length<=32&&/^[a-z0-9_-]+$/.test(skin))equippedSkins[id]=skin;
+    }
+  }
+  return {...stored,loadout:[...loadout],pack,equippedSkins};
+}
+
 async function applyAction(env,action,p,user){
   const db=env.DB;
   if(action==='adminStatus')return {admin:isAdmin(user),emailVerified:user.emailVerified===true};
@@ -41,9 +63,11 @@ async function applyAction(env,action,p,user){
     });
   }
   if(action==='createRoom'){
-    const profile=(await getProfile(db,user)).value;
-    if(profile.activeRoom)throw Error('기존 방을 먼저 나가세요.');
-    Core.validateConfig(p.config);
+    const stored=(await getProfile(db,user)).value;
+    if(stored.activeRoom)throw Error('기존 서버 방을 먼저 나가세요. 이전 버전에서 남은 방이라면 계정 메뉴에서 서버 방 정리를 실행하세요.');
+    const cfg=Core.validateConfig(p.config);
+    if(!['pvp','coop'].includes(cfg.type))throw Error('솔로 전투는 브라우저에서만 실행됩니다.');
+    const profile=roomLoadout(stored,p.loadout);
     for(let attempt=0;attempt<4;attempt++){
       const code=Array.from(crypto.getRandomValues(new Uint8Array(6)),n=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[n%32]).join('');
       try{
@@ -55,11 +79,21 @@ async function applyAction(env,action,p,user){
     throw Error('방 코드 생성 실패');
   }
   if(action==='join'){
-    const code=validCode(p.code),profile=(await getProfile(db,user)).value;
-    if(profile.activeRoom&&profile.activeRoom!==code)throw Error('기존 방을 먼저 나가세요.');
+    const code=validCode(p.code),stored=(await getProfile(db,user)).value;
+    if(stored.activeRoom&&stored.activeRoom!==code)throw Error('기존 서버 방을 먼저 나가세요. 이전 버전에서 남은 방이라면 계정 메뉴에서 서버 방 정리를 실행하세요.');
+    const profile=roomLoadout(stored,p.loadout);
     await callRoom(env,code,'join',{profile,code},user);
     await updateProfile(db,user,v=>{v.activeRoom=code;return v;});
     return {code};
+  }
+  if(action==='clearLegacyRoom'){
+    // Only for explicit multiplayer room cleanup, never during solo play.
+    const stored=(await getProfile(db,user)).value;
+    if(!stored.activeRoom)return {cleared:true};
+    try{await callRoom(env,stored.activeRoom,'leave',{},user);}
+    catch(e){if(!String(e.message).includes('존재하지 않거나 만료'))throw e;}
+    await updateProfile(db,user,v=>{delete v.activeRoom;return v;});
+    return {cleared:true};
   }
   if(action==='leave'){
     const code=validCode(p.code);
@@ -82,7 +116,7 @@ async function applyAction(env,action,p,user){
 export default {
   async fetch(request,env){
     const url=new URL(request.url);
-    if(url.pathname==='/health')return response({ok:true,service:'shinsung-cloudflare',version:'0.9.7'});
+    if(url.pathname==='/health')return response({ok:true,service:'shinsung-cloudflare',version:'0.9.8'});
     // Browsing rooms is public; mutating a lobby still requires Firebase auth.
     if(url.pathname==='/rooms'&&request.method==='GET'){
       const mode=url.searchParams.get('mode');
