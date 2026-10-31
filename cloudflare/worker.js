@@ -20,7 +20,7 @@ async function callRoom(env,code,action,payload,user){
   const result=await r.json();if(!result.ok)throw Error(result.error||'게임방 오류');return result.data;
 }
 
-function roomLoadout(stored,requested){
+export function roomLoadout(stored,requested){
   // Client-scoped solo/shop progression is authoritative for the player's
   // selected multiplayer loadout; never accept wallets/rewards/room flags.
   if(!requested)return stored; // compatibility with older clients
