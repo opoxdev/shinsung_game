@@ -256,11 +256,11 @@ const actions={
   setSkin(key){const [id,style]=key.split('|');closeModal();mutate({kind:'skin',id,skin:style});},
   setDefault(id){closeModal();mutate({kind:'skin',id,skin:'default'});},setArctic(id){closeModal();mutate({kind:'skin',id,skin:'arctic'});},
   visitCrates(){closeModal();page='shop';shopTab='crates';shell();},
-  async openCrate(count){const n=Number(count);if(![1,10].includes(n)||openCrateBusy)return;
+  async openCrate(request){const [id,number]=String(request).split(':');const n=Number(number);if(!Object.hasOwn(CRATES,id)||![1,10].includes(n)||openCrateBusy)return;
     openCrateBusy=true;
     const buttons=[...document.querySelectorAll('[data-action="openCrate"]')];
     buttons.forEach(b=>{b.disabled=true;b.dataset.pending='true';});
-    try{await mutate({kind:'openCrate',id:'wardrobe',count:n},true);}
+    try{await mutate({kind:'openCrate',id,count:n},true);}
     finally{openCrateBusy=false;buttons.forEach(b=>{b.disabled=false;delete b.dataset.pending;});}
   },
   pvp(){special('pvp');},coop(){special('coop');},events(){modal('<span class="eyebrow">PERMANENT CHALLENGE / 01</span><h2>음속을 넘어서</h2><div class="challenge-art">'+portrait('sonic')+'</div><p>익스트림 이상의 난이도에서 「슈퍼소닉」 모드를 적용해 클리어하세요.</p><p>보상: 신화 타워 <b>소닉</b> · 최초 클리어 시 영구 획득</p><button class="primary wide" data-action="challenge">도전 설정 적용</button>');},challenge(){config.difficulty='extreme';config.modes=['supersonic'];config.type='solo';closeModal();page='home';shell();},
