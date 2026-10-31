@@ -25,6 +25,7 @@ function setText(selector,value){const el=$(selector);if(el&&el.textContent!==va
 let config={map:'plains',difficulty:'easy',type:'solo',modes:[]};
 let renderer,state=null,playerId='local',placement=null,paused=false,resultShown=false,accumulator=0,lastTime=0,lastHud=0;
 let isOnlineMatch=false,room=null,onlineBusy=false,lastPulse=0,lastSnapshot=0,seenSnapshot=-1,seq=0,botClock=0,claimAfter=0;
+let predictionState=null,predictionBase=null,lastPaintTime=0;
 function saveLocal(){try{localStorage.setItem('shinsung.profile.v1',JSON.stringify(localProfile));}catch{toast('브라우저 저장 공간을 사용할 수 없습니다.');}}
 let toastTimer;function toast(message){$('#toast').textContent=message;$('#toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('#toast').classList.remove('show'),3200);}
 function modal(content){renderer?.keys.clear();$('#modal-root').innerHTML=`<div class="scrim"><section class="modal" role="dialog" aria-modal="true"><button class="close" data-action="close" aria-label="닫기">×</button>${content}</section></div>`;$('#modal-root').querySelector('input,button:not(.close)')?.focus({preventScroll:true});}
@@ -242,7 +243,7 @@ function startLocal(type='solo'){
   const players=[{id:'local',profile}];if(type==='pvp')players.push({id:'bot',profile:{...starterProfile('훈련 상대'),loadout:['scout','blade','soldier'],pack:'basic'}});
   state=createMatch(config,players);beginGame();
 }
-function beginGame(){motion=new MotionView();placementRevision++;placement=null;resultShown=false;paused=false;accumulator=0;botClock=0;claimAfter=0;previousWave=0;$('#modal-root').innerHTML='';gameUI();}
+function beginGame(){motion=new MotionView();predictionState=null;predictionBase=null;placementRevision++;placement=null;resultShown=false;paused=false;accumulator=0;botClock=0;claimAfter=0;previousWave=0;$('#modal-root').innerHTML='';gameUI();}
 function gameUI(){
   const p=state.players[playerId];app.innerHTML=`<div class="battle"><canvas id="battlefield" aria-label="타워 디펜스 전장"></canvas><div class="enemy-tooltip" id="enemy-tooltip" role="status" aria-live="off"></div><div class="battle-top"><button class="battle-brand" data-action="battleMenu">S<span>신성 디펜스</span>☰</button><div class="battle-stats"><div><small>기지 내구도</small><b id="base-hp"></b></div>${state.config.type==='pvp'?'<div><small>상대 내구도</small><b id="opponent-hp"></b></div>':''}<div><small>전투 자금</small><b class="gold" id="cash"></b></div><div><small>배치 타워</small><b id="tower-count"></b></div></div><div class="wave-panel"><small>${DIFFICULTIES.find(d=>d.id===state.config.difficulty).name} · ${isOnlineMatch?'SERVER':'LOCAL'}</small><b id="wave-label"></b><span id="wave-intel" class="wave-intel"></span><span id="wave-clock"></span></div></div><div class="battle-hints"><span>WASD 이동</span><span>E 확대 · R 축소 · 휠 줌</span><span>1–5 배치</span><span>Q 취소</span>${state.config.type==='pvp'?'<button data-action="field">필드 전환 ⇄</button>':''}<span id="connection-status"></span></div><div class="wave-notice" id="wave-notice"></div><aside id="tower-inspector" class="battle-inspector"></aside>${state.config.type==='pvp'?`<div class="monster-tray"><span>상대에게 보내기 / ${PACKS[p.pack].name}</span>${PACKS[p.pack].monsters.map(([id,cost])=>`<button data-action="send" data-id="${id}" id="send-${id}" style="--enemy:${ENEMIES[id].color}"><i>▣</i><b>${ENEMIES[id].name}</b><small>₩ ${cost}</small></button>`).join('')}</div>`:''}<div class="battle-bottom"><div class="battle-tools"><button data-action="zoomOut" aria-label="축소">−</button><button data-action="zoomReset" aria-label="카메라 초기화">⌾</button><button data-action="zoomIn" aria-label="확대">＋</button><button data-action="cancelPlace" aria-label="배치 취소">취소</button></div><div class="loadout-slots">${loadout(true)}</div><button class="skip-button" data-action="skip" id="skip">웨이브 스킵</button></div><div class="placement-hint" id="placement-hint"></div></div>`;
   resetRenderer();renderer=new Renderer($('#battlefield'));renderer.camera.x=900+p.field*2100;renderer.camera.zoom=1.18;
@@ -370,9 +371,9 @@ function inspector(){
     <button class="sell wide" data-action="sell" ${own?'':'disabled'}>판매 · ₩ ${fmt(Math.floor(t.spent*7/10))}</button>`;
   $('#tower-inspector').scrollTop=inspectorScroll;
 }
-let previousWave=0;function updateHud(){if(!state||!$('#cash'))return;const p=state.players[playerId],d=DIFFICULTIES.find(d=>d.id===state.config.difficulty);setText('#base-hp',`${state.fields[p.field]} / 100`);if(state.config.type==='pvp')setText('#opponent-hp',`${state.fields[1-p.field]} / 100`);setText('#cash','₩ '+fmt(p.money));setText('#tower-count',state.towers.filter(t=>t.field===p.field).length+' / '+modifiers(state.config).cap);setText('#wave-label',`WAVE ${String(state.wave).padStart(2,'0')} / ${d.waves.length}`);const wave=d.waves[state.wave-1];const next=d.waves[state.wave];const intel=$('#wave-intel');if(intel)setText('#wave-intel',wave.title+' · '+wave.groups.map(([id,n])=>ENEMIES[id].name+' '+n).join(' / ')+(next?' · 다음: '+next.groups.slice(0,2).map(([id])=>ENEMIES[id].name).join('·'):'')+waveAdvice(wave));setText('#wave-clock',`${Math.max(0,Math.ceil((state.waveDeadline??d.waves[state.wave-1].duration)-state.waveTime))}s · 적 ${state.enemies.length}`);const skip=$('#skip');skip.disabled=state.waveTime<8||state.wave===d.waves.length||state.votes.includes(playerId);const skipHtml=state.waveTime<8?`스킵 가능까지 ${Math.ceil(8-state.waveTime)}초`:`웨이브 스킵 <span>${state.votes.length} / ${requiredVotes(state)}</span>`;if(skip.innerHTML!==skipHtml)skip.innerHTML=skipHtml;
+let previousWave=0;function updateHud(){if(!state||!$('#cash'))return;const hudState=isOnlineMatch&&predictionState?predictionState:state;const p=hudState.players[playerId],d=DIFFICULTIES.find(d=>d.id===hudState.config.difficulty);setText('#base-hp',`${hudState.fields[p.field]} / 100`);if(hudState.config.type==='pvp')setText('#opponent-hp',`${hudState.fields[1-p.field]} / 100`);setText('#cash','₩ '+fmt(p.money));setText('#tower-count',hudState.towers.filter(t=>t.field===p.field).length+' / '+modifiers(hudState.config).cap);setText('#wave-label',`WAVE ${String(hudState.wave).padStart(2,'0')} / ${d.waves.length}`);const wave=d.waves[hudState.wave-1];const next=d.waves[hudState.wave];const intel=$('#wave-intel');if(intel)setText('#wave-intel',wave.title+' · '+wave.groups.map(([id,n])=>ENEMIES[id].name+' '+n).join(' / ')+(next?' · 다음: '+next.groups.slice(0,2).map(([id])=>ENEMIES[id].name).join('·'):'')+waveAdvice(wave));setText('#wave-clock',`${Math.max(0,Math.ceil((hudState.waveDeadline??d.waves[hudState.wave-1].duration)-hudState.waveTime))}s · 적 ${hudState.enemies.length}`);const skip=$('#skip');skip.disabled=hudState.waveTime<8||hudState.wave===d.waves.length||hudState.votes.includes(playerId);const skipHtml=hudState.waveTime<8?`스킵 가능까지 ${Math.ceil(8-hudState.waveTime)}초`:`웨이브 스킵 <span>${hudState.votes.length} / ${requiredVotes(state)}</span>`;if(skip.innerHTML!==skipHtml)skip.innerHTML=skipHtml;
   // Keep the per-instance evolution button in sync with earned combat money.
-  const selected=renderer&&state.towers.find(t=>t.id===renderer.selected);
+  const selected=renderer&&hudState.towers.find(t=>t.id===renderer.selected);
   const pane=$('#tower-inspector');
   if(pane){
     if(selected&&pane.dataset.evolutionKey!==selected.id+':'+selected.level)inspector();
@@ -386,9 +387,9 @@ let previousWave=0;function updateHud(){if(!state||!$('#cash'))return;const p=st
       }
     }
   }
-  if(state.wave!==previousWave){previousWave=state.wave;$('#wave-notice').textContent=`WAVE ${String(state.wave).padStart(2,'0')} · ${d.waves[state.wave-1].title}`;$('#wave-notice').classList.remove('animate');void $('#wave-notice').offsetWidth;$('#wave-notice').classList.add('animate');}
+  if(hudState.wave!==previousWave){previousWave=hudState.wave;$('#wave-notice').textContent=`WAVE ${String(hudState.wave).padStart(2,'0')} · ${d.waves[hudState.wave-1].title}`;$('#wave-notice').classList.remove('animate');void $('#wave-notice').offsetWidth;$('#wave-notice').classList.add('animate');}
   if(isOnlineMatch)setText('#connection-status',online.socket?.readyState!==WebSocket.OPEN?'재연결 중':performance.now()-lastSnapshot>7000?'동기화 대기 · 연결 확인 중':'Cloudflare 실시간 동기화');
-  if(state.config.type==='pvp')PACKS[p.pack].monsters.forEach(([id,cost])=>{const b=$('#send-'+id),left=Math.max(0,(p.cooldowns[id]||0)-state.time);b.disabled=left>0||p.money<cost;b.querySelector('small').textContent=left>0?Math.ceil(left)+'s':'₩ '+cost;});
+  if(hudState.config.type==='pvp')PACKS[p.pack].monsters.forEach(([id,cost])=>{const b=$('#send-'+id),left=Math.max(0,(p.cooldowns[id]||0)-hudState.time);b.disabled=left>0||p.money<cost;b.querySelector('small').textContent=left>0?Math.ceil(left)+'s':'₩ '+cost;});
 }
 function bot(){if(!state.players.bot)return;botClock+=STEP;if(botClock<2)return;botClock=0;const p=state.players.bot;const points=[[250,440],[390,450],[400,370],[650,370],[820,450],[1120,650],[1270,570],[1380,520]];const t=state.towers.filter(t=>t.owner==='bot');if(t.length<points.length){const [x,y]=points[t.length];command(state,'bot',{kind:'place',type:t.length%3===2?'blade':'scout',x,y});}else{const u=t.find(t=>TOWERS[t.type].upgrades[t.level]!==undefined&&TOWERS[t.type].upgrades[t.level]<p.money);if(u)command(state,'bot',{kind:'upgrade',id:u.id});}if(state.wave>2&&p.money>500)command(state,'bot',{kind:'send',type:'runner'});if(state.votes.includes('local'))command(state,'bot',{kind:'skip'});}
 async function finish(){if(resultShown||performance.now()<claimAfter)return;resultShown=true;const reward=rewardFor(state,playerId);try{if(isOnlineMatch)profile=await online.call('claim',{code:room.code});else{applyReward(localProfile,reward);saveLocal();}}catch(e){toast('보상 정산 대기: '+e.message);claimAfter=performance.now()+5000;resultShown=false;return;}
@@ -528,17 +529,40 @@ document.addEventListener('submit',async e=>{e.preventDefault();const f=new Form
 document.addEventListener('keydown',e=>{if(['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName))return;const key=e.key.toLowerCase();if(state){if(e.code==='Space'||key==='e'||key==='r')e.preventDefault();if(renderer&&!$('#modal-root').innerHTML)renderer.keys.add(key);if(e.repeat)return;if(key==='escape'){if($('#modal-root').innerHTML)closeModal();else battleMenu();}else if(!$('#modal-root').innerHTML){if(key==='q')selectPlacement(null);if('12345'.includes(key)){const id=state.players[playerId].loadout[Number(key)-1];if(id)selectPlacement(id);}if(e.code==='Space')sendCommand({kind:'skip'});}}});
 document.addEventListener('keyup',e=>renderer?.keys.delete(e.key.toLowerCase()));window.addEventListener('blur',()=>renderer?.keys.clear());
 document.addEventListener('visibilitychange',()=>{lastTime=0;renderer?.keys.clear();});
+// Prediction runs on a CLONE of the authoritative state. Local ticks are
+// visual only; commands, balances, rewards and results remain server-owned.
+export function visualPrediction(authoritative,elapsed,previous=null,previousSource=null){
+  if(!authoritative||authoritative.status!=='playing')return {state:authoritative,source:authoritative};
+  let state=previousSource===authoritative&&previous?previous:JSON.parse(JSON.stringify(authoritative));
+  const target=authoritative.time+Math.min(2.9,Math.max(0,elapsed));
+  let steps=0;
+  // Keep the main thread responsive after tab restoration or slow devices.
+  while(steps<12&&state.status==='playing'&&state.time+STEP*.5<target){
+    tick(state);steps++;
+  }
+  return {state,source:authoritative};
+}
+
 function frame(now){
+  // Cap expensive Canvas + SVG rendering; timing and network are independent.
+  const interval=state?(window.innerWidth<700?34:22):48;
+  if(now-lastPaintTime<interval){requestAnimationFrame(frame);return;}
+  lastPaintTime=now;
   const dt=Math.min(.1,(now-(lastTime||now))/1000);lastTime=now;
   if(state){
     if(!paused&&state.status==='playing'){
       if(!isOnlineMatch){
         accumulator+=dt;
         while(accumulator>=STEP){motion.capture(state);tick(state);bot();accumulator-=STEP;}
-      }else pulse(now);
+      } // Online heartbeats are sent by Online.watch's independent timer.
     }
-    const path=MAPS.find(m=>m.id===state.config.map).path;
-    const visual=motion.sample(state,path,{online:isOnlineMatch,ahead:(now-lastSnapshot)/1000,alpha:accumulator/STEP,dt,paused});
+    if(isOnlineMatch){
+      const predicted=visualPrediction(state,(now-lastSnapshot)/1000,predictionState,predictionBase);
+      predictionState=predicted.state;predictionBase=predicted.source;
+    }
+    const display=isOnlineMatch?predictionState||state:state;
+    const path=MAPS.find(m=>m.id===display.config.map).path;
+    const visual=motion.sample(display,path,{online:isOnlineMatch,ahead:0,alpha:accumulator/STEP,dt,paused});
     renderer?.frame(visual,state.config.map,playerId,dt,now/1000);
     hoverVisual=visual;updateEnemyTooltip(visual);
     if(now-lastHud>150){updateHud();lastHud=now;}
