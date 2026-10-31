@@ -1,3 +1,4 @@
+import { ENEMIES } from './data.js';
 // Original vector characters. The same silhouettes are used on cards and in battle.
 import { evolutionAt } from './evolutions.js';
 
@@ -107,8 +108,27 @@ export function character(id,skin='default',level=0) {
     rail:`<path d="M69 101L42 174 80 168 93 189 107 168 141 175 116 98Z" fill="${white?'#d5f1ff':'#508dce'}"/><path d="M84 110L70 170 93 181 113 171 99 110Z" fill="#bbebff"/><path d="M67 65q-6-21 26-24 32 1 28 24l-9 27H76Z" fill="#31375e"/><path d="M76 71h10m16 0h10" stroke="#c6ffff" stroke-width="5"/><path d="M43 62L72 45 95 5 120 43 143 59 97 71Z" fill="#5c97e0"/><path d="M96 8L101 49 121 44Z" fill="#a7ceff"/><path d="M77 44L124 45" stroke="#ffe193" stroke-width="8"/><path d="M141 94l7-17 7 17 18 4-15 10 2 18-15-10-16 8 5-18-14-10Z" fill="#ffeaa1"/><path d="M54 121Q12 95 30 67" fill="none" stroke="#98e9ff" stroke-width="6"/><path d="M18 57l12-9 12 12-10 13Z" fill="#c8fbff"/><circle cx="54" cy="153" r="5" fill="#ffe699"/>`,
     sonic:`<path d="M66 143L52 178 76 186 93 152 109 181 136 171 115 138" fill="#302d68"/><path d="M50 174l29 9-6 12-36-7Zm59 2 28-10 12 11-36 14" fill="#5ff4ed"/><path d="M66 96L43 116 54 132 74 122 71 150 118 145 112 118 138 127 146 109 114 95Z" fill="${white?'#e2f6ff':'#ff64c4'}"/>${head('#f1efff')}<path d="M59 65Q52 26 91 24Q129 23 127 66" fill="none" stroke="#52f5ed" stroke-width="10"/><rect x="53" y="57" width="15" height="29" rx="5" fill="#ff8bda"/><rect x="118" y="56" width="15" height="29" rx="5" fill="#ff8bda"/><path d="M78 110l14 11 18-17-15 30Z" fill="#fff393"/><circle cx="147" cy="136" r="23" fill="#303464"/><circle cx="147" cy="136" r="14" fill="#62f7e5"/><circle cx="147" cy="136" r="6" fill="#41426d"/><path d="M28 49v30m-8-22v14m16-20v25" stroke="#f893ed" stroke-width="5"/>`
   };
-  return evolvedPortrait(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 210" aria-hidden="true"><ellipse cx="93" cy="193" rx="62" ry="12" fill="#101738" opacity=".3"/><g stroke="${ink}" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">${bodies[id]||bodies.scout}</g></svg>`,id,level);
+  return cosmeticPortrait(evolvedPortrait(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 210" aria-hidden="true"><ellipse cx="93" cy="193" rx="62" ry="12" fill="#101738" opacity=".3"/><g stroke="${ink}" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">${bodies[id]||bodies.scout}</g></svg>`,id,level);
 }
+// Pack portraits reuse battle enemy silhouettes, colors, armor, shields and features.
+export function monsterPortrait(type){
+  const d=ENEMIES[type];if(!d)return '';
+  const robotic=['mk1','mk2','chain','mecha','sentinel','overload'].includes(type);
+  const armored=(d.armor||0)>.1||d.shield>0;
+  const giant=d.size>=25;
+  const wings=['harpy','ghost','phantom'].includes(type);
+  const ear=giant?'<path d="M38 42L22 11 53 33M100 42l18-31-32 22" fill="#5b617d"/>':'';
+  const shield=d.shield?'<ellipse cx="70" cy="77" rx="58" ry="67" fill="none" stroke="#a4f3ff" stroke-width="5" stroke-dasharray="11 7"/>':'';
+  const extra=d.heal?'<path d="M115 40v37m-18-18h36" stroke="#c9ffbc" stroke-width="7"/>':d.regen?'<path d="M111 55q27-25 16 13" stroke="#9dffc1" stroke-width="5" fill="none"/>':d.onDeath?'<circle cx="70" cy="92" r="13" fill="#ffe89b"/>':'';
+  const eyes=robotic?'#8df8ff':giant?'#ff8a87':'#344559';
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 160" aria-label="${d.name}"><ellipse cx="70" cy="146" rx="48" ry="8" fill="#122445" opacity=".32"/>${wings?'<path d="M49 64Q7 9 9 85L42 100M91 64Q133 9 131 85L99 100" fill="'+d.color+'" opacity=".75"/>':''}
+  <path d="M48 111l-6 29h20l8-27 8 27h20l-7-29Z" fill="#3d5067"/>
+  <path d="M37 61L21 96 38 106 50 90 45 123 95 123 90 91 105 106 119 96 103 61Z" fill="${d.color}" stroke="#2c405c" stroke-width="4"/>
+  ${armored?'<path d="M40 84h60v16H40Z" fill="#30475f" opacity=".85"/>':''}
+  ${ear}<path d="${robotic?'M36 33L104 33 111 76 29 76Z':'M40 34Q70 6 100 34L105 72 35 72Z'}" fill="${robotic?'#b3c7d9':'#b6d6ae'}" stroke="#34445d" stroke-width="5"/>
+  <path d="M45 52h17m16 0h17" stroke="${eyes}" stroke-width="8"/>${extra}${shield}</svg>`;
+}
+
 export function landscape(map){
   const palettes={plains:['#65baf4','#bdedff','#6ec963','#2e9260','#a9eb71'],mountains:['#303466','#8d7bb7','#524a77','#292b51','#9380b6'],crystal:['#252253','#6a58b8','#54448b','#302955','#a183f6'],volcano:['#5a2349','#f57d67','#6e4254','#362a42','#bb5861'],snow:['#69bde7','#e9faff','#b4e3f3','#6399bc','#edfaff']};
   const [sky,light,ground,shadow,high]=palettes[map.id]||palettes.plains;
