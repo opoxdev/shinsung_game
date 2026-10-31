@@ -308,3 +308,34 @@ body{background:#15203d;color:var(--text)}button{border:2px solid #101a35;border
 .tower-detail.tier-legendary .art-ring{opacity:.48;box-shadow:0 0 16px color-mix(in srgb,var(--rarity) 25%,transparent)}
 .tower-detail.tier-mythic .art-ring{opacity:.64;box-shadow:0 0 23px color-mix(in srgb,var(--rarity) 34%,transparent)}
 @media(prefers-reduced-motion:reduce){.tower-card.legendary:before,.tower-card.mythic:before,.tower-card.mythic:after{animation:none!important}}
+
+/* v0.9.2 usability: readable wide inspector panels, with responsive fallbacks.
+   Keep more details visible without making the user scroll a tiny sidebar. */
+.collection-layout{grid-template-columns:minmax(0,1fr) minmax(365px,425px)}
+.collection-layout>.tower-detail{min-width:0;width:100%;padding:22px 24px}
+.collection-layout>.tower-detail .detail-art{height:218px}
+.collection-layout>.tower-detail .stat-grid{gap:14px 18px}
+.battle-inspector{right:16px;top:112px;width:395px;max-width:calc(100vw - 32px);
+  max-height:calc(100% - 215px);padding:16px 18px}
+.battle-inspector .stat-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px 15px}
+.battle-inspector .inspector-art.evolved{min-height:118px}
+.battle-inspector .evo-upgrade-layout{grid-template-columns:100px minmax(0,1fr);gap:14px}
+.battle-inspector .evo-next{padding:12px 14px}
+@media(max-width:1150px){
+  .collection-layout{grid-template-columns:minmax(0,1fr) 350px}
+  .battle-inspector{width:340px;max-height:calc(100% - 220px)}
+}
+@media(max-width:850px){
+  .collection-layout{grid-template-columns:minmax(0,1fr) 310px}
+  .battle-inspector{width:305px;max-height:calc(100% - 205px)}
+}
+@media(max-width:620px){
+  .collection-layout{grid-template-columns:1fr}
+  .collection-layout>.tower-detail{overflow:visible;padding:18px}
+  .battle-inspector{right:8px;top:103px;width:min(295px,calc(100vw - 16px));
+    max-height:calc(100% - 188px);padding:11px}
+  .battle-inspector .evo-upgrade-layout{grid-template-columns:80px minmax(0,1fr);gap:9px}
+}
+@media(max-height:600px) and (min-width:621px){
+  .battle-inspector{top:84px;max-height:calc(100% - 158px)}
+}
