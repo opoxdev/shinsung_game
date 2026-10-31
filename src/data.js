@@ -1,36 +1,43 @@
 import { EVOLUTIONS } from './evolutions.js';
-export const VERSION = '0.5.2';
+export const VERSION = '0.6.0';
 export const WORLD = { width: 1800, height: 1100, road: 76 };
 export const RARITIES = {
   common: { name: '일반', color: '#a8b8b0' }, rare: { name: '희귀', color: '#65c8f3' },
-  epic: { name: '에픽', color: '#b08aff' }, legendary: { name: '전설', color: '#ffc558' }, mythic: { name: '신화', color: '#fa6b80' }, immortal: { name: '불멸', color: '#55f5ce' }
+  epic: { name: '에픽', color: '#b08aff' }, legendary: { name: '전설', color: '#ffc558' }, mythic: { name: '신화', color: '#fa6b80' }
 };
 // Attack classifications share rules; presentation is chosen independently by each tower's id.
 export const TOWERS = {
   scout: { name: '새총소년', role: '원거리', rarity: 'common', cost: 150, price: 0, color: '#ffb74e', damage: 6, interval: .7, range: 175, kind: 'ranged', cap: 20, upgrades: [180,380,760], desc: '빨간 스카프와 주머니 가득한 돌멩이. 작은 새총으로 커다란 적도 쓰러뜨린다.' },
-  soldier: { name: '스파크', role: '전기 · 연사', rarity: 'rare', cost: 320, price: 750, color: '#62e7f4', damage: 9, interval: .35, range: 195, kind: 'ranged', cap: 12, upgrades: [350,700,1500], desc: '토끼 이어셋, 롤러스케이트, 양손 전기총. 쉬지 않고 전격을 퍼붓는 발명가.' },
+  soldier: { name: '스파크', role: '전기 · 연사', rarity: 'rare', cost: 260, price: 750, color: '#62e7f4', damage: 9, interval: .35, range: 195, kind: 'ranged', cap: 12, upgrades: [350,700,1500], desc: '토끼 이어셋, 롤러스케이트, 양손 전기총. 쉬지 않고 전격을 퍼붓는 발명가.' },
   blade: { name: '가면검객', role: '근접 · 관통', rarity: 'rare', cost: 230, price: 0, color: '#ff6a92', damage: 25, interval: .9, range: 100, kind: 'melee', cap: 10, upgrades: [260,600,1200], desc: '여우 가면 뒤의 정체는 비밀. 휘날리는 붉은 천과 함께 적 최대 3기를 베어낸다.' },
   cannon: { name: '폭탄광', role: '폭발 · 광역', rarity: 'epic', cost: 450, price: 1800, color: '#ff9b54', damage: 35, interval: 2, range: 235, splash: 85, kind: 'splash', cap: 6, upgrades: [480,1000,2200], desc: '작고 둥글지만 폭발은 거대하다. 터질 듯한 폭탄을 적 한가운데 던진다.' },
   summoner: { name: '고블린 소환사', role: '소환', rarity: 'epic', cost: 500, price: 2200, color: '#a4e68b', damage: 65, interval: 4, range: 260, kind: 'summon', cap: 4, upgrades: [550,1200,2400], desc: '고블린을 소환해 적을 추격한다. 소환수는 목표에 도달하면 공격하고 사라진다.' },
-  workshop: { name: '버섯 정원', role: '지원 · 버프', rarity: 'epic', cost: 400, price: 1500, color: '#ff88a8', damage: 0, interval: 1, range: 210, kind: 'buff', cap: 3, upgrades: [450,900,1800], desc: '빛나는 포자로 아군 공격력을 20% 강화하는 작은 버섯집. 여러 정원의 효과는 중첩되지 않는다.' },
-  rail: { name: '별술사', role: '별빛 · 장거리', rarity: 'legendary', cost: 1200, price: 5000, color: '#a6d8ff', damage: 170, interval: 2.8, range: 420, kind: 'ranged', cap: 3, upgrades: [1300,2600,5200], desc: '커다란 모자 아래 반짝이는 두 눈. 멀리 있는 적에게 장갑을 꿰뚫는 별빛을 떨어뜨린다.', pierce: true },
-  sonic: { name: '소닉', role: '초고속 · 광역', rarity: 'mythic', cost: 1800, price: null, color: '#f784cb', damage: 45, interval: .22, range: 240, splash: 45, kind: 'splash', cap: 2, upgrades: [1900,3800,7000], desc: '익스트림 이상 + 슈퍼소닉 모드 클리어 보상. 음파로 적의 대열을 분쇄한다.' },
-  archer: {name:'숲의 궁수', role:'정밀 · 원거리', rarity:'common',cost:190,price:400,color:'#a4e56d',damage:13,interval:1.05,range:275,kind:'ranged',cap:12,upgrades:[200,440,850],desc:'나뭇잎 망토를 두른 방랑자. 넓은 사거리로 선두 적을 정확히 추적한다.'},
+  workshop: { name: '버섯 정원', role: '지원 · 버프', rarity: 'epic', cost: 610, price: 1500, color: '#ff88a8', damage: 0, interval: 1, range: 210, kind: 'buff', cap: 3, upgrades: [450,900,1800], desc: '빛나는 포자로 아군 공격력을 20% 강화하는 작은 버섯집. 여러 정원의 효과는 중첩되지 않는다.' },
+  rail: { name: '별술사', role: '별빛 · 장거리', rarity: 'legendary', cost: 850, price: 5000, color: '#a6d8ff', damage: 170, interval: 2.8, range: 420, kind: 'ranged', cap: 3, upgrades: [1300,2600,5200], desc: '커다란 모자 아래 반짝이는 두 눈. 멀리 있는 적에게 장갑을 꿰뚫는 별빛을 떨어뜨린다.', pierce: true },
+  sonic: { name: '소닉', role: '중반 · 초고속 광역', rarity: 'mythic', cost: 720, price: null, color: '#f784cb', damage: 26, interval: .22, range: 240, splash: 45, kind: 'splash', cap: 2, upgrades: [1900,3800,7000], desc: '익스트림 이상 + 슈퍼소닉 모드 클리어 보상. 음파로 적의 대열을 분쇄한다.' },
+  archer: {name:'숲의 궁수', role:'후반 · 장거리 정밀', rarity:'common',cost:780,price:400,color:'#a4e56d',damage:74,interval:1.75,range:345,kind:'ranged',cap:12,upgrades:[200,440,850],desc:'나뭇잎 망토를 두른 방랑자. 넓은 사거리로 선두 적을 정확히 추적한다.'},
   chef: {name:'도넛 요리사',role:'광역 · 폭발',rarity:'common',cost:270,price:600,color:'#ffb6bc',damage:17,interval:1.5,range:175,splash:58,kind:'splash',cap:10,upgrades:[270,540,1100],desc:'설탕 폭탄을 튀기는 요리사. 밀집된 적을 단숨에 밀어낸다.'},
-  chemist: {name:'연금술사',role:'독 · 지속 피해',rarity:'rare',cost:360,price:1050,color:'#98eb70',damage:7,interval:1.2,range:205,kind:'ranged',dot:12,dotTime:3,cap:8,upgrades:[360,780,1500],desc:'초록색 약병을 던져 중독시키는 연구자. 독은 방어력이 높아도 지속적으로 작용한다.'},
-  icewitch: {name:'얼음 마녀',role:'빙결 · 감속',rarity:'rare',cost:400,price:1400,color:'#7fddff',damage:16,interval:1.1,range:220,kind:'ranged',slow:.48,slowTime:2.5,cap:7,upgrades:[400,850,1750],desc:'서리 나비와 함께 다니는 마녀. 적을 얼려 방어 시간을 벌어준다.'},
-  spirit: {name:'등불 유령',role:'영혼 · 소환',rarity:'rare',cost:420,price:1450,color:'#b6f2ff',damage:26,interval:3.1,range:220,kind:'summon',summons:2,unitSpeed:290,unitLife:7,cap:6,upgrades:[440,900,1800],desc:'등불에서 작고 귀여운 영혼 둘을 불러 적을 쫓는다.'},
-  firefly: {name:'불꽃 요정',role:'화염 · 광역',rarity:'epic',cost:570,price:2200,color:'#ff925b',damage:28,interval:1.65,range:225,splash:72,kind:'splash',dot:10,dotTime:2.5,cap:6,upgrades:[600,1250,2600],desc:'불씨 날개를 펼치며 타오르는 꽃가루를 퍼뜨린다.'},
-  knight: {name:'달빛 기사',role:'근접 · 광역 검격',rarity:'epic',cost:680,price:2600,color:'#c7c1ff',damage:86,interval:1.45,range:123,kind:'melee',cleave:5,pierce:true,cap:5,upgrades:[650,1350,2750],desc:'은빛 대검으로 한 번에 다섯 적을 베어내는 달의 수호자.'},
-  drone: {name:'장난감 기술자',role:'연쇄 · 전기',rarity:'epic',cost:640,price:2850,color:'#89f8e9',damage:30,interval:.9,range:230,kind:'chain',chain:3,chainRange:120,cap:6,upgrades:[680,1350,2900],desc:'작은 로봇의 전기 번개가 옆의 적에게 차례로 튄다.'},
-  clockmaker: {name:'시계 장인',role:'지원 · 공속',rarity:'epic',cost:720,price:3200,color:'#ffd079',damage:0,interval:1,range:230,kind:'buff',haste:.18,cap:3,upgrades:[720,1450,2900],desc:'톱니바퀴가 아군의 시간을 빠르게 돌린다. 공속 오라는 중첩되지 않는다.'},
-  banker: {name:'황금 슬라임',role:'경제 · 수입',rarity:'epic',cost:850,price:3600,color:'#f4d46d',damage:0,interval:15,range:0,kind:'income',income:120,cap:3,upgrades:[750,1600,3200],desc:'반짝이는 젤리 주머니에서 일정 시간마다 전투 자금을 만들어 낸다.'},
-  mermaid: {name:'산호 연주자',role:'지원 · 강화',rarity:'epic',cost:950,price:3900,color:'#79e6e1',damage:0,interval:1,range:260,kind:'buff',power:.32,cap:3,upgrades:[950,1900,3900],desc:'산호 하프를 연주해 근처 아군의 공격력을 강화한다.'},
-  prism: {name:'프리즘 마법사',role:'광선 · 연쇄',rarity:'legendary',cost:1450,price:6800,color:'#b49fff',damage:125,interval:1.65,range:350,kind:'chain',chain:4,chainRange:165,pierce:true,cap:3,upgrades:[1400,2800,5600],desc:'유리 조각이 만든 빛의 굴절로 여러 대상을 관통한다.'},
-  reaper: {name:'낫 든 토끼',role:'처형 · 근접',rarity:'legendary',cost:1250,price:6100,color:'#eaaaff',damage:210,interval:2.1,range:145,kind:'melee',cleave:2,execute:.35,executeBonus:2.5,cap:4,upgrades:[1350,2650,5300],desc:'귀여운 토끼 가면과 거대한 낫. 빈사 상태의 적에게 치명적인 일격을 가한다.'},
-  storm: {name:'폭풍 사제',role:'폭풍 · 광역 감속',rarity:'legendary',cost:1600,price:7600,color:'#87b2ff',damage:100,interval:2.1,range:310,splash:105,kind:'splash',slow:.65,slowTime:1.7,cap:3,upgrades:[1600,3150,6100],desc:'작은 구름의 지휘자. 주변을 둔하게 만드는 번개 폭풍을 부른다.'},
+  chemist: {name:'연금술사',role:'후반 · 독 지속 피해',rarity:'rare',cost:980,price:1050,color:'#98eb70',damage:21,interval:1.2,range:250,kind:'ranged',dot:36,dotTime:3,cap:8,upgrades:[360,780,1500],desc:'초록색 약병을 던져 중독시키는 연구자. 독은 방어력이 높아도 지속적으로 작용한다.'},
+  icewitch: {name:'얼음 마녀',role:'빙결 · 감속',rarity:'rare',cost:290,price:1400,color:'#7fddff',damage:16,interval:1.1,range:220,kind:'ranged',slow:.48,slowTime:2.5,cap:7,upgrades:[400,850,1750],desc:'서리 나비와 함께 다니는 마녀. 적을 얼려 방어 시간을 벌어준다.'},
+  spirit: {name:'등불 유령',role:'영혼 · 소환',rarity:'rare',cost:280,price:1450,color:'#b6f2ff',damage:26,interval:3.1,range:220,kind:'summon',summons:2,unitSpeed:290,unitLife:7,cap:6,upgrades:[440,900,1800],desc:'등불에서 작고 귀여운 영혼 둘을 불러 적을 쫓는다.'},
+  firefly: {name:'불꽃 요정',role:'화염 · 광역',rarity:'epic',cost:960,price:2200,color:'#ff925b',damage:48,interval:1.65,range:225,splash:72,kind:'splash',dot:10,dotTime:2.5,cap:6,upgrades:[600,1250,2600],desc:'불씨 날개를 펼치며 타오르는 꽃가루를 퍼뜨린다.'},
+  knight: {name:'달빛 기사',role:'근접 · 광역 검격',rarity:'epic',cost:900,price:2600,color:'#c7c1ff',damage:86,interval:1.45,range:123,kind:'melee',cleave:5,pierce:true,cap:5,upgrades:[650,1350,2750],desc:'은빛 대검으로 한 번에 다섯 적을 베어내는 달의 수호자.'},
+  drone: {name:'장난감 기술자',role:'후반 · 연쇄 전기',rarity:'epic',cost:1250,price:2850,color:'#89f8e9',damage:67,interval:.9,range:230,kind:'chain',chain:3,chainRange:120,cap:6,upgrades:[680,1350,2900],desc:'작은 로봇의 전기 번개가 옆의 적에게 차례로 튄다.'},
+  clockmaker: {name:'시계 장인',role:'지원 · 공속',rarity:'epic',cost:390,price:3200,color:'#ffd079',damage:0,interval:1,range:230,kind:'buff',haste:.18,cap:3,upgrades:[720,1450,2900],desc:'톱니바퀴가 아군의 시간을 빠르게 돌린다. 공속 오라는 중첩되지 않는다.'},
+  banker: {name:'황금 슬라임',role:'경제 · 수입',rarity:'epic',cost:340,price:3600,color:'#f4d46d',damage:0,interval:15,range:0,kind:'income',income:120,cap:3,upgrades:[750,1600,3200],desc:'반짝이는 젤리 주머니에서 일정 시간마다 전투 자금을 만들어 낸다.'},
+  mermaid: {name:'산호 연주자',role:'지원 · 강화',rarity:'epic',cost:790,price:3900,color:'#79e6e1',damage:0,interval:1,range:260,kind:'buff',power:.32,cap:3,upgrades:[950,1900,3900],desc:'산호 하프를 연주해 근처 아군의 공격력을 강화한다.'},
+  prism: {name:'프리즘 마법사',role:'광선 · 연쇄',rarity:'legendary',cost:1090,price:6800,color:'#b49fff',damage:125,interval:1.65,range:350,kind:'chain',chain:4,chainRange:165,pierce:true,cap:3,upgrades:[1400,2800,5600],desc:'유리 조각이 만든 빛의 굴절로 여러 대상을 관통한다.'},
+  reaper: {name:'낫 든 토끼',role:'처형 · 근접',rarity:'legendary',cost:2200,price:6100,color:'#eaaaff',damage:210,interval:2.1,range:145,kind:'melee',cleave:2,execute:.35,executeBonus:2.5,cap:4,upgrades:[1350,2650,5300],desc:'귀여운 토끼 가면과 거대한 낫. 빈사 상태의 적에게 치명적인 일격을 가한다.'},
+  storm: {name:'폭풍 사제',role:'폭풍 · 광역 감속',rarity:'legendary',cost:1900,price:7600,color:'#87b2ff',damage:100,interval:2.1,range:310,splash:105,kind:'splash',slow:.65,slowTime:1.7,cap:3,upgrades:[1600,3150,6100],desc:'작은 구름의 지휘자. 주변을 둔하게 만드는 번개 폭풍을 부른다.'},
   phoenix: {name:'불사조 조련사',role:'소환 · 불꽃',rarity:'mythic',cost:2600,price:11500,color:'#ff697c',damage:300,interval:4.4,range:350,kind:'summon',summons:2,unitSpeed:370,unitLife:9,dot:25,dotTime:3,cap:2,upgrades:[2500,5000,9500],desc:'붉은 깃털 두 장을 던지면 작은 불사조들이 목표를 향해 날아간다.'},
-  aurora: {name:'오로라 정령',role:'불멸 · 성운 연쇄',rarity:'immortal',cost:3200,price:null,color:'#60fbd7',damage:260,interval:1.3,range:390,kind:'chain',chain:6,chainRange:210,pierce:true,slow:.6,slowTime:2,cap:1,upgrades:[3400,6900,13500],desc:'파멸 난이도의 수호자. 오로라의 빛줄기가 적 사이를 춤추며 흐른다.'},
+  aurora: {name:'오로라 정령',role:'신화 · 성운 연쇄',rarity:'mythic',cost:3200,price:null,color:'#60fbd7',damage:260,interval:1.3,range:390,kind:'chain',chain:6,chainRange:210,pierce:true,slow:.6,slowTime:2,cap:1,upgrades:[3400,6900,13500],desc:'파멸 난이도의 수호자. 오로라의 빛줄기가 적 사이를 춤추며 흐른다.'},
+
+  starseed: {name:'별씨앗',role:'초반 · 소규모 광역',rarity:'mythic',cost:145,price:6500,color:'#ffa2be',damage:5,interval:.64,range:125,splash:48,kind:'splash',cap:4,upgrades:[],desc:'신화라고 무조건 비싸지는 않다! 작은 별씨앗이 초반 무리를 쏙쏙 터뜨린다. 후반 단일 보스에는 취약하다.'},
+  hunter: {name:'밤의 추적자',role:'후반 · 보스 저격',rarity:'rare',cost:2200,price:1300,color:'#84a5ff',damage:620,interval:4.5,range:440,kind:'ranged',pierce:true,chargeEvery:3,chargeBonus:2.2,cap:2,upgrades:[],desc:'희귀 등급이지만 고가의 후반 전문 타워. 느린 장거리 사격과 세 번째 강화탄으로 거대한 보스를 노린다.'},
+  scrap: {name:'고철 거인',role:'후반 · 중장갑 폭격',rarity:'common',cost:1450,price:550,color:'#9fb9ae',damage:150,interval:2.4,range:220,splash:74,kind:'splash',cap:3,upgrades:[],desc:'평범한 고철 덩어리로 만든 비싼 중화기. 희귀도는 낮아도 후반 장갑 무리를 억제한다.'},
+  lullaby: {name:'자장가 요정',role:'초반 · 공격속도 지원',rarity:'epic',cost:195,price:1100,color:'#a1b8ff',damage:0,interval:1,range:145,kind:'buff',haste:.1,cap:3,upgrades:[],desc:'전투 초반 배치하기 쉬운 작은 지원 요정. 좁은 범위의 아군 공격속도를 올린다.'},
+  papercrane: {name:'종이학 조련사',role:'초반 · 기동 소환',rarity:'legendary',cost:295,price:4900,color:'#ffdaaf',damage:22,interval:2.75,range:195,kind:'summon',summons:1,unitSpeed:320,unitLife:6,cap:4,upgrades:[],desc:'전설이지만 값싼 종이학으로 초반 빈 공간을 메운다. 짧은 수명이 약점인 기동 소환수.'},
+  marker: {name:'밤안개 표식사',role:'중후반 · 표식 지원',rarity:'rare',cost:680,price:1700,color:'#c7a4f2',damage:20,interval:1.75,range:260,kind:'mark',markAmp:1.22,markTime:3.5,cap:4,upgrades:[],desc:'적에게 표식을 새겨 모든 아군 공격 피해를 증폭한다. 화력 집중을 유도하는 특수 지원 타워.'},
 };
 // Evolution costs are authoritative and belong to each installed tower instance.
 for(const [id,def] of Object.entries(TOWERS)) {
