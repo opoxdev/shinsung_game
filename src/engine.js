@@ -1,4 +1,4 @@
-import { WORLD, MAPS, TOWERS, ENEMIES, MODES, DIFFICULTIES, PACKS, SKIN_STYLES, CRATES, starterProfile } from './data.js';
+import { WORLD, MAPS, TOWERS, ENEMIES, MODES, DIFFICULTIES, PACKS, SKIN_STYLES, CRATES, BOSS_ABILITIES, starterProfile } from './data.js';
 import { evolutionAt } from './evolutions.js';
 export const STEP = .05;
 export function bounty(hp) {
@@ -171,6 +171,27 @@ export function tick(s,dt=STEP) {
   s.time+=dt;s.waveTime+=dt;
   const ready=s.queue.filter(q=>q.at<=s.time).slice(0,Math.max(0,350-s.enemies.length));
   const set=new Set(ready);s.queue=s.queue.filter(q=>!set.has(q));ready.forEach(q=>spawn(s,q.type,q.field));
+  // Boss casts are resolved on the authoritative fixed-step timeline.
+  // Skill charging is attached to each enemy instance, never to a global boss type.
+  for(const e of s.enemies){
+    const ability=BOSS_ABILITIES[e.type];if(!ability||e.hp<=0)continue;
+    if(e.castReady===undefined)e.castReady=s.time+ability.cooldown;
+    if(s.time+1e-8<e.castReady)continue;
+    e.castReady+=ability.cooldown;
+    if(ability.kind==='rush'){
+      e.rushUntil=s.time+ability.duration;e.rushPower=ability.power;
+    }else if(ability.kind==='shield'){
+      const amount=Math.round(e.maxHp*ability.power);
+      e.shield=Math.min((e.maxShield||0)+amount,(e.shield||0)+amount);
+    }else if(ability.kind==='jam'){
+      for(const t of s.towers){
+        if(t.field===e.field&&dist(t,e)<=ability.radius){
+          t.jammedUntil=Math.max(t.jammedUntil||0,s.time+ability.power);
+        }
+      }
+    }
+    event(s,{kind:'boss-skill',x:e.x,y:e.y,field:e.field,type:e.type,skill:ability.kind,name:ability.name,radius:ability.radius||80});
+  }
   // Enemy healing, regeneration and damage-over-time. 1 tick = 50ms.
   for(const e of s.enemies){
     const d=ENEMIES[e.type];
@@ -188,6 +209,7 @@ export function tick(s,dt=STEP) {
   }
   for(const t of s.towers) {
     const stats=towerStats(t);
+    if(t.jammedUntil>s.time)continue;
     if(stats.kind==='buff')continue;
     t.cd-=dt;
     if(stats.kind==='income'){
@@ -249,7 +271,7 @@ export function tick(s,dt=STEP) {
   s.units=s.units.filter(u=>u.life>0);
   s.enemies=s.enemies.filter(e=>e.hp>0);
   for(const e of s.enemies) {
-    e.progress+=e.speed*dt*(e.slowUntil>s.time?(e.slowFactor||1):1);const pos=pointOnPath(mapOf(s).path,e.progress);e.x=pos.x;e.y=pos.y;
+    e.progress+=e.speed*dt*(e.slowUntil>s.time?(e.slowFactor||1):1)*(e.rushUntil>s.time?(e.rushPower||1):1);const pos=pointOnPath(mapOf(s).path,e.progress);e.x=pos.x;e.y=pos.y;
     if(pos.end){s.fields[e.field]=Math.max(0,s.fields[e.field]-ENEMIES[e.type].leak);e.hp=0;event(s,{kind:'leak',x:e.x,y:e.y,field:e.field});}
   }
   s.enemies=s.enemies.filter(e=>e.hp>0);
