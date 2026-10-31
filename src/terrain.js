@@ -26,6 +26,8 @@ export function makeTerrain(map){
   g.lineJoin='round';g.lineCap='round';g.beginPath();map.path.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));g.lineWidth=95;g.strokeStyle='#263a4544';g.stroke();g.lineWidth=82;g.strokeStyle=map.id==='plains'?'#b49b6c':'#d3c5e088';g.stroke();g.lineWidth=76;g.strokeStyle=map.roadColor;g.stroke();
   for(let i=0;i<150;i++){const x=noise(i+1900)*1800,y=noise(i+2900)*1100;if(pathDistance(map.path,x,y)>27)continue;oval(g,x,y,5+i%4,2,'#ffffff26');}
   for(let i=0;i<90;i++){const x=60+noise(i+4000)*1680,y=90+noise(i+5000)*940;if(pathDistance(map.path,x,y)<125)continue;if(map.id==='plains'&&Math.hypot((x-940)/1.4,y-488)<100)continue;prop(g,x,y,.65+noise(i+90)*.7,i%5===0&&!['crystal','volcano'].includes(map.id)?'rock':map.id);}
-  const [sx,sy]=map.path[0],[ex,ey]=map.path.at(-1);for(const [x,y,color]of [[sx+35,sy,'#ff7197'],[ex-45,ey,'#84f4ff']]){g.shadowColor=color;g.shadowBlur=22;g.strokeStyle=color;g.lineWidth=9;g.beginPath();g.ellipse(x,y-16,23,52,0,0,7);g.stroke();g.shadowBlur=0;oval(g,x,y+31,34,10,'#222d4644');}
+  const inset=(end,near,d)=>{const length=Math.hypot(near[0]-end[0],near[1]-end[1]);return [end[0]+(near[0]-end[0])*d/length,end[1]+(near[1]-end[1])*d/length];};
+  const [sx,sy]=inset(map.path[0],map.path[1],35),[ex,ey]=inset(map.path.at(-1),map.path.at(-2),45);
+  for(const [x,y,color]of [[sx,sy,'#ff7197'],[ex,ey,'#84f4ff']]){g.shadowColor=color;g.shadowBlur=22;g.strokeStyle=color;g.lineWidth=9;g.beginPath();g.ellipse(x,y-16,23,52,0,0,7);g.stroke();g.shadowBlur=0;oval(g,x,y+31,34,10,'#222d4644');}
   return c;
 }

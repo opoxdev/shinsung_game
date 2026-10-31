@@ -283,7 +283,7 @@ export function tick(s,dt=STEP) {
     const distance=dist(u,e),move=(u.speed||210)*dt;
     if(distance<=move+10){
       applyHit(s,e,u.damage,u,{damage:u.damage});
-      u.life=0;event(s,{kind:'melee',x:e.x,y:e.y,tx:e.x,ty:e.y,field:e.field,type:u.type});
+      u.life=0;event(s,{kind:'melee',x:u.x,y:u.y,tx:e.x,ty:e.y,field:e.field,type:u.type});
     }else {u.x+=(e.x-u.x)*move/distance;u.y+=(e.y-u.y)*move/distance;}
   }
   s.units=s.units.filter(u=>u.life>0);
