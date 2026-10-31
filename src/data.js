@@ -179,11 +179,11 @@ export const SKIN_STYLES={
 // A box chooses a style by its own published probability, then uniformly
 // chooses an owned tower. Skins never modify combat stats.
 export const CRATES={
-  wardrobe:{name:'반짝 의상 상자',theme:'종합',price:240,icon:'🎁',color:'#c2b6ff',description:'클래식한 눈꽃·네온·왕실 의상을 만나는 기본 상자.',odds:{arctic:65,neon:28,royal:7}},
-  forest:{name:'비밀의 숲 상자',theme:'자연',price:160,icon:'🌿',color:'#9ce4a5',description:'싱그러운 초록빛부터 오래된 숲의 수호자까지.',odds:{meadow:70,bloom:25,solstice:5}},
-  winter:{name:'빙설 궁전 상자',theme:'눈과 얼음',price:300,icon:'❄️',color:'#9ce3ff',description:'차가운 눈꽃, 푸른 서리불꽃, 영원한 빙하.',odds:{arctic:65,frostfire:30,glacier:5}},
-  cyber:{name:'네온 연구소 상자',theme:'사이버',price:420,icon:'⚡',color:'#f4a5ff',description:'전기 회로와 홀로그램, 초희귀 디지털 심연.',odds:{circuit:55,neon:32,hologram:11,void:2}},
-  astral:{name:'천상의 별빛 상자',theme:'우주·왕실',price:780,icon:'🌌',color:'#ffd38e',description:'별빛 의상과 왕실 장식, 천상의 신화 스킨.',odds:{starlight:55,royal:30,celestial:13,void:2}}
+  wardrobe:{name:'반짝 의상 상자',theme:'종합',price:1000,icon:'🎁',color:'#c2b6ff',description:'클래식한 눈꽃·네온·왕실 의상을 만나는 기본 상자.',odds:{arctic:65,neon:28,royal:7}},
+  forest:{name:'비밀의 숲 상자',theme:'자연',price:400,icon:'🌿',color:'#9ce4a5',description:'싱그러운 초록빛부터 오래된 숲의 수호자까지.',odds:{meadow:70,bloom:25,solstice:5}},
+  winter:{name:'빙설 궁전 상자',theme:'눈과 얼음',price:1500,icon:'❄️',color:'#9ce3ff',description:'차가운 눈꽃, 푸른 서리불꽃, 영원한 빙하.',odds:{arctic:65,frostfire:30,glacier:5}},
+  cyber:{name:'네온 연구소 상자',theme:'사이버',price:3000,icon:'⚡',color:'#f4a5ff',description:'전기 회로와 홀로그램, 초희귀 디지털 심연.',odds:{circuit:55,neon:32,hologram:11,void:2}},
+  astral:{name:'천상의 별빛 상자',theme:'우주·왕실',price:5000,icon:'🌌',color:'#ffd38e',description:'별빛 의상과 왕실 장식, 천상의 신화 스킨.',odds:{starlight:55,royal:30,celestial:13,void:2}}
 };
 for(const [id,crate] of Object.entries(CRATES)){
   crate.styles=Object.keys(crate.odds);
