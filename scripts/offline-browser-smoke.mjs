@@ -35,6 +35,16 @@ try{
     'account purchases must not leak into guest save');
   await page.locator('.sidebar .nav-item[data-action="nav"][data-id="towers"]').click();
   assert.ok(await page.locator('.tower-card[data-id="archer"]:not(.locked)').count());
+  // The logged-in account must remain intact after reload, without D1 restore.
+  await page.reload({waitUntil:'domcontentloaded'});
+  await page.waitForFunction(()=>document.querySelector('.wallet')?.textContent.includes('200'));
+  assert.ok(await page.locator('.tower-card[data-id="archer"]:not(.locked)').count());
+  await page.locator('[data-action="backupMenu"]').click();
+  const downloaded=page.waitForEvent('download');
+  await page.locator('[data-action="exportProgress"]').click();
+  const save=await downloaded;
+  assert.match(save.suggestedFilename(),/^shinsung-save-\d{4}-\d{2}-\d{2}\.json$/);
+  await page.locator('[data-action="close"]').click();
   await page.locator('.sidebar .nav-item[data-action="nav"][data-id="home"]').click();
   await page.locator('[data-action="start"]').click();
   await page.waitForSelector('#battlefield',{timeout:10000});
