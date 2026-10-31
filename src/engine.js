@@ -322,7 +322,13 @@ export function profileAction(profile,a) {
   // Legacy profiles predate crates and can lack cosmetic dictionaries.
   profile.skins=profile.skins&&typeof profile.skins==='object'?profile.skins:{};
   profile.equippedSkins=profile.equippedSkins&&typeof profile.equippedSkins==='object'?profile.equippedSkins:{};
-  if(!Number.isSafeInteger(profile.cratePity)||profile.cratePity<0)profile.cratePity=0;
+  const oldPity=Number.isSafeInteger(profile.cratePity)&&profile.cratePity>=0?profile.cratePity:0;
+  if(!profile.cratePities||typeof profile.cratePities!=='object'||Array.isArray(profile.cratePities))
+    profile.cratePities={wardrobe:oldPity};
+  for(const id of Object.keys(CRATES))
+    if(!Number.isSafeInteger(profile.cratePities[id])||profile.cratePities[id]<0)
+      profile.cratePities[id]=id==='wardrobe'?oldPity:0;
+  profile.cratePity=profile.cratePities.wardrobe;
   if(a.kind==='equip') {
     if(!profile.owned.includes(a.id))throw Error('보유하지 않은 타워입니다.');
     if(profile.loadout.includes(a.id)){if(profile.loadout.length===1)throw Error('타워를 최소 1개 장착하세요.');profile.loadout=profile.loadout.filter(x=>x!==a.id);}
