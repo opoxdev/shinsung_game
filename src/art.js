@@ -1,4 +1,4 @@
-import { ENEMIES } from './data.js';
+import { ENEMIES, SKIN_STYLES } from './data.js';
 // Original vector characters. The same silhouettes are used on cards and in battle.
 import { evolutionAt } from './evolutions.js';
 
@@ -100,10 +100,26 @@ function expansionPortrait(id,skin){
 
 // Cosmetic skins recolor existing character artwork without altering gameplay.
 function cosmeticPortrait(svg,skin){
-  if(!['neon','royal'].includes(skin))return svg;
-  const tint=skin==='neon'?'hue-rotate(145deg) saturate(1.5)':'sepia(.65) saturate(1.8) hue-rotate(340deg)';
-  const aura=skin==='neon'?'#fe8aff':'#ffe3a1';
-  return svg.replace('<svg ',`<svg style="filter:${tint}" `).replace('</svg>',`<g fill="none" stroke="${aura}" stroke-width="2.6"><ellipse cx="92" cy="107" rx="75" ry="89" stroke-dasharray="10 13" opacity=".85"/></g></svg>`);
+  const item=SKIN_STYLES[skin];
+  if(!item)return svg;
+  const filters={
+    meadow:'hue-rotate(65deg) saturate(1.2)',arctic:'saturate(.7) brightness(1.18)',
+    bloom:'hue-rotate(310deg) saturate(1.2)',circuit:'hue-rotate(115deg) saturate(1.6)',
+    neon:'hue-rotate(145deg) saturate(1.5)',frostfire:'hue-rotate(190deg) saturate(1.4)',
+    starlight:'hue-rotate(235deg) saturate(1.4)',royal:'sepia(.65) saturate(1.8) hue-rotate(340deg)',
+    solstice:'hue-rotate(85deg) saturate(1.7)',hologram:'hue-rotate(170deg) saturate(1.7)',
+    glacier:'hue-rotate(190deg) saturate(.9) brightness(1.23)',
+    void:'hue-rotate(260deg) saturate(1.6) brightness(.9)',
+    celestial:'hue-rotate(325deg) saturate(1.35) brightness(1.13)'
+  };
+  const hue=item.color,rare=['legendary','mythic'].includes(item.rarity);
+  const aura=`<g fill="none" stroke="${hue}" stroke-width="${rare?4:2.5}" stroke-linecap="round">
+    <ellipse cx="92" cy="107" rx="75" ry="89" stroke-dasharray="${rare?'6 7':'11 14'}" opacity=".85"/>
+    <path d="M90 8l8-8 8 8-8 8Z" fill="${hue}" opacity=".9"/>
+    <path d="M16 102l8-12 8 12-8 12Zm135 15 8-12 8 12-8 12Z" fill="${hue}" opacity=".74"/>
+    ${rare?'<path d="M28 62L42 44M140 42l14 19M36 165l16 14M132 175l14-16" stroke-width="5"/>':''}
+  </g>`;
+  return svg.replace('<svg ',`<svg style="filter:${filters[skin]||'none'}" `).replace('</svg>',aura+'</svg>');
 }
 export function character(id,skin='default',level=0) {
   const expanded=expansionPortrait(id,skin);if(expanded)return cosmeticPortrait(evolvedPortrait(expanded,id,level),skin);
