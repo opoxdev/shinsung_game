@@ -71,7 +71,24 @@ async function applyAction(env,action,p,user){
 export default {
   async fetch(request,env){
     const url=new URL(request.url);
-    if(url.pathname==='/health')return response({ok:true,service:'shinsung-cloudflare',version:'0.9.2'});
+    if(url.pathname==='/health')return response({ok:true,service:'shinsung-cloudflare',version:'0.9.3'});
+    // Browsing rooms is public; mutating a lobby still requires Firebase auth.
+    if(url.pathname==='/rooms'&&request.method==='GET'){
+      const mode=url.searchParams.get('mode');
+      if(!['pvp','coop'].includes(mode))return response({ok:false,error:'PvP 또는 협동전 유형을 선택하세요.'},400);
+      try{
+        const rooms=await listRooms(env);
+        const available=rooms.filter(r=>r?.type===mode&&r.count>0&&r.count<r.capacity)
+          .map(r=>({code:r.code,name:r.name,type:r.type,map:r.map,
+            difficulty:r.difficulty,count:r.count,capacity:r.capacity,
+            players:Array.isArray(r.players)?r.players.slice(0,r.capacity):[],
+            createdAt:r.createdAt}));
+        return response({ok:true,data:available});
+      }catch(e){
+        console.error('Public room directory unavailable:',e);
+        return response({ok:false,error:'방 목록 서버 연결에 실패했습니다. 다시 시도해 주세요.'},503);
+      }
+    }
     if(request.method==='OPTIONS')return new Response(null,{status:204,headers:cors});
     if(url.pathname==='/socket'){
       try{
