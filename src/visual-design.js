@@ -1,17 +1,18 @@
+import { TOWERS } from './data.js';
 // Original Shinsung Defense silhouettes. No recolor filters or reused event costumes.
 // All default shapes share a readable tactical language; high tiers use richer equipment.
 const DESIGNS={
-  scout:{main:'#697e75',dark:'#293d4c',trim:'#d1b87a',helmet:'cap',weapon:'carbine',rig:'light'},
-  archer:{main:'#6d7a6b',dark:'#273745',trim:'#b2a982',helmet:'hood',weapon:'crossbow',rig:'light'},
-  chef:{main:'#7d8a7e',dark:'#2d3b4d',trim:'#cbaa73',helmet:'helmet',weapon:'grenade',rig:'light'},
-  scrap:{main:'#737e84',dark:'#263b48',trim:'#c4a66d',helmet:'heavy',weapon:'cannon',rig:'heavy'},
-  soldier:{main:'#516d7d',dark:'#263b52',trim:'#76bfc5',helmet:'visor',weapon:'dual',rig:'medium'},
-  blade:{main:'#637486',dark:'#24394b',trim:'#d3c39c',helmet:'band',weapon:'sword',rig:'light'},
-  chemist:{main:'#607c72',dark:'#293b44',trim:'#91c3a2',helmet:'gasmask',weapon:'vial',rig:'medium'},
-  icewitch:{main:'#617c90',dark:'#2a3e52',trim:'#99d5dd',helmet:'breather',weapon:'cryo',rig:'medium'},
-  spirit:{main:'#57727b',dark:'#2c3a51',trim:'#88c0c5',helmet:'headset',weapon:'controller',rig:'medium'},
-  hunter:{main:'#5b6778',dark:'#252d42',trim:'#c7c6a9',helmet:'hood',weapon:'sniper',rig:'medium'},
-  marker:{main:'#686d88',dark:'#30394c',trim:'#ad9ec8',helmet:'visor',weapon:'marker',rig:'medium'},
+  scout:{"main":"#9c9d84","dark":"#554f4a","trim":"#c9a77c","helmet":"none","weapon":"slingshot","rig":"casual"},
+  archer:{"main":"#84967a","dark":"#485a49","trim":"#d2b98b","helmet":"none","weapon":"bow","rig":"casual"},
+  chef:{"main":"#a08a70","dark":"#62564b","trim":"#d5b28b","helmet":"none","weapon":"grenade","rig":"casual"},
+  scrap:{"main":"#9b8e79","dark":"#5c584f","trim":"#c2b094","helmet":"none","weapon":"cannon","rig":"porter"},
+  soldier:{"main":"#748d86","dark":"#435a57","trim":"#91b8a2","helmet":"none","weapon":"coil","rig":"casual"},
+  blade:{"main":"#888b86","dark":"#4a4b53","trim":"#c5b6a1","helmet":"none","weapon":"sword","rig":"casual"},
+  chemist:{"main":"#859481","dark":"#505b53","trim":"#b5cd9d","helmet":"none","weapon":"vial","rig":"apron"},
+  icewitch:{"main":"#8ea6b5","dark":"#586477","trim":"#d4e2e7","helmet":"none","weapon":"staff","rig":"robe"},
+  spirit:{"main":"#879b99","dark":"#515e68","trim":"#bed0c9","helmet":"none","weapon":"controller","rig":"casual"},
+  hunter:{"main":"#968c75","dark":"#514e48","trim":"#baad91","helmet":"none","weapon":"sniper","rig":"coat"},
+  marker:{"main":"#929199","dark":"#555764","trim":"#c6bea6","helmet":"none","weapon":"telescope","rig":"casual"},
   cannon:{main:'#9a7257',dark:'#382f42',trim:'#e5a272',helmet:'heavy',weapon:'launcher',rig:'heavy'},
   summoner:{main:'#5e7974',dark:'#313c4d',trim:'#b4ca91',helmet:'hood',weapon:'summon',rig:'cape'},
   firefly:{main:'#8a6458',dark:'#3b333e',trim:'#efbb7e',helmet:'breather',weapon:'flame',rig:'heavy'},
@@ -166,6 +167,152 @@ function weapon(type,c,style){
  if(type==='crane')return path('M123 99l29-42-5 30 26 12-42 21-18-18Z','#e9e0c7',p,4)+line('M137 102l27-12',a,2);
  return line('M118 129l40-43',p,8)+circle(158,88,13,a);
 }
+// BASE COMMON + RARE: civilian professions. The same military helmet and
+// tactical armor must NOT appear on every starter unit. These are quiet,
+// recognizable 75px silhouettes: wood, cloth, leather, modest hand tools.
+export const BASE_ART_TIERS={common:'everyday',rare:'craft',epic:'specialist',legendary:'iconic',mythic:'myth'};
+function everydayPortrait(id,c,rare=false){
+  const a=c.trim,p=c.dark,m=c.main;
+  const skin='#d9b99f',hair=id==='icewitch'?'#726e72':id==='blade'?'#47464b':id==='archer'?'#62534b':'#5c514a';
+  let out=ellipse(94,194,44,7,'#25384d32');
+  // Everyday footwear and unarmored cloth are consistent, but jobs differ.
+  out+=path('M72 144L63 179 76 186 91 154 107 184 127 179 115 144Z',p,'#3e4447',3);
+  out+=path('M58 181l21-3 3 12-27 2ZM106 179l23 0 6 12-30 1Z','#655e56',p,2);
+  if(id==='hunter')out+=path('M61 97Q41 124 46 181L75 167 93 179 124 166 150 185Q141 117 123 97Z',m,p,4);
+  if(id==='icewitch')out+=path('M68 104L47 170Q90 188 141 171L120 103Z',m,p,3);
+  if(id==='scrap')out+=path('M19 120L22 178 46 180 40 111Z',p,p,3)+circle(32,173,11,a);
+  if(id==='archer')out+=path('M69 113L46 168 64 177 88 149Z',p,a,2);
+  if(id==='spirit')out+=rect(56,101,17,32,p,4);
+  if(id==='chemist')out+=path('M69 118l-20 52 34 11 24-15 25 12-15-56Z','#d9d2bb',p,3);
+  // Different tunic construction, not identical bulletproof vests.
+  const front=id==='blade'?'M65 101L107 103 121 149 66 151 75 124Z':
+    id==='hunter'?'M69 103L112 103 123 148 64 148Z':
+    id==='icewitch'?'M69 96L117 97 133 155 55 155Z':
+    id==='scrap'?'M62 105L127 105 127 153 58 153Z':
+    'M66 106L119 106 125 152 62 152Z';
+  out+=path(front,m,p,4);
+  if(id==='blade')out+=line('M70 115l41 29M67 145h54',a,4);
+  else if(id==='archer')out+=line('M72 115l35 0M81 121v22',p,3);
+  else if(id==='scout')out+=path('M66 114L121 147M85 105L101 150',a,'none',2);
+  else if(id==='chef')out+=rect(79,123,40,16,p,3)+circle(89,131,4,a)+circle(107,131,4,a);
+  else if(id==='scrap')out+=rect(73,120,43,17,a,3)+line('M78 129h32',p,3);
+  else if(id==='chemist')out+=rect(84,120,27,12,p,2)+line('M98 126v10',a,2);
+  else if(id==='hunter')out+=line('M92 106l-15 41M98 106l19 41',a,3);
+  else if(id==='marker')out+=rect(82,118,28,17,p,2)+line('M87 124h17',a,3);
+  else if(id==='soldier')out+=path('M76 119l15 0 0 24-15 0ZM105 119h12v24h-12Z',a,p,2);
+  else if(id==='icewitch')out+=line('M78 120l31 0M77 132h33',a,3);
+  else if(id==='spirit')out+=rect(84,114,34,24,p,3)+line('M91 121h20',a,2);
+  // Two different arm poses and rolled sleeves, no bulky shoulder armor.
+  out+=path('M68 111L50 118 44 144 55 151 73 132M119 110l22 8 6 26-11 8-20-20',m,p,3);
+  out+=circle(49,149,7,skin)+circle(141,148,7,skin);
+  // Bare human faces, freckles/short bangs/ponytails rather than helmets.
+  out+=path('M74 53Q79 39 94 39q20 0 25 18l-5 37-17 13-20-13Z',skin,p,3);
+  if(id==='icewitch')out+=path('M65 74q-1-38 30-39 30 0 36 43l-14-20-21-6-21 9Z',hair,p,3)
+    +path('M65 74l-9 33 20 7-2-35Z',hair,p,2)+path('M67 95L120 95 117 108 72 110Z','#e5e4db',p,2);
+  else if(id==='blade')out+=path('M67 58Q73 34 96 33q23 0 28 24l-25-12-25 17Z',hair,p,3)
+    +path('M115 45q34-9 27 13l-27-3Z',hair,p,2)+line('M71 108l39 0',a,3);
+  else if(id==='hunter')out+=path('M64 62Q72 34 95 34q26 2 32 28L106 53 85 50Z',hair,p,3)
+    +path('M118 52l13 25-9 1',hair,p,2);
+  else if(id==='archer')out+=path('M65 58q7-30 31-28 27 3 30 31l-20-11-36 12Z',hair,p,3)
+    +path('M68 59l-8 19',hair,p,3);
+  else if(id==='scout')out+=path('M68 61Q68 38 93 35q25 0 32 22l-22-5-26 10Z',hair,p,3)
+    +line('M72 59l-12 2',hair,4);
+  else if(id==='scrap')out+=path('M61 63Q69 35 92 37q30 0 34 27l-19-10-28 7Z',hair,p,3)
+    +rect(66,53,60,9,p,3);
+  else if(id==='chemist')out+=path('M66 56q6-26 28-27 25 0 32 31L110 49 78 56Z',hair,p,3)
+    +rect(78,69,15,10,'#b4c5c1',3)+rect(99,69,15,10,'#b4c5c1',3);
+  else if(id==='spirit')out+=path('M68 62q5-28 28-27 22 1 29 29l-18-14-24 9Z',hair,p,3)
+    +line('M70 67q-13-14-16 14',a,4);
+  else if(id==='marker')out+=path('M67 63q9-26 28-26 25-3 29 25l-19-13-29 11Z',hair,p,3)
+    +rect(75,47,44,7,a,3);
+  else if(id==='soldier')out+=path('M66 61q5-27 27-27 28-1 32 28l-19-15-28 12Z',hair,p,3)
+    +rect(74,59,47,6,p,2);
+  else out+=path('M67 63q7-28 28-27 27 0 31 27l-18-13-29 11Z',hair,p,3);
+  out+=line('M81 81h8m12 0h9','#4a4041',3);
+  // Small profession-specific weapons, not mythical or giant firearms.
+  if(id==='scout')out+=line('M131 129l14-45m0 0 20 45', '#8b644b',6)+line('M145 84l10 15 10-15','#624b45',3)+rect(65,140,17,17,a,3);
+  else if(id==='archer')out+=line('M151 40Q184 91 149 163','#8f7150',5)+line('M151 42L149 162','#ddd4b8',2)
+    +line('M111 105l56-22',p,3)+path('M166 83l-9-1 4 9Z',a,p,2)+rect(42,107,18,39,p,4);
+  else if(id==='chef')out+=circle(145,124,12,'#687b60')+rect(140,109,10,7,a,2)
+    +line('M145 109q8-10 1-15',p,3)+rect(69,137,13,17,p,2);
+  else if(id==='scrap')out+=path('M119 115L168 104 171 129 121 143Z','#6b6d68',p,5)+circle(164,117,10,'#3e4647')+
+    line('M121 128l-20 27',a,5)+rect(70,109,19,13,p,2);
+  else if(id==='soldier')out+=rect(132,112,30,24,p,5)+circle(148,122,8,a)+circle(148,122,3,m)
+    +line('M138 101q-8-22 11-19',p,4)+rect(49,117,15,21,a,3);
+  else if(id==='blade')out+=line('M132 154L163 51',p,7)+line('M136 135l28-82','#d6d8d2',4)
+    +line('M127 131l20 7',a,5)+path('M65 143l-6 37',p,p,3);
+  else if(id==='chemist')out+=path('M135 106h22l9 28q-15 19-39 0Z','#aed3a2',p,3)+rect(137,99,17,7,a,2)
+    +rect(53,120,20,28,p,3)+circle(62,131,5,a);
+  else if(id==='icewitch')out+=line('M148 169L151 47','#856c63',6)
+    +path('M150 43l9-17 8 17-8 18Z','#c8e3e7',p,2)+line('M132 115l-14-5',a,3);
+  else if(id==='spirit')out+=rect(122,126,39,25,p,5)+circle(133,139,4,a)+circle(149,139,4,a)
+    +rect(139,58,22,14,a,4)+line('M137 57l-19-7m24 6 16-6',p,3)+line('M117 47h46','#8eaead',4);
+  else if(id==='hunter')out+=line('M122 122L174 99',p,10)+line('M123 118l47-22',a,3)
+    +rect(136,91,20,5,p,1)+path('M120 121l-14 27',a,p,2);
+  else if(id==='marker')out+=rect(120,109,31,16,p,4)+circle(128,116,6,a)+circle(143,116,6,a)
+    +line('M163 157V68',p,4)+path('M163 70L175 81 163 89Z',a,p,2);
+  if(rare)out+=rect(89,149,12,5,a,1); // one small clasp, not a glowing badge
+  return out;
+}
+function prestigeBack(id,c,rarity){
+  const a=c.trim,p=c.dark;
+  if(rarity==='epic'){
+    const motifs={
+      cannon:()=>path('M36 112l-15-27 28-8M137 103l27-23 7 37',a,p,4)+circle(40,92,10,'#bc744a'),
+      summoner:()=>path('M32 118l-17-32 28-6M139 112l22-33 15 39',a,p,3)+circle(23,79,7,a),
+      firefly:()=>path('M45 118Q10 76 31 55q-1 34 21 39M138 118q38-47 19-62 5 32-25 37','#e6a06a',p,3),
+      knight:()=>line('M35 34Q95 -9 155 34',a,5)+path('M145 20l9 16-9 12-9-12Z',a,p,3),
+      drone:()=>line('M34 96L14 60M147 95l19-35',a,6)+circle(14,59,11,p)+circle(165,60,11,p),
+      clockmaker:()=>circle(96,95,77,p)+circle(96,95,65,a)+circle(96,95,54,p),
+      mermaid:()=>path('M43 114Q9 62 41 30l13 53M142 119Q180 70 155 28l-18 59',a,p,3),
+      lullaby:()=>circle(96,111,74,p)+line('M20 108h19M149 108h18',a,6)
+    };
+    return motifs[id]?.()||'';
+  }
+  if(rarity==='legendary'){
+    const motifs={
+      rail:()=>line('M25 155Q31 31 96 18 156 30 163 151',a,5)+circle(24,73,6,a)+circle(159,61,6,a),
+      prism:()=>path('M17 82l19-41 26 44-19 40Z',a,p,3)+path('M146 110l13-64 20 61-17 29Z','#c8e5f1',p,3),
+      reaper:()=>path('M21 163Q-4 89 43 30L61 16 43 79 54 130M134 128l29-60-6-44q41 57 14 147',p,a,4),
+      storm:()=>path('M15 129q-24-52 23-70 8-40 48-29 41-38 70 14 40 11 24 70Z',p,a,5),
+      papercrane:()=>path('M12 72L37 30 52 55 22 101Z','#f6e8cb',p,3)+path('M136 74l22-53 19 60-30 20Z','#f6e8cb',p,3)
+    };
+    return motifs[id]?.()||'';
+  }
+  if(rarity==='mythic'){
+    const motifs={
+      sonic:()=>line('M22 130Q0 49 95 18q94 30 74 111',a,7)+line('M15 150Q-9 35 96 5q109 34 87 149',p,5),
+      phoenix:()=>path('M65 131Q-8 64 26 14L70 88M123 131q73-68 33-117l-34 75','#ef8e60','#8c4d5f',6),
+      aurora:()=>path('M30 15Q-2 78 47 159Q26 96 103 19q42 87 29 145 53-46 29-144',a,p,5),
+      starseed:()=>line('M22 57q71-92 143 0M13 160q82 87 164-2',a,5)
+    };
+    return motifs[id]?.()||'';
+  }
+  return '';
+}
+function prestigeFront(id,c,rarity){
+  const a=c.trim,p=c.dark;
+  const motifs={
+    cannon:()=>rect(119,101,35,35,p,5)+circle(137,114,9,a),
+    summoner:()=>path('M40 118L12 138 43 151 62 140Z','#7db878',p,3)+circle(31,137,3,'#e6ffc5'),
+    firefly:()=>circle(151,84,8,'#fbd18a')+path('M164 103l13-28 3 30Z','#fba87b',p,3),
+    knight:()=>path('M83 103l11-17 14 17-14 12Z',a,p,3),
+    drone:()=>circle(34,60,9,'#8ff4e1')+circle(165,60,9,'#8ff4e1'),
+    clockmaker:()=>line('M96 45v50l21 17',p,7)+circle(96,95,10,a),
+    mermaid:()=>path('M58 117l-19-40 13-28 13 42Z',a,p,3),
+    lullaby:()=>path('M26 106L14 95 14 124 26 115ZM166 106l12-12v29l-12-9Z',a,p,3),
+    rail:()=>path('M31 51l12-16 12 16-12 16Z',a,p,3)+path('M141 51l12-16 12 16-12 16Z',a,p,3),
+    prism:()=>path('M83 22l14-18 14 18-14 18Z','#ebdcfb',p,3),
+    reaper:()=>line('M135 154l32-94',a,7)+path('M166 61q-30-32-26-48 36 13 42 44Z',a,p,3),
+    storm:()=>path('M25 121l30-41-13 44 30-12-35 47Z',a,p,3)+path('M144 101l28-39-9 42 22-9-31 40Z',a,p,3),
+    papercrane:()=>path('M55 25L90 42 72 56 58 91 41 56Z','#f5dfbb',p,3),
+    sonic:()=>line('M26 114h15m119 0h15',a,6),
+    phoenix:()=>path('M94 5l15 35-15-10-16 10Z','#ffe5ac',p,3),
+    aurora:()=>circle(33,58,6,'#dafaf2')+circle(155,66,6,'#dafaf2'),
+    starseed:()=>circle(30,69,7,a)+circle(160,117,7,a)
+  };
+  return motifs[id]?.()||'';
+}
 function fighterPortrait(id,c,skin){
   let out=ellipse(93,193,60,11,'#0e213944');
   out+=backRig(c,c,id,skin)+legs(c,id,skin);
@@ -224,10 +371,21 @@ export function redesignedPortrait(id,skin='default'){
  const suit=SCHEMES[skin];
  const c=suit?{...base,...suit}:base;
  const rid='shinsung-'+id+'-'+skin;
- let art=base.rig==='structure'?buildingPortrait(id,c,skin):base.rig==='relic'?relicPortrait(id,c,skin):fighterPortrait(id,c,skin);
+ const rarity=TOWERS[id]?.rarity||'common';
+ // A limited costume is allowed to transform a humble unit into a prestige
+ // look. Its ordinary base must not inherit the costume's visual complexity.
+ const plain=skin==='default';
+ let art;
+ if(plain&&(rarity==='common'||rarity==='rare'))
+   art=everydayPortrait(id,c,rarity==='rare');
+ else{
+   const back=plain?prestigeBack(id,c,rarity):'';
+   const front=plain?prestigeFront(id,c,rarity):'';
+   art=back+(base.rig==='structure'?buildingPortrait(id,c,skin):base.rig==='relic'?relicPortrait(id,c,skin):fighterPortrait(id,c,skin))+front;
+ }
  // Every model is standalone and stays recognizable at the 75px battle scale.
  const border=(suit&&['mythic','legendary'].includes(skin))?'': '';
- return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 210" aria-label="'+id+(skin==='default'?'':' '+skin)+'" data-design="v2" data-base="'+id+'" data-costume="'+skin+'">'
+ return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 210" aria-label="'+id+(skin==='default'?'':' '+skin)+'" data-design="v2" data-art-tier="'+(skin==='default'?BASE_ART_TIERS[rarity]:'costume')+'" data-base="'+id+'" data-costume="'+skin+'">'
   +'<defs><linearGradient id="'+rid+'" x1="0" x2="1" y1="0" y2="1"><stop stop-color="'+c.main+'"/><stop offset="1" stop-color="'+c.dark+'"/></linearGradient></defs>'
   +art+'</svg>';
 }
