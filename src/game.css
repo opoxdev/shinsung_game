@@ -240,3 +240,27 @@ body{background:#15203d;color:var(--text)}button{border:2px solid #101a35;border
   .battle-inspector{top:92px;max-height:calc(100% - 185px)}
   .placement-hint{bottom:94px}.monster-tray{top:90px;max-height:calc(100% - 180px)}
 }
+
+/* v0.8: curated full-body costume gallery, not generic recolor swatches. */
+.crate-offer-odds{grid-template-columns:1fr 1fr;align-items:stretch}
+.crate-cosmetic-choice{display:flex;gap:8px;align-items:center;min-height:100px;min-width:0;background:linear-gradient(145deg,#172b46,#233856);border:1px solid color-mix(in srgb,var(--rarity) 65%,#355273);border-radius:9px;padding:7px;box-shadow:inset 0 1px #fff1}
+.crate-skin-preview{flex:0 0 65px;display:grid;place-items:center;align-self:stretch;background:radial-gradient(circle at center,color-mix(in srgb,var(--rarity) 15%,transparent),transparent 73%)}
+.crate-skin-preview svg{width:65px;height:83px;filter:drop-shadow(0 4px 4px #050d1c55)}
+.crate-cosmetic-copy{display:flex;flex-direction:column;gap:3px;min-width:0;line-height:1.4}
+.crate-cosmetic-copy b{color:var(--rarity);font-family:var(--display);font-size:14px}
+.crate-cosmetic-copy small{color:#d7e5f3;font-size:11px}
+.crate-cosmetic-copy>span{font-size:9px;color:#9fb8d6;overflow-wrap:anywhere;max-height:43px;overflow:hidden}
+.crate-cosmetic-copy em{font-size:9px;font-style:normal;color:#edd8a8}
+.crate-cosmetic-choice.skin-locked{border-style:dashed;background:#1a2b43a6}
+.crate-cosmetic-choice.skin-locked .crate-skin-preview svg{filter:saturate(.6) brightness(.85)}
+.crate-eligibility{font-size:10px;color:#ffe2a6;margin-top:10px}
+.skin-options{grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:10px}
+.skin-options .skin-wardrobe-item{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:space-between;min-height:181px;padding:10px 7px;border:1px solid var(--skin-accent);background:radial-gradient(ellipse at 50% 30%,color-mix(in srgb,var(--skin-accent) 20%,transparent),transparent 75%),#213555;border-radius:9px}
+.skin-options .skin-wardrobe-item svg{width:100%;height:116px;filter:drop-shadow(0 4px 4px #0d1a33)}
+.skin-options .skin-wardrobe-item b{font-size:12px;color:#f4f9ff;margin-top:3px}
+.skin-options .skin-wardrobe-item small{font-size:10px;color:var(--skin-accent)}
+.skin-options .skin-wardrobe-item.unowned{opacity:.68;border-style:dashed}
+.skin-options .skin-wardrobe-item.owned:hover{background-color:#3c4f75}
+.modal:has(.skin-wardrobe-item){width:650px}
+@media(max-width:740px){.crate-offer-odds{grid-template-columns:1fr 1fr}.crate-cosmetic-choice{flex-direction:column;align-items:center;text-align:center}.crate-skin-preview{flex-basis:auto}.crate-cosmetic-copy{align-items:center}}
+@media(max-width:420px){.crate-offer-odds{grid-template-columns:1fr 1fr;gap:6px}.crate-cosmetic-choice{padding:5px}.crate-skin-preview svg{height:65px}.crate-cosmetic-copy b{font-size:12px}.skin-options{grid-template-columns:repeat(2,minmax(0,1fr))}}
