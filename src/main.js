@@ -549,7 +549,8 @@ function frame(now){
     }
     const display=isOnlineMatch?predictionState||state:state;
     const path=MAPS.find(m=>m.id===display.config.map).path;
-    const visual=motion.sample(display,path,{online:isOnlineMatch,ahead:0,alpha:accumulator/STEP,dt,paused});
+    const ahead=isOnlineMatch?Math.max(0,Math.min(STEP,Math.min(2.9,Math.max(0,(now-lastSnapshot)/1000))-(display.time-state.time))):0;
+    const visual=motion.sample(display,path,{online:isOnlineMatch,ahead,alpha:accumulator/STEP,dt,paused});
     renderer?.frame(visual,state.config.map,playerId,dt,now/1000);
     hoverVisual=visual;updateEnemyTooltip(visual);
     if(now-lastHud>150){updateHud();lastHud=now;}
