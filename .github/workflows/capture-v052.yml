@@ -1,4 +1,4 @@
-name: Capture actual v0.9.1 game screens
+name: Capture actual v0.9.2 game screens
 on:
   push:
     paths: ['.github/workflows/capture-v052.yml']
@@ -29,7 +29,7 @@ jobs:
           await page.waitForSelector('[data-action="start"]');
           const shot=async(name)=>{
             await page.waitForTimeout(350);
-            await page.screenshot({path:'screenshots/v091-'+name+'.png',fullPage:true,animations:'disabled'});
+            await page.screenshot({path:'screenshots/v092-'+name+'.png',fullPage:true,animations:'disabled'});
             console.log('CAPTURED',name);
           };
           const click=async(action,id)=>{
@@ -38,6 +38,12 @@ jobs:
             await page.waitForTimeout(180);
           };
           await shot('01-lobby');
+          const startFunds={easy:500,normal:650,hard:850,extreme:1100,hell:1400,ruin:1800};
+          for(const [id,cash] of Object.entries(startFunds)){
+            await click('difficulty',id);
+            if(!(await page.locator('.deploy-note').innerText()).includes('₩ '+cash.toLocaleString('en-US')))
+              throw Error('Starting money not displayed for '+id);
+          }
           await click('difficulty','hard');await shot('02-difficulty');
           await click('difficulty','easy');
           await click('nav','towers');
@@ -47,6 +53,14 @@ jobs:
           if(!(await page.locator('[data-action="inspect"][data-id="chef"] .card-name').innerText()).includes('투척병'))throw Error('Grenadier conversion missing');
           if(await page.locator('#rarity-filter option').count()!==6)throw Error('Expected five rarity choices plus all');
           await shot('03-tower-collection');
+          const infoWidth=await page.locator('.tower-detail').evaluate(el=>el.getBoundingClientRect().width);
+          if(infoWidth<360)throw Error('Tower information panel is still too narrow: '+infoWidth);
+          await page.locator('.tower-groups').evaluate(el=>el.scrollTop=360);
+          const towerScroll=await page.locator('.tower-groups').evaluate(el=>el.scrollTop);
+          if(towerScroll<=50)throw Error('Tower collection is not scrollable during regression test');
+          await page.locator('[data-action="inspect"][data-id="archer"]').evaluate(el=>el.click());
+          const towerAfter=await page.locator('.tower-groups').evaluate(el=>el.scrollTop);
+          if(Math.abs(towerAfter-towerScroll)>4)throw Error('Selecting a tower jumps the collection scroll to top');
           const tierCounts={common:4,rare:7,epic:10,legendary:5,mythic:4};
           const artTiers={common:'everyday',rare:'craft',epic:'specialist',legendary:'iconic',mythic:'myth'};
           let rankIndex=25;
@@ -94,6 +108,13 @@ jobs:
             if(!(await ten.innerText()).includes((price*10).toLocaleString('en-US')))throw Error('Wrong 10-pull price for '+id);
           }
           await shot('11-skin-crates');
+          await page.locator('.shop-scroll').evaluate(el=>el.scrollTop=270);
+          const shopBefore=await page.locator('.shop-scroll').evaluate(el=>el.scrollTop);
+          if(shopBefore<=50)throw Error('Shop scroll test needs an overflowing list');
+          await page.locator('[data-action="shopTab"][data-id="towers"]').evaluate(el=>el.click());
+          const shopAfter=await page.locator('.shop-scroll').evaluate(el=>el.scrollTop);
+          if(Math.abs(shopAfter-shopBefore)>4)throw Error('Changing shop tab resets scrolling');
+          await click('shopTab','crates');
           await click('pvp');
           if(await page.locator('#public-room-list').count()!==1)throw Error('PvP public room browser is missing');
           if(await page.locator('[data-action="refreshRooms"]').count()!==1)throw Error('PvP room refresh missing');
@@ -119,6 +140,8 @@ jobs:
           await canvas.click({position:coords});
           if(!(await page.locator('#tower-count').innerText()).startsWith('1 /'))throw Error('Failed to install tower for real combat screenshot');
           if(!(await page.locator('#tower-inspector h2').count()))throw Error('Upgrade inspector did not open');
+          const upgradeWidth=await page.locator('#tower-inspector').evaluate(el=>el.getBoundingClientRect().width);
+          if(upgradeWidth<335)throw Error('Evolution panel is still too narrow: '+upgradeWidth);
           await shot('16-battle-upgrade');
           await page.waitForTimeout(6300);
           await shot('23-combat-damage');
@@ -152,8 +175,8 @@ jobs:
           rm capture.mjs
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add screenshots/v091-*.png
-          git commit -m 'Record actual v0.9.1 Chromium screenshots across game UI'
+          git add screenshots/v092-*.png
+          git commit -m 'Record actual v0.9.2 Chromium screenshots across game UI'
           git reset --hard HEAD
           git pull --rebase origin main
           for attempt in 1 2 3 4 5; do
