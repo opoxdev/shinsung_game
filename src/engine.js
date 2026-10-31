@@ -1,4 +1,4 @@
-import { WORLD, MAPS, TOWERS, ENEMIES, MODES, DIFFICULTIES, PACKS, starterProfile } from './data.js';
+import { WORLD, MAPS, TOWERS, ENEMIES, MODES, DIFFICULTIES, PACKS, SKIN_STYLES, CRATES, starterProfile } from './data.js';
 import { evolutionAt } from './evolutions.js';
 export const STEP = .05;
 export function bounty(hp) {
@@ -294,9 +294,39 @@ export function profileAction(profile,a) {
     if(profile.coins<p.price)throw Error('코인이 부족합니다.');profile.coins-=p.price;profile.packs.push(a.id);
   } else if(a.kind==='pack') {if(!profile.packs.includes(a.id))throw Error('보유한 팩을 선택하세요.');profile.pack=a.id;}
   else if(a.kind==='skin') {
-    if(!profile.owned.includes(a.id)||!['default','arctic'].includes(a.skin))throw Error('사용할 수 없는 스킨입니다.');
-    const key=a.id+':arctic';if(a.skin==='arctic'&&!profile.skins[key]){if(profile.coins<300)throw Error('코인이 부족합니다.');profile.coins-=300;profile.skins[key]=true;}
+    if(!profile.owned.includes(a.id)||!(a.skin==='default'||Object.hasOwn(SKIN_STYLES,a.skin)))throw Error('사용할 수 없는 스킨입니다.');
+    if(a.skin!=='default'&&!profile.skins?.[a.id+':'+a.skin])throw Error('먼저 상자에서 스킨을 획득하세요.');
     profile.equippedSkins[a.id]=a.skin;
+  } else if(a.kind==='openCrate'){
+    const crate=Object.hasOwn(CRATES,a.id)?CRATES[a.id]:null, count=a.count;
+    if(!crate||![1,10].includes(count))throw Error('잘못된 상자 열기 요청입니다.');
+    if(profile.coins<crate.price*count)throw Error('상자를 열 코인이 부족합니다.');
+    // Never trust client-provided outcomes. The server performs every roll.
+    // Roll bytes using Web Crypto on Workers and in modern browsers.
+    const values=new Uint32Array(count);crypto.getRandomValues(values);
+    const available=()=>profile.owned.flatMap(id=>crate.styles.filter(style=>!profile.skins[id+':'+style]).map(style=>({id,style})));
+    const weightTotal=crate.styles.reduce((n,id)=>n+SKIN_STYLES[id].weight,0);
+    const rolls=[];
+    profile.coins-=crate.price*count;
+    profile.skins=profile.skins||{};
+    profile.cratePity=profile.cratePity||0;
+    for(let i=0;i<count;i++){
+      const remaining=available();
+      const guaranteed=profile.cratePity>=9&&remaining.length>0;
+      let style,id;
+      if(guaranteed){
+        const pick=remaining[values[i]%remaining.length];id=pick.id;style=pick.style;
+      }else{
+        let ticket=values[i]%weightTotal;
+        style=crate.styles.find(key=>{ticket-=SKIN_STYLES[key].weight;return ticket<0;})||crate.styles[0];
+        id=profile.owned[(Math.floor(values[i]/weightTotal))%profile.owned.length];
+      }
+      const key=id+':'+style,duplicate=!!profile.skins[key],refund=duplicate?SKIN_STYLES[style].refund:0;
+      if(!duplicate){profile.skins[key]=true;profile.cratePity=0;}else profile.cratePity++;
+      profile.coins+=refund;
+      rolls.push({id,style,duplicate,refund,guaranteed});
+    }
+    profile.lastCrate={crate:a.id,rolls,pity:profile.cratePity};
   } else throw Error('지원하지 않는 요청입니다.');
   return profile;
 }
