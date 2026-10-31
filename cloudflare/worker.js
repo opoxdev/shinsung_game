@@ -36,7 +36,7 @@ export function roomLoadout(stored,requested){
   return {...stored,loadout:ids,pack:requested.pack,equippedSkins};
 }
 
-async function applyAction(env,action,p,user){
+export async function applyAction(env,action,p,user){
   const db=env.DB;
   if(action==='adminStatus')return {admin:isAdmin(user),emailVerified:user.emailVerified===true};
   if(action.startsWith('admin')){
