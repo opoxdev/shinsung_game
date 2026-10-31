@@ -142,9 +142,17 @@ export class Renderer {
     g.save();g.translate(u.x,u.y+bob);
     g.fillStyle='#17343c55';g.beginPath();g.ellipse(0,13,16,6,0,0,7);g.fill();
     if(u.type==='spirit'){
-      g.shadowColor='#a3eeff';g.shadowBlur=12;
-      g.fillStyle='#b7efff';g.beginPath();g.arc(0,-5,12,Math.PI,0);g.lineTo(12,13);g.lineTo(4,8);g.lineTo(0,15);g.lineTo(-5,8);g.lineTo(-12,13);g.closePath();g.fill();
-      g.fillStyle='#426283';g.fillRect(-7,-9,4,5);g.fillRect(4,-9,4,5);
+      // The former lantern ghost is now a lightweight tactical scouting drone.
+      g.shadowColor='#86cde5';g.shadowBlur=9;
+      g.fillStyle='#304c62';g.strokeStyle='#82b8ca';g.lineWidth=3;
+      g.beginPath();g.roundRect(-14,-18,28,18,5);g.fill();g.stroke();
+      g.fillStyle='#78c6d3';g.fillRect(-7,-13,14,6);
+      g.strokeStyle='#637c8b';g.lineWidth=4;
+      g.beginPath();g.moveTo(-9,-18);g.lineTo(-23,-23);
+      g.moveTo(9,-18);g.lineTo(23,-23);g.stroke();
+      g.strokeStyle='#a7f0e7';g.lineWidth=3;
+      g.beginPath();g.ellipse(-23,-24,13,4,0,0,7);g.stroke();
+      g.beginPath();g.ellipse(23,-24,13,4,0,0,7);g.stroke();
       g.shadowBlur=0;g.restore();return;
     }
     if(u.type==='phoenix'){
