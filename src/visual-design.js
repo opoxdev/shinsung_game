@@ -3,17 +3,17 @@ import { TOWERS } from './data.js';
 // Everyday/common and craft/rare portraits use modest civilian jobs.
 // Epic/legendary/mythic gain progressively unique silhouettes; no military-uniform template.
 const DESIGNS={
-  scout:{"main":"#9c9d84","dark":"#554f4a","trim":"#c9a77c","helmet":"none","weapon":"slingshot","rig":"casual"},
-  archer:{"main":"#84967a","dark":"#485a49","trim":"#d2b98b","helmet":"none","weapon":"bow","rig":"casual"},
-  chef:{"main":"#a08a70","dark":"#62564b","trim":"#d5b28b","helmet":"none","weapon":"grenade","rig":"casual"},
-  scrap:{"main":"#9b8e79","dark":"#5c584f","trim":"#c2b094","helmet":"none","weapon":"cannon","rig":"porter"},
-  soldier:{"main":"#748d86","dark":"#435a57","trim":"#91b8a2","helmet":"none","weapon":"coil","rig":"casual"},
-  blade:{"main":"#888b86","dark":"#4a4b53","trim":"#c5b6a1","helmet":"none","weapon":"sword","rig":"casual"},
-  chemist:{"main":"#859481","dark":"#505b53","trim":"#b5cd9d","helmet":"none","weapon":"vial","rig":"apron"},
-  icewitch:{"main":"#8ea6b5","dark":"#586477","trim":"#d4e2e7","helmet":"none","weapon":"staff","rig":"robe"},
-  spirit:{"main":"#879b99","dark":"#515e68","trim":"#bed0c9","helmet":"none","weapon":"controller","rig":"casual"},
-  hunter:{"main":"#968c75","dark":"#514e48","trim":"#baad91","helmet":"none","weapon":"sniper","rig":"coat"},
-  marker:{"main":"#929199","dark":"#555764","trim":"#c6bea6","helmet":"none","weapon":"telescope","rig":"casual"},
+  scout:{"main":"#628ec4","dark":"#334e71","trim":"#f3d184","helmet":"none","weapon":"slingshot","rig":"casual"},
+  archer:{"main":"#53a18a","dark":"#2e5b53","trim":"#d7e6a5","helmet":"none","weapon":"bow","rig":"casual"},
+  chef:{"main":"#dc835b","dark":"#644760","trim":"#ffdc9a","helmet":"none","weapon":"grenade","rig":"casual"},
+  scrap:{"main":"#7895b5","dark":"#36516a","trim":"#f4c77d","helmet":"none","weapon":"cannon","rig":"porter"},
+  soldier:{"main":"#52b6ae","dark":"#295d6c","trim":"#b2eee0","helmet":"none","weapon":"coil","rig":"casual"},
+  blade:{"main":"#8185b2","dark":"#3c456c","trim":"#ee9493","helmet":"none","weapon":"sword","rig":"casual"},
+  chemist:{"main":"#79b995","dark":"#37695b","trim":"#e2edbb","helmet":"none","weapon":"vial","rig":"apron"},
+  icewitch:{"main":"#87bfdf","dark":"#466d96","trim":"#e5f6fd","helmet":"none","weapon":"staff","rig":"robe"},
+  spirit:{"main":"#6cafc4","dark":"#365e77","trim":"#c4ecf1","helmet":"none","weapon":"controller","rig":"casual"},
+  hunter:{"main":"#78a089","dark":"#3d5c55","trim":"#eacb91","helmet":"none","weapon":"sniper","rig":"coat"},
+  marker:{"main":"#9b90be","dark":"#4e5376","trim":"#e5d8fb","helmet":"none","weapon":"telescope","rig":"casual"},
   cannon:{main:'#9a7257',dark:'#382f42',trim:'#e5a272',helmet:'heavy',weapon:'launcher',rig:'heavy'},
   summoner:{main:'#5e7974',dark:'#313c4d',trim:'#b4ca91',helmet:'hood',weapon:'summon',rig:'cape'},
   firefly:{main:'#8a6458',dark:'#3b333e',trim:'#efbb7e',helmet:'breather',weapon:'flame',rig:'heavy'},
@@ -174,17 +174,21 @@ function weapon(type,c,style){
 export const BASE_ART_TIERS={common:'everyday',rare:'craft',epic:'specialist',legendary:'iconic',mythic:'myth'};
 function everydayPortrait(id,c,rare=false){
   const a=c.trim,p=c.dark,m=c.main;
-  const skin='#d9b99f',hair=id==='icewitch'?'#726e72':id==='blade'?'#47464b':id==='archer'?'#62534b':'#5c514a';
+  const skin='#ddbca6';
+  const hairColors={scout:'#384958',archer:'#405b55',chef:'#5e4455',scrap:'#455162',
+    soldier:'#34596a',blade:'#43435c',chemist:'#496354',icewitch:'#687b9b',
+    spirit:'#426078',hunter:'#4d534e',marker:'#55506f'};
+  const hair=hairColors[id]||'#4c5566';
   let out=ellipse(94,194,44,7,'#25384d32');
   // Everyday footwear and unarmored cloth are consistent, but jobs differ.
   out+=path('M72 144L63 179 76 186 91 154 107 184 127 179 115 144Z',p,'#3e4447',3);
-  out+=path('M58 181l21-3 3 12-27 2ZM106 179l23 0 6 12-30 1Z','#655e56',p,2);
+  out+=path('M58 181l21-3 3 12-27 2ZM106 179l23 0 6 12-30 1Z','#36485d',p,2);
   if(id==='hunter')out+=path('M61 97Q41 124 46 181L75 167 93 179 124 166 150 185Q141 117 123 97Z',m,p,4);
   if(id==='icewitch')out+=path('M68 104L47 170Q90 188 141 171L120 103Z',m,p,3);
   if(id==='scrap')out+=path('M19 120L22 178 46 180 40 111Z',p,p,3)+circle(32,173,11,a);
   if(id==='archer')out+=path('M69 113L46 168 64 177 88 149Z',p,a,2);
   if(id==='spirit')out+=rect(56,101,17,32,p,4);
-  if(id==='chemist')out+=path('M69 118l-20 52 34 11 24-15 25 12-15-56Z','#d9d2bb',p,3);
+  if(id==='chemist')out+=path('M69 118l-20 52 34 11 24-15 25 12-15-56Z','#dce9e6',p,3);
   // Different tunic construction, not identical bulletproof vests.
   const front=id==='blade'?'M65 101L107 103 121 149 66 151 75 124Z':
     id==='hunter'?'M69 103L112 103 123 148 64 148Z':
@@ -206,30 +210,40 @@ function everydayPortrait(id,c,rare=false){
   // Two different arm poses and rolled sleeves, no bulky shoulder armor.
   out+=path('M68 111L50 118 44 144 55 151 73 132M119 110l22 8 6 26-11 8-20-20',m,p,3);
   out+=circle(49,149,7,skin)+circle(141,148,7,skin);
-  // Bare human faces, freckles/short bangs/ponytails rather than helmets.
-  out+=path('M74 53Q79 39 94 39q20 0 25 18l-5 37-17 13-20-13Z',skin,p,3);
-  if(id==='icewitch')out+=path('M65 74q-1-38 30-39 30 0 36 43l-14-20-21-6-21 9Z',hair,p,3)
-    +path('M65 74l-9 33 20 7-2-35Z',hair,p,2)+path('M67 95L120 95 117 108 72 110Z','#e5e4db',p,2);
-  else if(id==='blade')out+=path('M67 58Q73 34 96 33q23 0 28 24l-25-12-25 17Z',hair,p,3)
-    +path('M115 45q34-9 27 13l-27-3Z',hair,p,2)+line('M71 108l39 0',a,3);
-  else if(id==='hunter')out+=path('M64 62Q72 34 95 34q26 2 32 28L106 53 85 50Z',hair,p,3)
-    +path('M118 52l13 25-9 1',hair,p,2);
-  else if(id==='archer')out+=path('M65 58q7-30 31-28 27 3 30 31l-20-11-36 12Z',hair,p,3)
-    +path('M68 59l-8 19',hair,p,3);
-  else if(id==='scout')out+=path('M68 61Q68 38 93 35q25 0 32 22l-22-5-26 10Z',hair,p,3)
-    +line('M72 59l-12 2',hair,4);
-  else if(id==='scrap')out+=path('M61 63Q69 35 92 37q30 0 34 27l-19-10-28 7Z',hair,p,3)
-    +rect(66,53,60,9,p,3);
-  else if(id==='chemist')out+=path('M66 56q6-26 28-27 25 0 32 31L110 49 78 56Z',hair,p,3)
-    +rect(78,69,15,10,'#b4c5c1',3)+rect(99,69,15,10,'#b4c5c1',3);
-  else if(id==='spirit')out+=path('M68 62q5-28 28-27 22 1 29 29l-18-14-24 9Z',hair,p,3)
-    +line('M70 67q-13-14-16 14',a,4);
-  else if(id==='marker')out+=path('M67 63q9-26 28-26 25-3 29 25l-19-13-29 11Z',hair,p,3)
-    +rect(75,47,44,7,a,3);
-  else if(id==='soldier')out+=path('M66 61q5-27 27-27 28-1 32 28l-19-15-28 12Z',hair,p,3)
-    +rect(74,59,47,6,p,2);
-  else out+=path('M67 63q7-28 28-27 27 0 31 27l-18-13-29 11Z',hair,p,3);
-  out+=line('M81 81h8m12 0h9','#4a4041',3);
+  // Simulation-style rounded / soft-square heads. Flat or curved hair caps
+  // replace sharp triangular hair spikes; separate haircuts keep jobs readable.
+  out+='<g data-head-shape="rounded">';
+  const square=['scrap','soldier','chemist','spirit','hunter','marker'].includes(id);
+  out+=square
+    ?path('M74 57Q74 43 87 42H104Q117 43 118 57L118 86Q115 102 99 104H89Q73 101 72 85Z',skin,p,3)
+    :path('M72 65Q72 43 94 41Q118 42 118 65V82Q117 99 99 104H89Q72 99 72 82Z',skin,p,3);
+  // Hair must remain low and rounded, without a pointed fringe or helmet.
+  const fringe={
+    scout:'M70 65Q70 41 94 40Q117 39 123 62L114 59Q98 55 85 61L72 69Z',
+    archer:'M69 63Q70 38 96 37Q120 39 123 63Q107 51 94 57Q80 55 69 65Z',
+    chef:'M70 62Q73 40 92 41H105Q119 44 121 62L105 58Q87 57 70 66Z',
+    scrap:'M68 62Q70 42 88 41H105Q123 44 123 62H68Z',
+    soldier:'M70 62Q71 39 94 40Q118 41 123 63L108 57Q90 61 70 67Z',
+    blade:'M68 63Q70 40 96 40Q121 41 122 61Q107 54 96 57Q80 59 68 65Z',
+    chemist:'M70 64Q69 41 90 39H104Q123 44 122 64L111 58Q90 55 70 66Z',
+    icewitch:'M65 70Q66 37 95 38Q124 39 127 71L114 60Q94 52 76 63Z',
+    spirit:'M70 63Q70 40 91 39H103Q121 44 123 64L105 57Q85 55 70 66Z',
+    hunter:'M69 63Q70 39 94 39Q118 39 123 65L110 58Q86 55 69 66Z',
+    marker:'M70 64Q72 41 91 40H102Q121 42 123 65L110 59Q87 55 70 66Z'
+  };
+  out+=path(fringe[id]||fringe.scout,hair,p,3);
+  if(id==='archer'||id==='hunter')out+=path('M70 63Q62 75 66 94L74 93 78 65Z',hair,p,2);
+  if(id==='blade')out+=path('M115 49Q134 49 136 61Q129 68 115 63Z',hair,p,2)+line('M72 108h39',a,3);
+  if(id==='icewitch')out+=path('M69 61Q62 80 66 109L78 106 76 65Z',hair,p,2)
+    +path('M120 61Q127 85 122 108L111 104 115 64Z',hair,p,2)
+    +path('M70 96Q94 103 119 96L117 108Q94 115 72 108Z','#dcecf6',p,2);
+  if(id==='scrap')out+=rect(68,56,52,8,p,3); // simple worker's hair band, not a combat helmet
+  if(id==='chemist')out+=rect(79,71,14,9,'#cce5db',3)+rect(100,71,14,9,'#cce5db',3);
+  if(id==='spirit')out+=line('M72 65Q61 59 59 79',a,3); // consumer headset
+  if(id==='marker')out+=rect(76,54,38,5,a,2);
+  if(id==='soldier')out+=rect(79,59,31,4,a,2);
+  out+=line('M82 82h8m10 0h8','#394451',3);
+  out+='</g>';
   // Small profession-specific weapons, not mythical or giant firearms.
   if(id==='scout')out+=line('M131 129l14-45m0 0 20 45', '#8b644b',6)+line('M145 84l10 15 10-15','#624b45',3)+rect(65,140,17,17,a,3);
   else if(id==='archer')out+=line('M151 40Q184 91 149 163','#8f7150',5)+line('M151 42L149 162','#ddd4b8',2)
