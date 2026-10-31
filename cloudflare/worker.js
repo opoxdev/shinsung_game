@@ -71,7 +71,7 @@ async function applyAction(env,action,p,user){
 export default {
   async fetch(request,env){
     const url=new URL(request.url);
-    if(url.pathname==='/health')return response({ok:true,service:'shinsung-cloudflare',version:'0.9.1'});
+    if(url.pathname==='/health')return response({ok:true,service:'shinsung-cloudflare',version:'0.9.2'});
     if(request.method==='OPTIONS')return new Response(null,{status:204,headers:cors});
     if(url.pathname==='/socket'){
       try{
