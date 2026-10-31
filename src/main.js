@@ -7,13 +7,14 @@ import { Online } from './online.js';
 import { MotionView } from './presentation.js';
 const $=s=>document.querySelector(s), app=$('#app'), online=new Online();
 const fmt=n=>Math.floor(n).toLocaleString('ko-KR');
+const fmtHp=n=>Number.isFinite(n)?Number(Math.max(0,n).toFixed(Math.abs(n)<10?1:0)).toLocaleString('ko-KR'):'0';
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const icons={home:'⌂',towers:'▥',shop:'◇',pvp:'⚔',coop:'♟',events:'✧'};
 let localProfile;
 try{const raw=JSON.parse(localStorage.getItem('shinsung.profile.v1'));localProfile=raw?.schema===1&&Array.isArray(raw.owned)&&Array.isArray(raw.loadout)&&raw.loadout.length?raw:starterProfile();}catch{localProfile=starterProfile();}
 let profile=localProfile,page='home',selectedTower='scout',shopTab='towers',filter='',rarityFilter='all';
 let collectionTab='towers',selectedPack=null;
-let openCrateBusy=false;
+let openCrateBusy=false,roomListBusy=false,roomListNext=0,hoverVisual=null;
 let motion=new MotionView(),placementRevision=0;
 function resetRenderer(){renderer?.dispose();renderer=null;}
 function setText(selector,value){const el=$(selector);if(el&&el.textContent!==value)el.textContent=value;}
@@ -27,7 +28,7 @@ function closeModal(){if(room&&!state)return;$('#modal-root').innerHTML='';if(!i
 function profileBar(){return `<div class="identity"><div class="insignia">S<span>D</span></div><div><b>${esc(profile.name)}</b><small>LV. ${Math.floor(profile.xp/400)+1} · ${online.user?'연결된 계정':'로컬 모험가'}</small></div></div><div class="wallet"><span class="coin">◈</span> ${fmt(profile.coins)} <small>COINS</small></div><button class="account" data-action="account">${online.user?'계정 관리':'계정 연결'} <span>↗</span></button>`;}
 function loadout(inGame=false){return Array.from({length:5},(_,i)=>{const id=(inGame?state.players[playerId].loadout:profile.loadout)[i];return id?`<button class="loadout-slot ${placement===id?'selected':''}" data-action="${inGame?'selectPlace':'inspect'}" data-id="${id}" style="--rarity:${RARITIES[TOWERS[id].rarity].color}"><span class="slot-number">0${i+1}</span>${portrait(id,profile.equippedSkins[id])}<span class="slot-name">${TOWERS[id].name}</span><strong>₩ ${TOWERS[id].cost}</strong></button>`:`<button class="loadout-slot empty" data-action="${inGame?'noop':'nav'}" data-id="towers"><span class="slot-number">0${i+1}</span><span>＋</span><small>빈 슬롯</small></button>`;}).join('');}
 function shell(){
-  app.innerHTML=`<div class="shell"><header class="topbar"><a class="brand" href="#" data-action="nav" data-id="home"><span class="brand-symbol">S</span><div>신성 디펜스<small>SHINSUNG DEFENSE</small></div></a><div class="build-label">ALPHA <span>01</span></div><div class="profilebar">${profileBar()}</div></header><aside class="sidebar"><div class="nav-caption">PLAY</div>${['home','towers','shop'].map(id=>`<button class="nav-item ${page===id?'active':''}" data-action="nav" data-id="${id}"><span>${icons[id]}</span>${{home:'로비',towers:'타워 구성',shop:'상점'}[id]}<i>›</i></button>`).join('')}<div class="nav-caption second">친구들과 더 재미있게</div><button class="nav-item" data-action="pvp"><span>⚔</span>대전 · PVP<i>›</i></button><button class="nav-item" data-action="coop"><span>♟</span>친구와 함께<i>›</i></button><button class="nav-item" data-action="events"><span>✧</span>도전 과제<i>›</i></button><div class="sidebar-bottom"><span class="status-dot"></span>${online.user?'ONLINE ACCOUNT':'LOCAL PLAY'}<small>모으고, 키우고,<br>함께 지켜내자!</small><button data-action="help">조작 안내 <span>?</span></button></div></aside><main class="content" id="content"></main><footer class="loadout-bar"><div class="loadout-label"><span>MY TEAM</span><b>내 팀</b><small>${profile.loadout.length} / 5 SLOTS</small></div><div class="loadout-slots">${loadout()}</div><div class="footer-note">${online.user?'서버 계정 진행도':'진행도는 이 브라우저에 저장됩니다.'}<br><span>BUILD 0.8.0 · PLAY WITH FRIENDS</span></div></footer></div>`;
+  app.innerHTML=`<div class="shell"><header class="topbar"><a class="brand" href="#" data-action="nav" data-id="home"><span class="brand-symbol">S</span><div>신성 디펜스<small>SHINSUNG DEFENSE</small></div></a><div class="build-label">ALPHA <span>01</span></div><div class="profilebar">${profileBar()}</div></header><aside class="sidebar"><div class="nav-caption">PLAY</div>${['home','towers','shop'].map(id=>`<button class="nav-item ${page===id?'active':''}" data-action="nav" data-id="${id}"><span>${icons[id]}</span>${{home:'로비',towers:'타워 구성',shop:'상점'}[id]}<i>›</i></button>`).join('')}<div class="nav-caption second">친구들과 더 재미있게</div><button class="nav-item" data-action="pvp"><span>⚔</span>대전 · PVP<i>›</i></button><button class="nav-item" data-action="coop"><span>♟</span>친구와 함께<i>›</i></button><button class="nav-item" data-action="events"><span>✧</span>도전 과제<i>›</i></button><div class="sidebar-bottom"><span class="status-dot"></span>${online.user?'ONLINE ACCOUNT':'LOCAL PLAY'}<small>모으고, 키우고,<br>함께 지켜내자!</small><button data-action="help">조작 안내 <span>?</span></button></div></aside><main class="content" id="content"></main><footer class="loadout-bar"><div class="loadout-label"><span>MY TEAM</span><b>내 팀</b><small>${profile.loadout.length} / 5 SLOTS</small></div><div class="loadout-slots">${loadout()}</div><div class="footer-note">${online.user?'서버 계정 진행도':'진행도는 이 브라우저에 저장됩니다.'}<br><span>BUILD 0.9.0 · PLAY WITH FRIENDS</span></div></footer></div>`;
   if(page==='home')home();else if(page==='towers')collection();else shop();
 }
 function home(){
@@ -128,7 +129,41 @@ function account(){if(online.user){modal(`<span class="eyebrow">CONNECTED ACCOUN
   if(!online.enabled){modal('<span class="eyebrow">OFFLINE BUILD</span><h2>계정 서버 연결 준비</h2><p>현재는 로컬 플레이 버전입니다. 이메일 계정·협동·온라인 PvP를 사용하려면 Firebase 로그인과 무료 Cloudflare Worker를 연결해야 합니다.</p><p>프로젝트의 <b>DEPLOY.md</b>에 설정 순서가 있습니다. 배포 파일은 <b>dist/apps-script</b>에 생성됩니다.</p><button class="primary" data-action="close">로컬 플레이 계속</button>');return;}
   modal('<span class="eyebrow">SHINSUNG ACCOUNT</span><h2>모험가 계정 연결</h2><form id="auth-form"><label>이메일<input name="email" type="email" autocomplete="email" required></label><label>비밀번호<input name="password" type="password" minlength="8" autocomplete="current-password" required></label><div class="detail-actions"><button class="primary" type="submit" name="mode" value="login">로그인</button><button type="submit" name="mode" value="signup">회원가입</button></div><p id="auth-error" role="alert"></p></form>');}
 function help(){modal('<span class="eyebrow">FIELD MANUAL</span><h2>모험가 조작 안내</h2><div class="help-grid"><b>W A S D</b><span>카메라 이동</span><b>마우스 휠</b><span>줌 인 / 아웃</span><b>1 ~ 5</b><span>장착 타워 선택</span><b>클릭</b><span>타워 설치 / 배치된 타워 선택</span><b>Q / 우클릭</b><span>설치 취소</span><b>Space</b><span>웨이브 스킵 / 투표</span><b>Esc</b><span>전투 메뉴</span></div><p>도로 위에는 설치할 수 없습니다. 협동 플레이의 타워 한도는 필드 전체 기준입니다. 스킵해도 남아 있는 적은 사라지지 않습니다.</p>');}
-function special(type){config.type=type;modal(`<span class="eyebrow">${type==='pvp'?'VERSUS OPERATIONS':'COOPERATIVE DEFENSE'}</span><h2>${type==='pvp'?'두 개의 필드, 하나의 승리':'함께 지키는 방어선'}</h2><p>${type==='pvp'?'장착한 몬스터 팩으로 상대 필드에 적을 보냅니다. PvP는 현재 비랭크이며 계정 보상은 없습니다.':'최대 4명이 하나의 맵을 지킵니다. 처치 자금은 참가자 수로 나누고, 스킵은 과반수·최소 2명이 필요합니다.'}</p><p>현재 선택: ${MAPS.find(m=>m.id===config.map).name} · ${DIFFICULTIES.find(d=>d.id===config.difficulty).name}</p><div class="detail-actions"><button class="primary" data-action="createRoom" ${online.user?'':'disabled'}>온라인 방 만들기</button><button data-action="joinPrompt" ${online.user?'':'disabled'}>코드로 참가</button></div>${type==='pvp'?'<button class="wide secondary" data-action="trainingPvp">로컬 PvP 훈련 · 연습 봇</button>':''}${!online.user?'<p class="unlock-note">온라인 플레이는 계정 연결 후 이용할 수 있습니다.</p>':''}`);}
+function special(type){
+  config.type=type;
+  modal(`<span class="eyebrow">${type==='pvp'?'VERSUS OPERATIONS':'COOPERATIVE DEFENSE'}</span>
+    <h2>${type==='pvp'?'대전 · PvP 공개 대기실':'협동전 공개 대기실'}</h2>
+    <p>${type==='pvp'?'다른 플레이어의 필드에 몬스터를 보내 대결합니다. 현재 비랭크 PvP에는 프로필 코인 보상이 없습니다.':'최대 4명이 같은 맵에서 함께 방어합니다. 진행 웨이브에 비례한 패배 보상도 받을 수 있습니다.'}</p>
+    <p>내 방 설정: ${MAPS.find(m=>m.id===config.map).name} · ${DIFFICULTIES.find(d=>d.id===config.difficulty).name}</p>
+    <div class="detail-actions"><button class="primary" data-action="createRoom" ${online.user?'':'disabled'}>공개 방 생성</button><button data-action="joinPrompt" ${online.user?'':'disabled'}>코드로 참가</button></div>
+    <div class="public-room-heading"><b>참가 가능한 공개 방</b><button type="button" data-action="refreshRooms" ${online.user?'':'disabled'}>↻ 새로고침</button></div>
+    <div id="public-room-list" class="public-room-list" data-mode="${type}" aria-live="polite"><p>방 목록을 조회하는 중...</p></div>
+    <p class="room-list-footnote">대기 중인 공개 방만 표시됩니다. 입장 중 방이 가득 차거나 시작되면 참가할 수 없습니다. 목록은 자동 갱신됩니다.</p>
+    ${type==='pvp'?'<button class="wide secondary" data-action="trainingPvp">로컬 PvP 훈련 · 연습 봇</button>':''}
+    ${!online.user?'<p class="unlock-note">온라인 방 목록과 참가 기능은 계정 로그인 후 이용할 수 있습니다.</p>':''}`);
+  roomListNext=0;
+  if(online.user)void refreshRooms();
+}
+async function refreshRooms(){
+  const target=$('#public-room-list');
+  if(!online.user||!target||roomListBusy)return;
+  roomListBusy=true;
+  const mode=target.dataset.mode;roomListNext=performance.now()+8500;
+  try{
+    const rooms=await online.call('listRooms');
+    if(!Array.isArray(rooms))throw Error('잘못된 서버 방 목록입니다.');
+    if($('#public-room-list')!==target||target.dataset.mode!==mode)return;
+    const list=rooms.filter(r=>r.type===mode&&r.count<r.capacity);
+    target.innerHTML=list.length?list.map(r=>{
+      const map=MAPS.find(m=>m.id===r.map),difficulty=DIFFICULTIES.find(d=>d.id===r.difficulty);
+      return `<article class="room-row"><div class="room-row-main"><b>${esc(r.name)}의 방</b>
+        <span>${esc(map?.name||r.map)} · ${esc(difficulty?.name||r.difficulty)} · ${Number(r.count)}/${Number(r.capacity)}명</span></div>
+        <code>${esc(r.code)}</code><button class="primary" data-action="joinListedRoom" data-id="${esc(r.code)}">참가</button></article>`;
+    }).join(''):'<p class="empty-room-list">지금은 대기 중인 공개 방이 없습니다. 직접 방을 만들어 친구를 초대해 보세요.</p>';
+  }catch(e){
+    if($('#public-room-list')===target)target.textContent='방 목록을 불러오지 못했습니다: '+e.message;
+  }finally{roomListBusy=false;}
+}
 function startLocal(type='solo'){
   online.stop();room=null;isOnlineMatch=false;profile=localProfile;playerId='local';config.type=type;
   const players=[{id:'local',profile}];if(type==='pvp')players.push({id:'bot',profile:{...starterProfile('훈련 상대'),loadout:['scout','blade','soldier'],pack:'basic'}});
@@ -136,7 +171,7 @@ function startLocal(type='solo'){
 }
 function beginGame(){motion=new MotionView();placementRevision++;placement=null;resultShown=false;paused=false;accumulator=0;botClock=0;claimAfter=0;previousWave=0;$('#modal-root').innerHTML='';gameUI();}
 function gameUI(){
-  const p=state.players[playerId];app.innerHTML=`<div class="battle"><canvas id="battlefield" aria-label="타워 디펜스 전장"></canvas><div class="battle-top"><button class="battle-brand" data-action="battleMenu">S<span>신성 디펜스</span>☰</button><div class="battle-stats"><div><small>기지 내구도</small><b id="base-hp"></b></div>${state.config.type==='pvp'?'<div><small>상대 내구도</small><b id="opponent-hp"></b></div>':''}<div><small>전투 자금</small><b class="gold" id="cash"></b></div><div><small>배치 타워</small><b id="tower-count"></b></div></div><div class="wave-panel"><small>${DIFFICULTIES.find(d=>d.id===state.config.difficulty).name} · ${isOnlineMatch?'SERVER':'LOCAL'}</small><b id="wave-label"></b><span id="wave-intel" class="wave-intel"></span><span id="wave-clock"></span></div></div><div class="battle-hints"><span>WASD 이동</span><span>E 확대 · R 축소 · 휠 줌</span><span>1–5 배치</span><span>Q 취소</span>${state.config.type==='pvp'?'<button data-action="field">필드 전환 ⇄</button>':''}<span id="connection-status"></span></div><div class="wave-notice" id="wave-notice"></div><aside id="tower-inspector" class="battle-inspector"></aside>${state.config.type==='pvp'?`<div class="monster-tray"><span>상대에게 보내기 / ${PACKS[p.pack].name}</span>${PACKS[p.pack].monsters.map(([id,cost])=>`<button data-action="send" data-id="${id}" id="send-${id}" style="--enemy:${ENEMIES[id].color}"><i>▣</i><b>${ENEMIES[id].name}</b><small>₩ ${cost}</small></button>`).join('')}</div>`:''}<div class="battle-bottom"><div class="battle-tools"><button data-action="zoomOut" aria-label="축소">−</button><button data-action="zoomReset" aria-label="카메라 초기화">⌾</button><button data-action="zoomIn" aria-label="확대">＋</button><button data-action="cancelPlace" aria-label="배치 취소">취소</button></div><div class="loadout-slots">${loadout(true)}</div><button class="skip-button" data-action="skip" id="skip">웨이브 스킵</button></div><div class="placement-hint" id="placement-hint"></div></div>`;
+  const p=state.players[playerId];app.innerHTML=`<div class="battle"><canvas id="battlefield" aria-label="타워 디펜스 전장"></canvas><div class="enemy-tooltip" id="enemy-tooltip" role="status" aria-live="off"></div><div class="battle-top"><button class="battle-brand" data-action="battleMenu">S<span>신성 디펜스</span>☰</button><div class="battle-stats"><div><small>기지 내구도</small><b id="base-hp"></b></div>${state.config.type==='pvp'?'<div><small>상대 내구도</small><b id="opponent-hp"></b></div>':''}<div><small>전투 자금</small><b class="gold" id="cash"></b></div><div><small>배치 타워</small><b id="tower-count"></b></div></div><div class="wave-panel"><small>${DIFFICULTIES.find(d=>d.id===state.config.difficulty).name} · ${isOnlineMatch?'SERVER':'LOCAL'}</small><b id="wave-label"></b><span id="wave-intel" class="wave-intel"></span><span id="wave-clock"></span></div></div><div class="battle-hints"><span>WASD 이동</span><span>E 확대 · R 축소 · 휠 줌</span><span>1–5 배치</span><span>Q 취소</span>${state.config.type==='pvp'?'<button data-action="field">필드 전환 ⇄</button>':''}<span id="connection-status"></span></div><div class="wave-notice" id="wave-notice"></div><aside id="tower-inspector" class="battle-inspector"></aside>${state.config.type==='pvp'?`<div class="monster-tray"><span>상대에게 보내기 / ${PACKS[p.pack].name}</span>${PACKS[p.pack].monsters.map(([id,cost])=>`<button data-action="send" data-id="${id}" id="send-${id}" style="--enemy:${ENEMIES[id].color}"><i>▣</i><b>${ENEMIES[id].name}</b><small>₩ ${cost}</small></button>`).join('')}</div>`:''}<div class="battle-bottom"><div class="battle-tools"><button data-action="zoomOut" aria-label="축소">−</button><button data-action="zoomReset" aria-label="카메라 초기화">⌾</button><button data-action="zoomIn" aria-label="확대">＋</button><button data-action="cancelPlace" aria-label="배치 취소">취소</button></div><div class="loadout-slots">${loadout(true)}</div><button class="skip-button" data-action="skip" id="skip">웨이브 스킵</button></div><div class="placement-hint" id="placement-hint"></div></div>`;
   resetRenderer();renderer=new Renderer($('#battlefield'));renderer.camera.x=900+p.field*2100;renderer.camera.zoom=1.18;
   const c=$('#battlefield');c.addEventListener('wheel',e=>{e.preventDefault();renderer.zoomBy(Math.exp(-Math.max(-100,Math.min(100,e.deltaY))*.002));},{passive:false});
   // One-finger drag pans the field when not deploying; taps still select a tower.
@@ -159,11 +194,34 @@ function gameUI(){
       drag.lastX=e.clientX;drag.lastY=e.clientY;
     }
     const r=c.getBoundingClientRect();renderer.pointerScreen={x:e.clientX-r.left,y:e.clientY-r.top};renderer.pointer=renderer.screenToWorld(renderer.pointerScreen.x,renderer.pointerScreen.y);
+    renderer.hoverScreen=e.pointerType==='mouse'||e.pointerType==='pen'?{x:e.clientX-r.left,y:e.clientY-r.top}:null;
   });
+  c.addEventListener('pointerleave',()=>{renderer.hoverScreen=null;const el=$('#enemy-tooltip');if(el)el.classList.remove('visible');});
   c.addEventListener('pointerup',e=>{if(drag&&drag.id===e.pointerId){ignoreTap=drag.moved;drag=null;}});
   c.addEventListener('pointercancel',()=>{drag=null;});
   c.addEventListener('click',async e=>{if(ignoreTap){ignoreTap=false;return;}const r=c.getBoundingClientRect(),point=renderer.screenToWorld(e.clientX-r.left,e.clientY-r.top);if(placement){const revision=placementRevision;const ok=await sendCommand({kind:'place',type:placement,x:Math.round(point.x-p.field*2100),y:Math.round(point.y)});if(ok&&state&&renderer&&revision===placementRevision)selectPlacement(null);}else{const f=Math.floor(point.x/2100);const t=state.towers.find(t=>t.field===f&&Math.hypot(t.x+f*2100-point.x,t.y-point.y)<32);renderer.selected=t?.id;inspector();}});
   c.addEventListener('contextmenu',e=>{e.preventDefault();selectPlacement(null);});updateHud();
+}
+function updateEnemyTooltip(visual){
+  const tip=$('#enemy-tooltip'),r=renderer;
+  if(!tip||!r?.hoverScreen||!visual?.enemies?.length||placement||$('#modal-root')?.innerHTML){
+    if(tip)tip.classList.remove('visible');return;
+  }
+  const e=r.enemyAt(visual,r.hoverScreen);
+  if(!e){tip.classList.remove('visible');return;}
+  const d=ENEMIES[e.type],hp=Math.max(0,e.hp),max=Math.max(.001,e.maxHp);
+  const percent=Math.max(0,Math.min(100,100*hp/max));
+  tip.innerHTML=`<strong>${esc(d.name)}</strong><span class="enemy-hover-type">${d.size>=25?'대형 · ':''}${d.armor?'장갑 '+Math.round(d.armor*100)+'% · ':''}이동 ${fmt(d.speed)}</span>
+    <div class="enemy-hover-bar"><i style="width:${percent}%"></i></div>
+    <b>체력 ${fmtHp(hp)} / ${fmtHp(e.maxHp)}</b>
+    ${e.maxShield?'<span>보호막 '+fmtHp(e.shield)+' / '+fmtHp(e.maxShield)+'</span>':''}
+    ${d.heal?'<span>주변 적 회복 · '+fmtHp(d.heal)+'/초</span>':''}
+    ${d.regen?'<span>체력 재생 · '+fmtHp(d.regen)+'/초</span>':''}
+    ${e.slowUntil>visual.time?'<span>감속 효과 적용 중</span>':''}`;
+  const x=r.hoverScreen.x+19,y=r.hoverScreen.y+20;
+  tip.style.left=Math.max(8,Math.min(r.width-210,x))+'px';
+  tip.style.top=Math.max(8,Math.min(r.height-144,y))+'px';
+  tip.classList.add('visible');
 }
 function selectPlacement(id){placementRevision++;placement=id;renderer.preview=id;renderer.selected=null;inspector();document.querySelectorAll('.loadout-slot').forEach(el=>el.classList.toggle('selected',!!id&&el.dataset.id===id));$('#placement-hint').textContent=id?`${TOWERS[id].name} 배치 · 클릭으로 설치 · Q / 우클릭 취소`:'';}
 async function sendCommand(c){
@@ -306,6 +364,12 @@ const actions={
   async diagnostic(){try{const result=await online.call('diagnostic');modal(`<span class="eyebrow">ONLINE CHECK</span><h2>서버 연결 정상</h2><p>Firebase 인증 ✓ · Cloudflare Worker 통신 ✓ · D1 프로필 읽기 ✓</p><p>계정: ${esc(result.name)} · 서버 시간: ${esc(result.serverTime)}</p><p>실시간 대전 확인은 별도 계정 두 개로 방에 입장해 점검하세요.</p><button class="primary wide" data-action="close">확인</button>`);}catch(e){toast('연결 진단 실패: '+e.message);}},
   async logout(){await online.signOut();profile=localProfile;closeModal();shell();},
   async resumeRoom(){await openRoom(profile.activeRoom);},async abandonRoom(){try{await online.call('leave',{code:profile.activeRoom});profile=await online.call('profile');closeModal();shell();}catch(e){toast(e.message);}},
+  refreshRooms(){roomListNext=0;return refreshRooms();},
+  async joinListedRoom(code){
+    if(!/^[A-Z0-9]{6}$/.test(code||''))return;
+    try{await online.call('join',{code});await openRoom(code);}
+    catch(e){toast(e.message);await refreshRooms();}
+  },
   async createRoom(){try{const r=await online.call('createRoom',{config});await openRoom(r.code);}catch(e){toast(e.message);}},joinPrompt(){modal('<h2>방 코드로 참가</h2><form id="join-form"><label>6자리 코드<input name="code" minlength="6" maxlength="6" pattern="[A-Za-z0-9]{6}" required autocomplete="off"></label><button class="primary wide">참가하기</button></form>');},async startRoom(){try{await online.call('start',{code:room.code});}catch(e){toast(e.message);}},async leaveRoom(){try{await online.call('leave',{code:room.code});online.stop();room=null;closeModal();profile=await online.call('profile');shell();}catch(e){toast(e.message);}}
 };
 document.addEventListener('click',async e=>{const b=e.target.closest('[data-action]');if(!b||b.disabled)return;e.preventDefault();try{await actions[b.dataset.action]?.(b.dataset.id);}catch(err){toast(err.message);}});
@@ -327,9 +391,13 @@ function frame(now){
     const path=MAPS.find(m=>m.id===state.config.map).path;
     const visual=motion.sample(state,path,{online:isOnlineMatch,ahead:(now-lastSnapshot)/1000,alpha:accumulator/STEP,dt,paused});
     renderer?.frame(visual,state.config.map,playerId,dt,now/1000);
+    hoverVisual=visual;updateEnemyTooltip(visual);
     if(now-lastHud>150){updateHud();lastHud=now;}
     if(state.status!=='playing'&&!resultShown&&!onlineBusy)finish();
-  }else if(renderer)renderer.frame(null,config.map,playerId,dt,now/1000,true);
+  }else{
+    if(renderer)renderer.frame(null,config.map,playerId,dt,now/1000,true);
+    if(online.user&&$('#public-room-list')&&now>=roomListNext&&!roomListBusy)void refreshRooms();
+  }
   requestAnimationFrame(frame);
 }
 shell();requestAnimationFrame(frame);online.onError=e=>toast(e.message);
