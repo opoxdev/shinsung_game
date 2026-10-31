@@ -1,4 +1,5 @@
 import { MAPS, TOWERS, ENEMIES, DIFFICULTIES, MODES, PACKS, RARITIES, starterProfile } from './data.js';
+import { evolutionAt } from './evolutions.js';
 import { createMatch, tick, command, modifiers, towerStats, requiredVotes, rewardFor, applyReward, profileAction, pointOnPath, STEP } from './engine.js';
 import { Renderer, portrait, landscape } from './render.js';
 import { Online } from './online.js';
@@ -59,15 +60,43 @@ async function sendCommand(c){if(!state||paused||state.status!=='playing')return
   else {const r=command(state,playerId,c);if(!r.ok)toast(r.error);}
   inspector();updateHud();
 }catch(e){toast(e.message);}finally{onlineBusy=false;}}
-function inspector(){if(!$('#tower-inspector'))return;const t=state.towers.find(t=>t.id===renderer.selected);if(!t){$('#tower-inspector').innerHTML='';return;}const d=TOWERS[t.type],stats=towerStats(t),cost=d.upgrades[t.level],own=t.owner===playerId;
-  $('#tower-inspector').innerHTML=`<span class="eyebrow">${esc(state.players[t.owner].name)} / LV.${t.level+1}</span><h2>${d.name}</h2><div class="inspector-art">${portrait(t.type,t.skin)}</div><div class="stat-grid"><div>피해량<b>${fmt(stats.damage)}</b></div><div>공격 간격<b>${stats.interval.toFixed(2)}s</b></div><div>사거리<b>${fmt(stats.range)}</b></div><div>공격 방식<b>${d.role}</b></div></div><button class="primary wide" data-action="upgrade" ${cost&&own?'':'disabled'}>${cost?'강화 · ₩ '+fmt(cost):'최대 강화'}</button><button class="wide" data-action="target" ${own?'':'disabled'}>우선 공격: ${{first:'선두',strong:'강한 적',near:'가까운 적'}[t.target]} ⇄</button><button class="sell wide" data-action="sell" ${own?'':'disabled'}>판매 · ₩ ${fmt(t.spent*7/10)}</button>`;
+function inspector(){
+  if(!$('#tower-inspector')||!renderer||!state)return;
+  const t=state.towers.find(t=>t.id===renderer.selected);
+  if(!t){$('#tower-inspector').innerHTML='';return;}
+  const d=TOWERS[t.type],stats=towerStats(t),next=evolutionAt(t.type,t.level+1);
+  const cost=d.upgrades[t.level],own=t.owner===playerId,max=d.upgrades.length;
+  const cash=state.players[playerId]?.money||0;
+  const nextStats=next?towerStats({...t,level:t.level+1}):null;
+  const names={ranged:'원거리 사격',melee:'근접 검격',splash:'범위 폭발',chain:'연쇄 공격',summon:'소환술',buff:'지원 오라',income:'주기적 수입'};
+  const kind=names[stats.kind]||d.role;
+  const future=nextStats?(stats.kind!==nextStats.kind?' · '+kind+' → '+(names[nextStats.kind]||'특수 공격'):''):'';
+  const compare=(now,after,unit='')=>`<strong>${typeof now==='number'&&unit!=='s'?fmt(now):Number(now).toFixed(2)}${unit}</strong>${after!==undefined?` <span class="evo-delta">→ ${unit==='s'?Number(after).toFixed(2):fmt(after)}${unit}</span>`:''}`;
+  const info=next?`<section class="evo-next"><div class="evo-next-header"><small>다음 진화 / LEVEL ${t.level+2}</small><b>${esc(next.name)}</b></div><p>${esc(next.desc)}</p><span class="evo-effect">${esc(future||'무기·의상·이펙트가 진화하며 성능 강화')}</span></section>`
+    :'<section class="evo-next max"><b>✦ 최종 진화 달성</b><p>이 개체는 더 이상 업그레이드할 수 없습니다.</p></section>';
+  $('#tower-inspector').innerHTML=`<span class="eyebrow">${esc(state.players[t.owner].name)} / ${t.level+1} / ${max+1} 단계</span>
+    <h2>${d.name}</h2><div class="evo-stage">${esc(stats.stageName)}</div>
+    <div class="inspector-art evolved">${portrait(t.type,t.skin,t.level)}<span class="evo-sparks">✦</span></div>
+    <div class="evo-progression">${Array.from({length:max+1},(_,i)=>`<i class="${i<=t.level?'reached':''} ${i===t.level?'active':''}" title="LEVEL ${i+1}"></i>`).join('')}</div>
+    <div class="stat-grid"><div>피해량${compare(stats.damage,nextStats?.damage)}</div>
+      <div>공격 간격${compare(stats.interval,nextStats?.interval,'s')}</div>
+      <div>사거리${compare(stats.range,nextStats?.range)}</div>
+      <div>공격 방식<b>${kind}</b></div></div>
+    ${stats.kind==='income'?`<p class="evo-extra">수입: +${fmt(stats.income)} / ${stats.interval.toFixed(1)}초</p>`:''}
+    ${stats.kind==='summon'?`<p class="evo-extra">소환수 ${stats.summons||1}마리 · 이동 속도 ${stats.unitSpeed||210}</p>`:''}
+    ${stats.kind==='chain'?`<p class="evo-extra">연쇄 타겟 ${stats.chain||3}명 · 도약 범위 ${stats.chainRange||120}</p>`:''}
+    ${info}
+    <button class="primary wide" data-action="upgrade" ${cost!==undefined&&own&&cash>=cost?'':'disabled'}>
+      ${cost===undefined?'MAX · 진화 완료':!own?'다른 플레이어의 타워':cash<cost?'자금 부족 · ₩ '+fmt(cost):'진화 · ₩ '+fmt(cost)}</button>
+    <button class="wide" data-action="target" ${own?'':'disabled'}>우선 공격: ${{first:'선두',strong:'강한 적',near:'가까운 적'}[t.target]} ⇄</button>
+    <button class="sell wide" data-action="sell" ${own?'':'disabled'}>판매 · ₩ ${fmt(Math.floor(t.spent*7/10))}</button>`;
 }
 let previousWave=0;function updateHud(){if(!state||!$('#cash'))return;const p=state.players[playerId],d=DIFFICULTIES.find(d=>d.id===state.config.difficulty);$('#base-hp').textContent=`${state.fields[p.field]} / 100`;if(state.config.type==='pvp')$('#opponent-hp').textContent=`${state.fields[1-p.field]} / 100`;$('#cash').textContent='₩ '+fmt(p.money);$('#tower-count').textContent=state.towers.filter(t=>t.field===p.field).length+' / '+modifiers(state.config).cap;$('#wave-label').textContent=`WAVE ${String(state.wave).padStart(2,'0')} / ${d.waves.length}`;const wave=d.waves[state.wave-1];const next=d.waves[state.wave];const intel=$('#wave-intel');if(intel)intel.textContent=wave.title+' · '+wave.groups.map(([id,n])=>ENEMIES[id].name+' '+n).join(' / ')+(next?' · 다음: '+next.groups.slice(0,2).map(([id])=>ENEMIES[id].name).join('·'):'');$('#wave-clock').textContent=`${Math.max(0,Math.ceil(d.waves[state.wave-1].duration-state.waveTime))}s · 적 ${state.enemies.length}`;const skip=$('#skip');skip.disabled=state.waveTime<8||state.wave===d.waves.length||state.votes.includes(playerId);skip.innerHTML=state.waveTime<8?`스킵 가능까지 ${Math.ceil(8-state.waveTime)}초`:`웨이브 스킵 <span>${state.votes.length} / ${requiredVotes(state)}</span>`;
   if(state.wave!==previousWave){previousWave=state.wave;$('#wave-notice').textContent=`WAVE ${String(state.wave).padStart(2,'0')} · ${d.waves[state.wave-1].title}`;$('#wave-notice').classList.remove('animate');void $('#wave-notice').offsetWidth;$('#wave-notice').classList.add('animate');}
   if(isOnlineMatch)$('#connection-status').textContent=online.socket?.readyState!==WebSocket.OPEN?'재연결 중':performance.now()-lastSnapshot>7000?'동기화 대기 · 연결 확인 중':'Cloudflare 실시간 동기화';
   if(state.config.type==='pvp')PACKS[p.pack].monsters.forEach(([id,cost])=>{const b=$('#send-'+id),left=Math.max(0,(p.cooldowns[id]||0)-state.time);b.disabled=left>0||p.money<cost;b.querySelector('small').textContent=left>0?Math.ceil(left)+'s':'₩ '+cost;});
 }
-function bot(){if(!state.players.bot)return;botClock+=STEP;if(botClock<2)return;botClock=0;const p=state.players.bot;const points=[[250,440],[390,450],[400,370],[650,370],[820,450],[1120,650],[1270,570],[1380,520]];const t=state.towers.filter(t=>t.owner==='bot');if(t.length<points.length){const [x,y]=points[t.length];command(state,'bot',{kind:'place',type:t.length%3===2?'blade':'scout',x,y});}else{const u=t.find(t=>t.level<3&&TOWERS[t.type].upgrades[t.level]<p.money);if(u)command(state,'bot',{kind:'upgrade',id:u.id});}if(state.wave>2&&p.money>500)command(state,'bot',{kind:'send',type:'runner'});if(state.votes.includes('local'))command(state,'bot',{kind:'skip'});}
+function bot(){if(!state.players.bot)return;botClock+=STEP;if(botClock<2)return;botClock=0;const p=state.players.bot;const points=[[250,440],[390,450],[400,370],[650,370],[820,450],[1120,650],[1270,570],[1380,520]];const t=state.towers.filter(t=>t.owner==='bot');if(t.length<points.length){const [x,y]=points[t.length];command(state,'bot',{kind:'place',type:t.length%3===2?'blade':'scout',x,y});}else{const u=t.find(t=>TOWERS[t.type].upgrades[t.level]!==undefined&&TOWERS[t.type].upgrades[t.level]<p.money);if(u)command(state,'bot',{kind:'upgrade',id:u.id});}if(state.wave>2&&p.money>500)command(state,'bot',{kind:'send',type:'runner'});if(state.votes.includes('local'))command(state,'bot',{kind:'skip'});}
 async function finish(){if(resultShown||performance.now()<claimAfter)return;resultShown=true;const reward=rewardFor(state,playerId);try{if(isOnlineMatch)profile=await online.call('claim',{code:room.code});else{applyReward(localProfile,reward);saveLocal();}}catch(e){toast('보상 정산 대기: '+e.message);claimAfter=performance.now()+5000;resultShown=false;return;}
   modal(`<span class="eyebrow">OPERATION COMPLETE</span><h2>${reward.win?'방어 성공':state.config.type==='pvp'&&state.winner===null?'무승부':'방어선 붕괴'}</h2><p>${state.wave} 웨이브 · 처치 ${state.kills} · ${Math.floor(state.time/60)}분 ${Math.floor(state.time%60)}초</p><div class="result-reward">◈ ${fmt(reward.coins)} <small>COINS</small> <span>+${reward.xp} XP</span></div>${reward.sonic?'<p>신화 타워 「소닉」 획득!</p>':''}${reward.aurora?'<p>불멸 타워 「오로라 정령」 획득!</p>':''}<button class="primary wide" data-action="leave">로비로</button>`);}
 function battleMenu(){if(!isOnlineMatch)paused=true;modal(`<span class="eyebrow">FIELD PLAY</span><h2>${isOnlineMatch?'전투는 계속 진행됩니다':'일시 정지'}</h2><p>전투에서 나가면 클리어 보상을 받을 수 없습니다.${isOnlineMatch?' 방장은 참가자가 이어서 동기화를 요청할 수 있습니다.':''}</p><button class="primary wide" data-action="close">전투 계속</button><button class="wide secondary" data-action="leave">본부로 돌아가기</button>`);}
