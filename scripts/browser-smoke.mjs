@@ -59,7 +59,8 @@ try{
   await page.setViewportSize({width:390,height:760});
   const storyBounds=await page.locator('#story-overlay').boundingBox();
   assert.ok(storyBounds&&storyBounds.x>=0&&storyBounds.x+storyBounds.width<=390,'story overlay fits on mobile');
-  await page.click('[data-action="battleMenu"]');
+  assert.equal(await page.locator('.battle-mobile-menu:visible').count(),1,'mobile battle menu must remain accessible');
+  await page.click('.battle-mobile-menu');
   await page.click('[data-action="leave"]');
   assert.match(await page.locator('.story-preview').textContent(),/기록 1 \/ 6/);
   await page.click('[data-action="storyGuide"]');
