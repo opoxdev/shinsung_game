@@ -100,7 +100,7 @@ function cosmeticPortrait(svg,skin){
   return svg.replace('<svg ',`<svg style="filter:${tint}" `).replace('</svg>',`<g fill="none" stroke="${aura}" stroke-width="2.6"><ellipse cx="92" cy="107" rx="75" ry="89" stroke-dasharray="10 13" opacity=".85"/></g></svg>`);
 }
 export function character(id,skin='default',level=0) {
-  const expanded=expansionPortrait(id,skin);if(expanded)return evolvedPortrait(expanded,id,level);
+  const expanded=expansionPortrait(id,skin);if(expanded)return cosmeticPortrait(evolvedPortrait(expanded,id,level),skin);
   const white=skin==='arctic';
   const ink='#192445', face='#ffdbb0';
   const head=(hair,extra='')=>`<path d="M65 67Q64 39 92 39Q120 40 118 70L113 88Q92 101 72 86Z" fill="${face}"/><path d="M65 63L61 42 78 25 105 28 123 47 115 67 104 49 91 58 83 47 72 65Z" fill="${hair}"/><path d="M79 73v5m25-5v5" stroke="${ink}" stroke-width="5"/>${extra}`;
