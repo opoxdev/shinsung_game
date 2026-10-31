@@ -3,11 +3,11 @@ const bad = message => new Response(JSON.stringify({ok:false,error:message}),{st
 const ok = data => new Response(JSON.stringify({ok:true,data}),{headers:{'content-type':'application/json'}});
 const CODE_LIMIT=5000, ROOM_TTL=24*3600*1000, LOBBY_TTL=2*3600*1000;
 // Budget: ~1 host tick per 3s/room; the clients smoothly predict between snapshots.
-export const ROOM_PULSE_MS=2700, ROOM_FAILOVER_MS=8500, ROOM_SAVE_MS=18000, EFFECT_WINDOW=.8;
+export const ROOM_PULSE_MS=2700, ROOM_FAILOVER_MS=8500, ROOM_SAVE_MS=12000, RECOVERY_MAX_MS=15000, EFFECT_WINDOW=.8;
 const DIRECTORY_KEY='PUBLIC_ROOM_DIRECTORY_V1';
 export class GameRoom {
   constructor(ctx,env){
-    this.ctx=ctx;this.env=env;this.room=null;this.lastSave=0;
+    this.ctx=ctx;this.env=env;this.room=null;this.lastSave=0;this.recovering=true;
     this.ctx.blockConcurrencyWhile(async()=>{this.room=await ctx.storage.get('room')||null;});
   }
   async persist(){this.room.lastSavedAt=Date.now();await this.ctx.storage.put('room',this.room);this.lastSave=this.room.lastSavedAt;}
@@ -63,14 +63,21 @@ export class GameRoom {
     const r=this.room;
     if(!r||r.status!=='playing')return false;
     const now=Date.now(),secs=Math.max(0,(now-r.lastPulse)/1000);
-    const steps=Math.min(100,Math.floor(secs/Core.STEP+1e-7));
+    // A restart/handoff can restore a slightly older persisted checkpoint.
+    // Recover its deterministic time only when hibernated WebSockets exist;
+    // otherwise preserve the intentional pause for abandoned rooms.
+    const hasLiveSockets=this.ctx.getWebSockets?.().length>0;
+    const recovery=this.recovering&&hasLiveSockets;
+    const steps=Math.min(recovery?Math.floor(RECOVERY_MAX_MS/(1000*Core.STEP)):100,
+      Math.floor(secs/Core.STEP+1e-7));
     if(!steps)return false;
     // A disconnected match pauses after a short bounded catch-up; no runaway CPU use.
     Core.advance(r.state,steps*Core.STEP);
     // These effects only render for <=450ms; old events have no gameplay impact.
     // Prune BEFORE persistence and broadcast, not just from the wire payload.
     r.state.events=r.state.events.filter(e=>r.state.time-e.time<=EFFECT_WINDOW);
-    r.lastPulse=secs>5?now:r.lastPulse+steps*Core.STEP*1000;
+    this.recovering=false;
+    r.lastPulse=secs>steps*Core.STEP+.001?now:r.lastPulse+steps*Core.STEP*1000;
     if(r.state.status!=='playing')r.status='finished';
     return true;
   }
