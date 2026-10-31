@@ -12,3 +12,6 @@ jobs:
         with:
           node-version: "22"
       - run: npm test
+      - run: npm install --no-save playwright
+      - run: npx playwright install --with-deps chromium
+      - run: node scripts/browser-smoke.mjs
