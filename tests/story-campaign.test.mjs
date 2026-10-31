@@ -53,6 +53,7 @@ test('archive reveals visited scenes and keeps future scenes hidden',()=>{
     const intro=storyPreviewMarkup(diff.id);
     assert.match(intro,new RegExp(STORIES[diff.id].title));
     assert.match(intro,/data-action="storyGuide"/);
+    assert.match(storyPreviewMarkup(diff.id,diff.waves.length),/기록 6 \/ 6/);
     const full=storyGuideMarkup(diff.id,diff.waves.length);
     assert.equal((full.match(/class="story-chapter-step unlocked"/g)||[]).length,6);
     const locked=storyGuideMarkup(diff.id,0);
