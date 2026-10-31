@@ -38,6 +38,7 @@ try{
   // The logged-in account must remain intact after reload, without D1 restore.
   await page.reload({waitUntil:'domcontentloaded'});
   await page.waitForFunction(()=>document.querySelector('.wallet')?.textContent.includes('200'));
+  await page.locator('.sidebar .nav-item[data-action="nav"][data-id="towers"]').click();
   assert.ok(await page.locator('.tower-card[data-id="archer"]:not(.locked)').count());
   await page.locator('[data-action="backupMenu"]').click();
   const downloaded=page.waitForEvent('download');
