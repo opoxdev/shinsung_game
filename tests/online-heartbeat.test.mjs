@@ -12,16 +12,16 @@ function room(){
   const ctx={storage,blockConcurrencyWhile:fn=>fn(),getWebSockets:()=>sockets,acceptWebSocket:s=>sockets.push(s)};
   return new GameRoom(ctx,{});
 }
-test('authoritative game progresses on sub-second online heartbeat, not 2s server stalls',async()=>{
+test('authoritative game progresses on budgeted 3s heartbeat without redundant snapshots',async()=>{
   const r=room();await new Promise(done=>setImmediate(done));
   const cfg={map:'plains',difficulty:'easy',type:'pvp',modes:[]};
   await r.action('create',{code:'FIGHT1',config:cfg,profile:Core.starterProfile('Alice')},alice);
   await r.action('join',{code:'FIGHT1',profile:Core.starterProfile('Bob')},bob);
   await r.action('start',{},alice);
-  r.room.lastPulse=Date.now()-1050;
+  r.room.lastPulse=Date.now()-3100;
   const reply=await r.action('pulse',{},alice);
   assert.equal(reply.updated,true);
-  assert.ok(r.room.state.time>=0.95,'at least 950ms of game time advanced');
+  assert.ok(r.room.state.time>=2.95,'at least 2.95 seconds of game time advanced');
   const prior=r.room.state.time;
   const early=await r.action('pulse',{},alice);
   assert.equal(early.updated,false,'avoid redundant snapshots before cadence threshold');
@@ -32,17 +32,18 @@ test('independent WebSocket heartbeat runs without Canvas animation frames and s
   const client=new Online(),messages=[],saved=globalThis.WebSocket;
   globalThis.WebSocket={OPEN:1};
   client.user={uid:'owner'};
+  client.heartbeatMs=75; // Fast deterministic unit test; production default is 3000ms.
   client.connect=async()=>{
     client.socket={readyState:1,send:message=>messages.push(JSON.parse(message)),close:()=>{}};
     client.matchStatus='playing';client.hostId='owner';
   };
   try{
     await client.watch('FIGHT1',()=>{});
-    await new Promise(resolve=>setTimeout(resolve,990));
+    await new Promise(resolve=>setTimeout(resolve,175));
     assert.ok(messages.some(m=>m.type==='pulse'),'heartbeat must be scheduled without requestAnimationFrame');
     client.stop();
     const count=messages.length;
-    await new Promise(resolve=>setTimeout(resolve,950));
+    await new Promise(resolve=>setTimeout(resolve,175));
     assert.equal(messages.length,count,'leaving a room must clear the heartbeat timer');
   }finally{client.stop();globalThis.WebSocket=saved;}
 });
