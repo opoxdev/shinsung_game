@@ -241,8 +241,11 @@ export function tick(s,dt=STEP) {
       }
     }
   }
-  for(const t of s.towers) {
-    const stats=towerStats(t);
+  // Resolve tower evolution exactly once per 50ms step and reuse aura stats.
+  // This avoids repeated allocations and evolution lookups for every shot.
+  const resolvedTowers=s.towers.map(t=>({t,stats:towerStats(t)}));
+  const auras=resolvedTowers.filter(entry=>entry.stats.kind==='buff');
+  for(const {t,stats} of resolvedTowers) {
     if(t.jammedUntil>s.time)continue;
     if(stats.kind==='buff')continue;
     t.cd-=dt;
@@ -258,10 +261,10 @@ export function tick(s,dt=STEP) {
     const candidates=s.enemies.filter(e=>e.field===t.field&&e.hp>0&&dist(t,e)<=stats.range);
     candidates.sort(t.target==='strong'?(a,b)=>b.hp-a.hp:t.target==='near'?(a,b)=>dist(a,t)-dist(b,t):(a,b)=>b.progress-a.progress);
     const e=candidates[0];if(!e)continue;
-    const buffs=s.towers.filter(b=>b.field===t.field&&towerStats(b).kind==='buff'&&dist(b,t)<=towerStats(b).range);
+    const buffs=auras.filter(({t:b,stats:bs})=>b.field===t.field&&dist(b,t)<=bs.range);
     // Strongest aura of each category wins; different kinds may coexist.
-    const power=buffs.reduce((a,b)=>Math.max(a,1+(towerStats(b).power??(b.type==='workshop'?.2:0))),1);
-    const haste=buffs.reduce((a,b)=>Math.max(a,1+(towerStats(b).haste||0)),1);
+    const power=buffs.reduce((a,{t:b,stats:bs})=>Math.max(a,1+(bs.power??(b.type==='workshop'?.2:0))),1);
+    const haste=buffs.reduce((a,{stats:bs})=>Math.max(a,1+(bs.haste||0)),1);
     t.cd=stats.interval/haste;t.shots=(t.shots||0)+1;
     t.angle=Math.atan2(e.y-t.y,e.x-t.x);
     event(s,{kind:stats.kind,from:t.id,x:t.x,y:t.y,tx:e.x,ty:e.y,field:t.field,type:t.type,level:t.level});
