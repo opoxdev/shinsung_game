@@ -134,6 +134,7 @@ function damage(s,e,n,t,ignoreArmor=false) {
   if(e.hp<=0||!Number.isFinite(n)||n<=0)return;
   const source=TOWERS[t.type]||{};
   let value=n*(ignoreArmor||towerStats(t).pierce?1:1-(ENEMIES[e.type].armor||0));
+  if(e.markUntil>s.time&&e.markAmp>1)value*=e.markAmp;
   if(e.shield>0){const absorbed=Math.min(e.shield,value);e.shield-=absorbed;value-=absorbed;}
   if(value>0)e.hp-=value;
   if(e.hp>0)return;
@@ -154,8 +155,16 @@ function applyHit(s,e,n,t,stats,scale=1){
   const def=towerStats(t);
   const crit=def.critChance&&((t.id*17+(t.shots||0)*31)%100)<def.critChance;
   const execute=def.execute&&e.hp/e.maxHp<=def.execute;
-  damage(s,e,n*scale*(crit?(def.critBonus||1.8):1)*(execute?(def.executeBonus||2):1),t);
+  // Heavy snipers charge their every-Nth shot; ordering is derived from the unit.
+  const charged=def.chargeEvery&&t.shots>0&&t.shots%def.chargeEvery===0;
+  if(charged)event(s,{kind:'charged',x:e.x,y:e.y,field:e.field,type:t.type});
+  damage(s,e,n*scale*(crit?(def.critBonus||1.8):1)*(execute?(def.executeBonus||2):1)*(charged?(def.chargeBonus||2):1),t);
   if(e.hp<=0)return;
+  if(def.markAmp){
+    e.markAmp=Math.max(e.markUntil>s.time?(e.markAmp||1):1,def.markAmp);
+    e.markUntil=Math.max(e.markUntil||0,s.time+(def.markTime||3));
+    event(s,{kind:'mark',x:e.x,y:e.y,field:e.field,type:t.type});
+  }
   if(def.dot){
     const dot=def.dot;
     if(!e.dotDps||dot>=e.dotDps){e.dotDps=dot;e.dotFrom=t.type;}
