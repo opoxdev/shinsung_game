@@ -24,7 +24,7 @@ try{
   const page=await browser.newPage({viewport:{width:1280,height:800},acceptDownloads:true});
   const errors=[],external=[];
   page.on('pageerror',e=>errors.push(e.message));
-  page.on('request',r=>{if(!r.url().startsWith('http://local-solo.test/'))external.push(r.url());});
+  page.on('request',r=>{if(!r.url().startsWith('http://localhost:8484/'))external.push(r.url());});
   await page.exposeFunction('__mockD1',async ({action,payload})=>{
     actions.push(action);
     if(action==='profile')return structuredClone(server);
@@ -38,8 +38,8 @@ try{
     }
     throw Error('Unexpected cloud action: '+action);
   });
-  await page.route('http://local-solo.test/',route=>route.fulfill({contentType:'text/html; charset=utf-8',body:html}));
-  await page.goto('http://local-solo.test/',{waitUntil:'domcontentloaded'});
+  await page.route('http://localhost:8484/',route=>route.fulfill({contentType:'text/html; charset=utf-8',body:html}));
+  await page.goto('http://localhost:8484/',{waitUntil:'domcontentloaded'});
   await page.waitForFunction(()=>document.querySelector('.wallet')?.textContent.includes('600'));
   assert.deepEqual(actions,['profile'],'D1 profile read only on login');
   await page.locator('.sidebar .nav-item[data-action="nav"][data-id="shop"]').click();
