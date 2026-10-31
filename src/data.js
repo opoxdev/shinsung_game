@@ -72,6 +72,23 @@ export const ENEMIES = {
   colossus:{name:'고대 콜로서스',hp:235000,speed:25,color:'#eca36a',shield:50000,armor:.4,leak:100,size:48},
   oblivion:{name:'소멸의 군주',hp:380000,speed:34,color:'#f4528e',shield:95000,armor:.4,regen:260,leak:100,size:52},
 };
+// Distinct boss mechanics, readable telegraphs and limited-frequency effects.
+export const BOSS_ABILITIES={
+ boss:{name:'분노의 돌진',kind:'rush',cooldown:12,power:1.5,duration:3},
+ fastboss:{name:'전력 질주',kind:'rush',cooldown:10,power:1.85,duration:2.4},
+ tank:{name:'강철 방벽',kind:'shield',cooldown:15,power:.18},
+ mecha:{name:'전자기 교란',kind:'jam',cooldown:16,power:2.2,radius:175},
+ doom:{name:'아마겟돈 파동',kind:'jam',cooldown:17,power:3,radius:220},
+ apocalypse:{name:'심판의 보호막',kind:'shield',cooldown:16,power:.2},
+ warden:{name:'황혼의 방벽',kind:'shield',cooldown:14,power:.15},
+ behemoth:{name:'대지의 발구름',kind:'jam',cooldown:19,power:2,radius:160},
+ overload:{name:'과부하 신호',kind:'rush',cooldown:11,power:1.65,duration:3},
+ abyss:{name:'심연의 속박',kind:'jam',cooldown:17,power:2.6,radius:180},
+ phantom:{name:'유령 질주',kind:'rush',cooldown:12,power:1.7,duration:2.6},
+ nemesis:{name:'네메시스 결계',kind:'shield',cooldown:13,power:.12},
+ colossus:{name:'거인의 충격파',kind:'jam',cooldown:20,power:3.5,radius:230},
+ oblivion:{name:'소멸의 심판',kind:'jam',cooldown:18,power:4,radius:240}
+};
 export const PACKS = {
   basic: { name: '일반 좀비들', price: 0, monsters: [['zombie',60,4],['runner',100,6],['heavy',230,10],['boss',850,25],['fastboss',1200,30],['tank',2400,45]] },
   lab: { name: '연구소 강화 실험체', price: 3000, monsters: [['mk1',400,12],['mk2',450,12],['chain',1100,24],['mecha',3500,55],['doom',12000,90]] },
