@@ -1,5 +1,5 @@
 import {authenticate} from './auth.js';
-import {getProfile,updateProfile,claimProfile} from './profile.js';
+import {getProfile,updateProfile,claimProfile,claimSoloProfile,importV098Profile} from './profile.js';
 import {GameRoom} from './room.js';
 import {Core} from '../dist/cloudflare/core.js';
 import {isAdmin,adminAction,assertActiveProfile} from './admin.js';
@@ -21,24 +21,19 @@ async function callRoom(env,code,action,payload,user){
 }
 
 export function roomLoadout(stored,requested){
-  // Client-scoped solo/shop progression is authoritative for the player's
-  // selected multiplayer loadout; never accept wallets/rewards/room flags.
-  if(!requested)return stored; // compatibility with older clients
-  if(!requested||typeof requested!=='object'||Array.isArray(requested))throw Error('잘못된 멀티플레이 타워 구성입니다.');
-  const loadout=requested.loadout;
-  if(!Array.isArray(loadout)||loadout.length<1||loadout.length>5||
-     new Set(loadout).size!==loadout.length||
-     loadout.some(id=>typeof id!=='string'||!Object.hasOwn(Core.TOWERS,id)))
-    throw Error('멀티플레이 장착 타워가 올바르지 않습니다.');
-  const pack=typeof requested.pack==='string'&&Object.hasOwn(Core.PACKS,requested.pack)?requested.pack:'basic';
+  // D1 is the authoritative collection. Client may select owned equipment only.
+  if(!requested)return stored;
+  if(typeof requested!=='object'||Array.isArray(requested))throw Error('잘못된 타워 구성입니다.');
+  const ids=requested.loadout;
+  if(!Array.isArray(ids)||!ids.length||ids.length>5||new Set(ids).size!==ids.length||
+     ids.some(id=>typeof id!=='string'||!stored.owned.includes(id)))throw Error('서버에 보유한 타워만 장착할 수 있습니다.');
+  if(typeof requested.pack!=='string'||!stored.packs.includes(requested.pack))throw Error('서버에 보유한 몬스터 팩만 사용할 수 있습니다.');
   const equippedSkins={};
-  if(requested.equippedSkins&&typeof requested.equippedSkins==='object'&&!Array.isArray(requested.equippedSkins)){
-    for(const id of loadout){
-      const skin=requested.equippedSkins[id];
-      if(typeof skin==='string'&&skin.length<=32&&/^[a-z0-9_-]+$/.test(skin))equippedSkins[id]=skin;
-    }
+  for(const id of ids){
+    const skin=requested.equippedSkins?.[id];
+    if(skin==='default'||(typeof skin==='string'&&stored.skins?.[id+':'+skin]))equippedSkins[id]=skin;
   }
-  return {...stored,loadout:[...loadout],pack,equippedSkins};
+  return {...stored,loadout:ids,pack:requested.pack,equippedSkins};
 }
 
 async function applyAction(env,action,p,user){
@@ -56,7 +51,26 @@ async function applyAction(env,action,p,user){
   if(action==='profile')return (await getProfile(db,user)).value;
   if(action==='listRooms')return listRooms(env);
   if(action==='diagnostic')return {name:(await getProfile(db,user)).value.name,serverTime:new Date().toISOString(),services:['Firebase Auth','Cloudflare Worker','D1','Durable Objects']};
-  if(action==='profileAction')throw Error('상점과 타워 구성은 현재 브라우저에서만 처리됩니다. 게임을 새로고침하세요.');
+  if(action==='profileAction'){
+    return updateProfile(db,user,profile=>{
+      if(profile.activeRoom)throw Error('게임방에서 나간 뒤 컬렉션을 변경하세요.');
+      Core.profileAction(profile,p);return profile;
+    });
+  }
+  if(action==='soloReward'){
+    const cfg=Core.validateConfig(p.config);
+    if(cfg.type!=='solo')throw Error('솔로 전투 보상만 정산할 수 있습니다.');
+    const diff=Core.DIFFICULTIES.find(d=>d.id===cfg.difficulty);
+    if(!Number.isSafeInteger(p.wave)||p.wave<1||p.wave>diff.waves.length||typeof p.win!=='boolean')
+      throw Error('웨이브 결과가 올바르지 않습니다.');
+    if(p.win&&p.wave!==diff.waves.length)throw Error('마지막 웨이브를 클리어해야 승리 보상을 받을 수 있습니다.');
+    // The browser runs the battle; the Worker computes rewards from game data,
+    // not client-submitted coins/XP, without creating a Durable Object.
+    const match={config:cfg,players:{[user.uid]:{field:0}},
+      wave:p.wave,status:p.win?'victory':'defeat'};
+    return claimSoloProfile(db,user,p.runId,Core.rewardFor(match,user.uid));
+  }
+  if(action==='importV098')return importV098Profile(db,user,p.profile);
   if(action==='createRoom'){
     const stored=(await getProfile(db,user)).value;
     if(stored.activeRoom)throw Error('기존 서버 방을 먼저 나가세요. 이전 버전에서 남은 방이라면 계정 메뉴에서 서버 방 정리를 실행하세요.');
@@ -111,7 +125,7 @@ async function applyAction(env,action,p,user){
 export default {
   async fetch(request,env){
     const url=new URL(request.url);
-    if(url.pathname==='/health')return response({ok:true,service:'shinsung-cloudflare',version:'0.9.8'});
+    if(url.pathname==='/health')return response({ok:true,service:'shinsung-cloudflare',version:'0.9.9'});
     // Browsing rooms is public; mutating a lobby still requires Firebase auth.
     if(url.pathname==='/rooms'&&request.method==='GET'){
       const mode=url.searchParams.get('mode');
