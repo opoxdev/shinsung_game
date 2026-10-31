@@ -2,6 +2,8 @@ import {Core} from '../dist/cloudflare/core.js';
 const bad = message => new Response(JSON.stringify({ok:false,error:message}),{status:400,headers:{'content-type':'application/json'}});
 const ok = data => new Response(JSON.stringify({ok:true,data}),{headers:{'content-type':'application/json'}});
 const CODE_LIMIT=5000, ROOM_TTL=24*3600*1000, LOBBY_TTL=2*3600*1000;
+// Budget: ~1 host tick per 3s/room; the clients smoothly predict between snapshots.
+export const ROOM_PULSE_MS=2700, ROOM_FAILOVER_MS=8500, ROOM_SAVE_MS=18000, EFFECT_WINDOW=.8;
 const DIRECTORY_KEY='PUBLIC_ROOM_DIRECTORY_V1';
 export class GameRoom {
   constructor(ctx,env){
@@ -59,11 +61,14 @@ export class GameRoom {
     const r=this.room;
     if(!r||r.status!=='playing')return false;
     const now=Date.now(),secs=Math.max(0,(now-r.lastPulse)/1000);
-    const steps=Math.min(80,Math.floor(secs/Core.STEP+1e-7));
+    const steps=Math.min(100,Math.floor(secs/Core.STEP+1e-7));
     if(!steps)return false;
     // A disconnected match pauses after a short bounded catch-up; no runaway CPU use.
     Core.advance(r.state,steps*Core.STEP);
-    r.lastPulse=secs>4?now:r.lastPulse+steps*Core.STEP*1000;
+    // These effects only render for <=450ms; old events have no gameplay impact.
+    // Prune BEFORE persistence and broadcast, not just from the wire payload.
+    r.state.events=r.state.events.filter(e=>r.state.time-e.time<=EFFECT_WINDOW);
+    r.lastPulse=secs>5?now:r.lastPulse+steps*Core.STEP*1000;
     if(r.state.status!=='playing')r.status='finished';
     return true;
   }
@@ -106,11 +111,11 @@ export class GameRoom {
       await this.persist();await this.syncDirectory().catch(e=>console.warn(e));this.broadcast();return {started:true};
     }
     if(name==='pulse'){
-      if(r.status!=='playing'||Date.now()-r.lastPulse<750)return {updated:false};
-      if(r.host!==uid && Date.now()-r.lastPulse<4500)return {updated:false};
+      if(r.status!=='playing'||Date.now()-r.lastPulse<ROOM_PULSE_MS)return {updated:false};
+      if(r.host!==uid && Date.now()-r.lastPulse<ROOM_FAILOVER_MS)return {updated:false};
       if(r.host!==uid)r.host=uid;
       if(!this.advance())return {updated:false};
-      if(Date.now()-(r.lastSavedAt||0)>8000||r.status!=='playing')await this.persist();
+      if(Date.now()-(r.lastSavedAt||0)>ROOM_SAVE_MS||r.status!=='playing'||r.state.wave!==r.lastSavedWave){r.lastSavedWave=r.state.wave;await this.persist();}
       this.broadcast();return {updated:true};
     }
     if(name==='command'){
@@ -167,7 +172,7 @@ export class GameRoom {
     socket.serializeAttachment(a);
     let obj;
     try{obj=JSON.parse(message);if(!['command','pulse'].includes(obj.type))return;
-      if(obj.type==='pulse'&&this.room?.host!==a.uid&&Date.now()-this.room?.lastPulse<4500)return;
+      if(obj.type==='pulse'&&this.room?.host!==a.uid&&Date.now()-this.room?.lastPulse<ROOM_FAILOVER_MS)return;
       const data=await this.action(obj.type,obj.type==='command'?{command:obj.command}:{},{uid:a.uid});
       if(obj.id)socket.send(JSON.stringify({type:'ack',id:obj.id,data}));
     }catch(e){if(obj?.id)socket.send(JSON.stringify({type:'ack',id:obj.id,error:String(e.message).slice(0,180)}));}
