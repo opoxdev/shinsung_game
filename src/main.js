@@ -15,14 +15,15 @@ const fmt=n=>Math.floor(n).toLocaleString('ko-KR');
 const fmtHp=n=>Number.isFinite(n)?Number(Math.max(0,n).toFixed(Math.abs(n)<10?1:0)).toLocaleString('ko-KR'):'0';
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const icons={home:'⌂',towers:'▥',shop:'◇',pvp:'⚔',coop:'♟',events:'✧'};
-let localProfile=loadClientProfile(localStorage);
+const playerStorage=(()=>{try{return localStorage;}catch{return null;}})();
+let localProfile=loadClientProfile(playerStorage);
 const currentUid=()=>online.user?.uid||null;
 function switchAccountProfile(user){
   if(!user){profile=localProfile;return;}
   // First login inherits the current guest progress on this device, but later
   // logins reuse only that account's own locally saved wallet and collection.
-  const hasSaved=!!localStorage.getItem('shinsung.profile.account.v2.'+encodeURIComponent(user.uid));
-  profile=loadClientProfile(localStorage,user.uid,{
+  let hasSaved=false;try{hasSaved=!!playerStorage?.getItem('shinsung.profile.account.v2.'+encodeURIComponent(user.uid));}catch{}
+  profile=loadClientProfile(playerStorage,user.uid,{
     name:user.displayName||user.email?.split('@')[0]||'모험가',
     seed:hasSaved?null:localProfile
   });
@@ -99,7 +100,7 @@ function resetStory(){
 
 function saveLocal(){
   try{
-    saveClientProfile(localStorage,currentUid(),profile);
+    saveClientProfile(playerStorage,currentUid(),profile);
     if(!currentUid())localProfile=profile;
   }catch(e){toast('기기 저장 실패: '+e.message);}
 }
