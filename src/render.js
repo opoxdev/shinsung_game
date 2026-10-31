@@ -73,7 +73,7 @@ export class Renderer {
         for(const t of state.towers)if(t.field===f&&this.visible(t.x+offset,t.y))this.tower(g,t,now,state.time);
         for(const e of state.enemies)if(e.field===f&&this.visible(e.x+offset,e.y))this.enemy(g,e,now,state.time);
         for(const u of state.units)if(u.field===f&&this.visible(u.x+offset,u.y))this.summon(g,u,now);
-        for(const e of state.events){const age=state.time-e.time;if(e.field!==f||age<0||age>.45)continue;g.globalAlpha=1-age/.45;g.strokeStyle=TOWERS[e.type]?.color||ENEMIES[e.type]?.color||'#ffd88c';g.lineWidth=e.type==='rail'?5:3;g.shadowColor=g.strokeStyle;g.shadowBlur=8;
+        for(const e of state.events){const age=state.time-e.time;if(e.field!==f||age<0||age>.45||!this.visible(e.x+offset,e.y,180))continue;g.globalAlpha=1-age/.45;g.strokeStyle=TOWERS[e.type]?.color||ENEMIES[e.type]?.color||'#ffd88c';g.lineWidth=e.type==='rail'?5:3;g.shadowColor=g.strokeStyle;g.shadowBlur=8;
           if(e.kind==='damage'){
             const amount=e.amount||0;
             const label=amount<1?Number(amount.toFixed(2)).toString():amount<10?Number(amount.toFixed(1)).toString():Math.round(amount).toLocaleString('ko-KR');
