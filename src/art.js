@@ -1,8 +1,9 @@
 import { ENEMIES, TOWERS } from './data.js';
 import { evolutionAt } from './evolutions.js';
 import { redesignedPortrait } from './visual-design.js';
-// v0.8 art direction: field-issue armor first; high-rarity visual upgrades are
-// allowed to be elaborate. Combat statistics and purchase IDs stay unchanged.
+// v0.9.1: everyday common/rare equipment evolves through class-specific tools.
+// Epic and above may use distinctive magical and mechanical set pieces.
+// Gameplay stats, IDs and owned cosmetics remain unchanged.
 function evolvedPortrait(svg,id,level){
   if(!level)return svg;
   const stage=evolutionAt(id,level);
