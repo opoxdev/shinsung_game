@@ -292,3 +292,19 @@ body{background:#15203d;color:var(--text)}button{border:2px solid #101a35;border
 /* Transparent progress-based defeat payouts. */
 .defeat-reward-note{margin:-5px 0 9px;font-size:10px;line-height:1.5;color:#a9d8d4;text-align:center}
 .result-reward-info{color:#c0e9e3!important;font-size:12px!important;text-align:center!important;margin-top:0!important}
+
+/* v0.9.1: common and rare collections must look obtainable, not like
+   full-power event heroes. Real prestige begins at epic/legendary. */
+.tower-card.common{background:radial-gradient(ellipse at 50% 70%,#83938e1c,transparent 75%),linear-gradient(#374350,#202d3b);border-color:#667a81;box-shadow:inset 0 1px #d3ddd512,0 3px 8px #0b1b2b66}
+.tower-card.rare{background:radial-gradient(ellipse at 50% 45%,#a6c6ba25,transparent 76%),linear-gradient(#37475a,#1e3344);border-color:#628e9d;box-shadow:inset 0 1px #d7e6da18,0 4px 9px #0b1a2b5b}
+.tower-card.common:before,.tower-card.common:after,.tower-card.rare:before,.tower-card.rare:after{animation:none!important;box-shadow:none}
+.tower-card.epic{background:radial-gradient(ellipse at 50% 43%,color-mix(in srgb,var(--rarity) 28%,transparent),transparent 72%),linear-gradient(#3d4665,#203151);border-color:color-mix(in srgb,var(--rarity) 74%,#31466c)}
+.tower-card.legendary{background:radial-gradient(ellipse at 50% 42%,color-mix(in srgb,var(--rarity) 36%,transparent),transparent 74%),linear-gradient(#4c446a,#1d294a);border-color:color-mix(in srgb,var(--rarity) 88%,#273658);box-shadow:inset 0 1px #ffffff31,0 0 15px color-mix(in srgb,var(--rarity) 18%,transparent)}
+.tower-detail.tier-common .detail-art{background:radial-gradient(ellipse at center,#86928e1c,transparent 69%)}
+.tower-detail.tier-rare .detail-art{background:radial-gradient(ellipse at center,#8fb0ba22,transparent 69%)}
+.tower-detail.tier-legendary .detail-art{background:radial-gradient(ellipse at center,color-mix(in srgb,var(--rarity) 33%,transparent),transparent 75%)}
+.tower-detail.tier-mythic .detail-art{background:radial-gradient(ellipse at center,color-mix(in srgb,var(--rarity) 39%,transparent),transparent 75%)}
+.tower-detail.tier-common .art-ring,.tower-detail.tier-rare .art-ring{opacity:.08}
+.tower-detail.tier-legendary .art-ring{opacity:.48;box-shadow:0 0 16px color-mix(in srgb,var(--rarity) 25%,transparent)}
+.tower-detail.tier-mythic .art-ring{opacity:.64;box-shadow:0 0 23px color-mix(in srgb,var(--rarity) 34%,transparent)}
+@media(prefers-reduced-motion:reduce){.tower-card.legendary:before,.tower-card.mythic:before,.tower-card.mythic:after{animation:none!important}}
