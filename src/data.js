@@ -1,5 +1,5 @@
 import { EVOLUTIONS } from './evolutions.js';
-export const VERSION = '0.9.0';
+export const VERSION = '0.9.1';
 // All combat health and damage numbers use a 1/6 display scale. Economy, ranges,
 // movement and relative time-to-kill are deliberately unchanged.
 export const COMBAT_SCALE = 6;
@@ -10,24 +10,24 @@ export const RARITIES = {
 };
 // Attack classifications share rules; presentation is chosen independently by each tower's id.
 export const TOWERS = {
-  scout: { name:'정찰병', role: '원거리', rarity: 'common', cost: 150, price: 0, color: '#ffb74e', damage: 6, interval: .7, range: 175, kind: 'ranged', cap: 20, upgrades: [180,380,760], desc:'표준 전투복과 경량 발사기를 장비한 정찰대원. 낮은 배치비로 초반 방어선을 형성한다.' },
-  soldier: { name:'전격병', role: '전기 · 연사', rarity: 'rare', cost: 260, price: 750, color: '#62e7f4', damage: 9, interval: .35, range: 195, kind: 'ranged', cap: 12, upgrades: [350,700,1500], desc:'절연 방탄복과 쌍권총형 코일건을 장비한 특수병. 빠른 전기 연사에 특화됐다.' },
-  blade: { name:'검술병', role: '근접 · 관통', rarity: 'rare', cost: 230, price: 0, color: '#ff6a92', damage: 25, interval: .9, range: 100, kind: 'melee', cap: 10, upgrades: [260,600,1200], desc:'경량 전투복과 실전용 검을 갖춘 근접 대원. 구미호 가면은 특별 스킨에서만 등장한다.' },
+  scout: { name:'새총잡이', role: '원거리', rarity: 'common', cost: 150, price: 0, color: '#ffb74e', damage: 6, interval: .7, range: 175, kind: 'ranged', cap: 20, upgrades: [180,380,760], desc:'평범한 여행용 조끼와 낡은 새총을 가진 초보 방어자. 초반에 부담 없이 배치한다.' },
+  soldier: { name:'전기공', role: '전기 · 연사', rarity: 'rare', cost: 260, price: 750, color: '#62e7f4', damage: 9, interval: .35, range: 195, kind: 'ranged', cap: 12, upgrades: [350,700,1500], desc:'공구 벨트와 작은 전지팩을 갖춘 전기 수리공. 저렴한 코일 충격기로 빠르게 공격한다.' },
+  blade: { name:'검객', role: '근접 · 관통', rarity: 'rare', cost: 230, price: 0, color: '#ff6a92', damage: 25, interval: .9, range: 100, kind: 'melee', cap: 10, upgrades: [260,600,1200], desc:'무명 도복과 연습용 칼집을 가진 떠돌이 검객. 화려한 가면은 특별 스킨의 몫이다.' },
   cannon: { name:'폭파 전문가', role: '폭발 · 광역', rarity: 'epic', cost: 450, price: 1800, color: '#ff9b54', damage: 35, interval: 2, range: 235, splash: 85, kind: 'splash', cap: 6, upgrades: [480,1000,2200], desc:'유탄 발사기와 탄약 배낭을 장착한 폭발물 전문가. 광역 폭발로 적 진형을 무너뜨린다.' },
   summoner: { name: '고블린 소환사', role: '소환', rarity: 'epic', cost: 500, price: 2200, color: '#a4e68b', damage: 65, interval: 4, range: 260, kind: 'summon', cap: 4, upgrades: [550,1200,2400], desc: '고블린을 소환해 적을 추격한다. 소환수는 목표에 도달하면 공격하고 사라진다.' },
   workshop: { name: '버섯 정원', role: '지원 · 버프', rarity: 'epic', cost: 610, price: 1500, color: '#ff88a8', damage: 0, interval: 1, range: 210, kind: 'buff', cap: 3, upgrades: [450,900,1800], desc: '빛나는 포자로 아군 공격력을 20% 강화하는 작은 버섯집. 여러 정원의 효과는 중첩되지 않는다.' },
   rail: { name: '별술사', role: '별빛 · 장거리', rarity: 'legendary', cost: 850, price: 5000, color: '#a6d8ff', damage: 170, interval: 2.8, range: 420, kind: 'ranged', cap: 3, upgrades: [1300,2600,5200], desc: '커다란 모자 아래 반짝이는 두 눈. 멀리 있는 적에게 장갑을 꿰뚫는 별빛을 떨어뜨린다.', pierce: true },
   sonic: { name: '소닉', role: '중반 · 초고속 광역', rarity: 'mythic', cost: 720, price: null, color: '#f784cb', damage: 26, interval: .22, range: 240, splash: 45, kind: 'splash', cap: 2, upgrades: [1900,3800,7000], desc: '익스트림 이상 + 슈퍼소닉 모드 클리어 보상. 음파로 적의 대열을 분쇄한다.' },
-  archer: {name:'정밀 사수', role:'후반 · 장거리 정밀', rarity:'common',cost:780,price:400,color:'#a4e56d',damage:74,interval:1.75,range:345,kind:'ranged',cap:12,upgrades:[200,440,850],desc:'정밀 조준경과 장거리 석궁을 가진 숙련 사수. 일반 등급이지만 비싼 후반 장거리 타워.'},
-  chef: {name:'수류탄병',role:'광역 · 폭발',rarity:'common',cost:270,price:600,color:'#ffb6bc',damage:17,interval:1.5,range:175,splash:58,kind:'splash',cap:10,upgrades:[270,540,1100],desc:'기본 전투복을 입은 투척병. 파편 수류탄으로 적 무리를 처리한다. 도넛 요리사는 특별 스킨.'},
-  chemist: {name:'독성 연구원',role:'후반 · 독 지속 피해',rarity:'rare',cost:980,price:1050,color:'#98eb70',damage:21,interval:1.2,range:250,kind:'ranged',dot:36,dotTime:3,cap:8,upgrades:[360,780,1500],desc:'방독면과 화학약품 투척 장비를 갖춘 연구원. 지속 중독 공격에 특화됐다.'},
-  icewitch: {name:'냉각병',role:'빙결 · 감속',rarity:'rare',cost:290,price:1400,color:'#7fddff',damage:16,interval:1.1,range:220,kind:'ranged',slow:.48,slowTime:2.5,cap:7,upgrades:[400,850,1750],desc:'냉각 탱크와 동결 방사기를 갖춘 저온 특수병. 적을 느리게 만들어 방어 시간을 확보한다.'},
-  spirit: {name:'드론 운용병',role:'정찰 드론 · 추격 소환',rarity:'rare',cost:280,price:1450,color:'#b6f2ff',damage:26,interval:3.1,range:220,kind:'summon',summons:2,unitSpeed:290,unitLife:7,cap:6,upgrades:[440,900,1800],desc:'경량 정찰 드론을 출격시켜 적을 추격하는 드론 운용병. 소환 메커니즘은 유지된다.'},
+  archer: {name:'궁수', role:'후반 · 장거리 정밀', rarity:'common',cost:780,price:400,color:'#a4e56d',damage:74,interval:1.75,range:345,kind:'ranged',cap:12,upgrades:[200,440,850],desc:'가죽 팔토시와 나무 활을 사용하는 궁수. 외형은 소박하지만 사거리와 후반 가격이 높은 사수다.'},
+  chef: {name:'투척병',role:'광역 · 폭발',rarity:'common',cost:270,price:600,color:'#ffb6bc',damage:17,interval:1.5,range:175,splash:58,kind:'splash',cap:10,upgrades:[270,540,1100],desc:'작은 폭약 주머니와 수류탄을 든 투척수. 군용 특수장비 없이 광역 공격을 담당한다.'},
+  chemist: {name:'약제사',role:'후반 · 독 지속 피해',rarity:'rare',cost:980,price:1050,color:'#98eb70',damage:21,interval:1.2,range:250,kind:'ranged',dot:36,dotTime:3,cap:8,upgrades:[360,780,1500],desc:'앞치마와 약병 가방을 든 약제사. 작은 병을 던져 적을 중독시킨다.'},
+  icewitch: {name:'서리 견습생',role:'빙결 · 감속',rarity:'rare',cost:290,price:1400,color:'#7fddff',damage:16,interval:1.1,range:220,kind:'ranged',slow:.48,slowTime:2.5,cap:7,upgrades:[400,850,1750],desc:'목도리와 작고 낡은 냉기 지팡이를 가진 견습생. 적을 잠시 느리게 한다.'},
+  spirit: {name:'드론 조작원',role:'정찰 드론 · 추격 소환',rarity:'rare',cost:280,price:1450,color:'#b6f2ff',damage:26,interval:3.1,range:220,kind:'summon',summons:2,unitSpeed:290,unitLife:7,cap:6,upgrades:[440,900,1800],desc:'보급형 조종기와 작은 프로펠러 드론을 조작하는 초보 운용자. 비싼 전술 장갑을 입지 않는다.'},
   firefly: {name:'화염술사',role:'화염 · 광역',rarity:'epic',cost:960,price:2200,color:'#ff925b',damage:48,interval:1.65,range:225,splash:72,kind:'splash',dot:10,dotTime:2.5,cap:6,upgrades:[600,1250,2600],desc:'고열 분사 장치를 조작하는 화염술사. 광역 화염과 잔불 피해로 적을 태운다.'},
   knight: {name:'달빛 기사',role:'근접 · 광역 검격',rarity:'epic',cost:900,price:2600,color:'#c7c1ff',damage:86,interval:1.45,range:123,kind:'melee',cleave:5,pierce:true,cap:5,upgrades:[650,1350,2750],desc:'은빛 대검으로 한 번에 다섯 적을 베어내는 달의 수호자.'},
-  drone: {name:'전기 기술자',role:'후반 · 연쇄 전기',rarity:'epic',cost:1250,price:2850,color:'#89f8e9',damage:67,interval:.9,range:230,kind:'chain',chain:3,chainRange:120,cap:6,upgrades:[680,1350,2900],desc:'연쇄 방전 장치와 전자 공구를 운용하는 기술자. 여러 적에게 전기를 전도한다.'},
+  drone: {name:'번개 발명가',role:'후반 · 연쇄 전기',rarity:'epic',cost:1250,price:2850,color:'#89f8e9',damage:67,interval:.9,range:230,kind:'chain',chain:3,chainRange:120,cap:6,upgrades:[680,1350,2900],desc:'코일과 방전봉을 직접 제작한 발명가. 일반 전기공보다 훨씬 큰 연쇄 장치가 특징이다.'},
   clockmaker: {name:'시계 장인',role:'지원 · 공속',rarity:'epic',cost:390,price:3200,color:'#ffd079',damage:0,interval:1,range:230,kind:'buff',haste:.18,cap:3,upgrades:[720,1450,2900],desc:'톱니바퀴가 아군의 시간을 빠르게 돌린다. 공속 오라는 중첩되지 않는다.'},
-  banker: {name:'보급 기지',role:'경제 · 수입',rarity:'epic',cost:340,price:3600,color:'#f4d46d',damage:0,interval:15,range:0,kind:'income',income:120,cap:3,upgrades:[750,1600,3200],desc:'자동 보급 장비를 갖춘 경제 타워. 일정 시간마다 전투 자금을 생산한다.'},
+  banker: {name:'황금 공방',role:'경제 · 수입',rarity:'epic',cost:340,price:3600,color:'#f4d46d',damage:0,interval:15,range:0,kind:'income',income:120,cap:3,upgrades:[750,1600,3200],desc:'금속 톱니와 자동 주화 장치로 자금을 생산하는 작은 공방. 공격하지 않는 경제 타워.'},
   mermaid: {name:'산호 연주자',role:'지원 · 강화',rarity:'epic',cost:790,price:3900,color:'#79e6e1',damage:0,interval:1,range:260,kind:'buff',power:.32,cap:3,upgrades:[950,1900,3900],desc:'산호 하프를 연주해 근처 아군의 공격력을 강화한다.'},
   prism: {name:'프리즘 마법사',role:'광선 · 연쇄',rarity:'legendary',cost:1090,price:6800,color:'#b49fff',damage:125,interval:1.65,range:350,kind:'chain',chain:4,chainRange:165,pierce:true,cap:3,upgrades:[1400,2800,5600],desc:'유리 조각이 만든 빛의 굴절로 여러 대상을 관통한다.'},
   reaper: {name:'낫 든 토끼',role:'처형 · 근접',rarity:'legendary',cost:2200,price:6100,color:'#eaaaff',damage:210,interval:2.1,range:145,kind:'melee',cleave:2,execute:.35,executeBonus:2.5,cap:4,upgrades:[1350,2650,5300],desc:'귀여운 토끼 가면과 거대한 낫. 빈사 상태의 적에게 치명적인 일격을 가한다.'},
@@ -36,11 +36,11 @@ export const TOWERS = {
   aurora: {name:'오로라 정령',role:'신화 · 성운 연쇄',rarity:'mythic',cost:3200,price:null,color:'#60fbd7',damage:260,interval:1.3,range:390,kind:'chain',chain:6,chainRange:210,pierce:true,slow:.6,slowTime:2,cap:1,upgrades:[3400,6900,13500],desc:'파멸 난이도의 수호자. 오로라의 빛줄기가 적 사이를 춤추며 흐른다.'},
 
   starseed: {name:'별씨앗',role:'초반 · 소규모 광역',rarity:'mythic',cost:145,price:6500,color:'#ffa2be',damage:5,interval:.64,range:125,splash:48,kind:'splash',cap:4,upgrades:[],desc:'신화라고 무조건 비싸지는 않다! 작은 별씨앗이 초반 무리를 쏙쏙 터뜨린다. 후반 단일 보스에는 취약하다.'},
-  hunter: {name:'특수 저격수',role:'후반 · 보스 저격',rarity:'rare',cost:2200,price:1300,color:'#84a5ff',damage:620,interval:4.5,range:440,kind:'ranged',pierce:true,chargeEvery:3,chargeBonus:2.2,cap:2,upgrades:[],desc:'희귀 등급이지만 고가의 후반 보스 전문 저격수. 세 번째 탄환을 강력하게 충전한다.'},
-  scrap: {name:'중화기병',role:'후반 · 중장갑 폭격',rarity:'common',cost:1450,price:550,color:'#9fb9ae',damage:150,interval:2.4,range:220,splash:74,kind:'splash',cap:3,upgrades:[],desc:'중장갑과 대형 포를 장착한 일반 등급의 후반 포병. 장갑 무리를 폭격한다.'},
-  lullaby: {name:'음향 지원병',role:'초반 · 공격속도 지원',rarity:'epic',cost:195,price:1100,color:'#a1b8ff',damage:0,interval:1,range:145,kind:'buff',haste:.1,cap:3,upgrades:[],desc:'저비용 이동식 음향 장치를 운용하는 지원대원. 근처 아군 공격속도를 높인다.'},
+  hunter: {name:'사냥꾼',role:'후반 · 보스 저격',rarity:'rare',cost:2200,price:1300,color:'#84a5ff',damage:620,interval:4.5,range:440,kind:'ranged',pierce:true,chargeEvery:3,chargeBonus:2.2,cap:2,upgrades:[],desc:'낡은 긴 총과 튼튼한 외투를 갖춘 산지 사냥꾼. 고가의 후반 타워지만 외형은 소박하다.'},
+  scrap: {name:'포수',role:'후반 · 중장갑 폭격',rarity:'common',cost:1450,price:550,color:'#9fb9ae',damage:150,interval:2.4,range:220,splash:74,kind:'splash',cap:3,upgrades:[],desc:'커다란 낡은 포를 직접 끌고 다니는 포수. 비싼 후반형이지만 영웅처럼 장식되지는 않는다.'},
+  lullaby: {name:'음향 조율사',role:'초반 · 공격속도 지원',rarity:'epic',cost:195,price:1100,color:'#a1b8ff',damage:0,interval:1,range:145,kind:'buff',haste:.1,cap:3,upgrades:[],desc:'진동 장치를 운용하는 조율사. 기계식 스피커와 공명판으로 주변 타워를 가속한다.'},
   papercrane: {name:'종이학 조련사',role:'초반 · 기동 소환',rarity:'legendary',cost:295,price:4900,color:'#ffdaaf',damage:22,interval:2.75,range:195,kind:'summon',summons:1,unitSpeed:320,unitLife:6,cap:4,upgrades:[],desc:'전설이지만 값싼 종이학으로 초반 빈 공간을 메운다. 짧은 수명이 약점인 기동 소환수.'},
-  marker: {name:'표식 사수',role:'중후반 · 표식 지원',rarity:'rare',cost:680,price:1700,color:'#c7a4f2',damage:20,interval:1.75,range:260,kind:'mark',markAmp:1.22,markTime:3.5,cap:4,upgrades:[],desc:'표적 지정 장비를 갖춘 지원 사수. 적에게 약점 표식을 남겨 아군 집중 화력을 돕는다.'},
+  marker: {name:'관측원',role:'중후반 · 표식 지원',rarity:'rare',cost:680,price:1700,color:'#c7a4f2',damage:20,interval:1.75,range:260,kind:'mark',markAmp:1.22,markTime:3.5,cap:4,upgrades:[],desc:'망원경과 표식 깃발을 지닌 평범한 관측원. 적의 약점을 찾아 아군 집중 공격을 돕는다.'},
 };
 // Evolution costs are authoritative and belong to each installed tower instance.
 for(const [id,def] of Object.entries(TOWERS)) {
