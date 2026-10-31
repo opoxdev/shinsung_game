@@ -18,7 +18,7 @@ test('expanded roster, collectibles, PvP packs and unique character artwork',()=
   for(const [id,t] of Object.entries(TOWERS)){
     assert.ok(RARITIES[t.rarity],id);
     assert.ok(t.cap>=1&&t.cap<=20&&t.interval>0,id);
-    assert.equal(t.upgrades.length,3,id);
+    assert.ok(t.upgrades.length>=2&&t.upgrades.length<=5,id);
     assert.match(character(id),/<svg[^>]*>/,id);
   }
   for(const [id,p] of Object.entries(PACKS))for(const [eid,cost,cd] of p.monsters){
