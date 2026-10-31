@@ -22,23 +22,29 @@ export class GameRoom {
     const result=await res.json();if(!result.ok)throw Error('방 목록 동기화 실패');
   }
   async directoryAction(name,p){
-    const now=Date.now();
-    const entries=await this.ctx.storage.get('directory')||{};
-    let changed=false;
-    for(const [code,v] of Object.entries(entries))
-      if(now-v.createdAt>LOBBY_TTL||v.count>=v.capacity){delete entries[code];changed=true;}
-    if(name==='directorySync'){
-      if(!/^[A-Z0-9]{6}$/.test(p.code||''))throw Error('잘못된 방 코드');
-      if(p.entry&&p.entry.code===p.code&&p.entry.createdAt<=now&&now-p.entry.createdAt<LOBBY_TTL
-        &&['pvp','coop'].includes(p.entry.type)&&p.entry.count>0&&p.entry.count<p.entry.capacity)
-        entries[p.code]=p.entry;
-      else delete entries[p.code];
-      changed=true;
-    }
-    if(changed)await this.ctx.storage.put('directory',entries);
-    if(name==='directoryList')return Object.values(entries)
-      .sort((a,b)=>b.createdAt-a.createdAt).slice(0,100);
-    return {updated:true};
+    // Concurrent creators may publish in the same millisecond. SQLite-backed
+    // Durable Object storage transactions prevent lost directory entries.
+    const operation=async storage=>{
+      const now=Date.now();
+      const entries=await storage.get('directory')||{};
+      let changed=false;
+      for(const [code,v] of Object.entries(entries))
+        if(now-v.createdAt>LOBBY_TTL||v.count>=v.capacity){delete entries[code];changed=true;}
+      if(name==='directorySync'){
+        if(!/^[A-Z0-9]{6}$/.test(p.code||''))throw Error('잘못된 방 코드');
+        if(p.entry&&p.entry.code===p.code&&p.entry.createdAt<=now&&now-p.entry.createdAt<LOBBY_TTL
+          &&['pvp','coop'].includes(p.entry.type)&&p.entry.count>0&&p.entry.count<p.entry.capacity)
+          entries[p.code]=p.entry;
+        else delete entries[p.code];
+        changed=true;
+      }
+      if(changed)await storage.put('directory',entries);
+      if(name==='directoryList')return Object.values(entries)
+        .sort((a,b)=>b.createdAt-a.createdAt).slice(0,100);
+      return {updated:true};
+    };
+    return this.ctx.storage.transaction?
+      this.ctx.storage.transaction(operation):operation(this.ctx.storage);
   }
   view(){
     const r=this.room;
