@@ -35,6 +35,13 @@ export class Renderer {
             g.beginPath();g.arc(e.x,e.y,r,0,Math.PI*2);g.stroke();
             g.font='bold 17px sans-serif';g.fillStyle=g.strokeStyle;
             g.fillText(e.name||'BOSS SKILL',e.x-60,e.y-42-age*25);
+          }else if(e.kind==='mark'||e.kind==='charged'){
+            const isMark=e.kind==='mark';
+            g.strokeStyle=isMark?'#d6a4ff':'#ffe695';
+            g.lineWidth=isMark?3:7;
+            g.beginPath();g.arc(e.x,e.y,8+age*(isMark?56:125),0,Math.PI*2);g.stroke();
+            if(isMark){g.fillStyle='#efd1ff';g.font='bold 18px sans-serif';g.fillText('⌖',e.x-9,e.y-25-age*36);}
+            else{g.fillStyle='#ffe9a4';g.font='bold 23px sans-serif';g.fillText('✦',e.x-12,e.y-28-age*45);}
           }else if(e.kind==='kill'){
             const pieces=e.split?9:e.size>=28?13:5;
             g.strokeStyle=e.color||'#fff3b9';g.lineWidth=2+Math.max(0,4-age*10);
@@ -125,6 +132,11 @@ export class Renderer {
     // Species-specific, deterministic walking/floating animation: no gameplay randomness.
     if(['ghost','phantom','harpy','warlock'].includes(e.type))g.translate(0,Math.sin(time*4+e.id)*5);
     if(['sprinter','mk2','harpy','overload'].includes(e.type))g.rotate(Math.sin(time*9+e.id)*.075);
+    if(e.markUntil>clock){
+      g.strokeStyle='#e5b1ff';g.lineWidth=2.5;g.globalAlpha=.85;
+      g.beginPath();g.arc(0,-8,r+11+Math.sin(time*7+e.id)*2,0,7);g.stroke();
+      g.fillStyle='#ecc1ff';g.font='bold 14px sans-serif';g.fillText('⌖',-6,-r-19);g.globalAlpha=1;
+    }
     g.fillStyle='#09203966';g.beginPath();g.ellipse(3,10,r*1.15,r*.55,0,0,7);g.fill();
     if(['doom','apocalypse'].includes(e.type)){
       g.shadowColor=d.color;g.shadowBlur=15+Math.abs(pulse)*8;
