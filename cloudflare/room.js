@@ -70,6 +70,13 @@ export class GameRoom {
   async action(name,p,user){
     if(name==='directoryList'||name==='directorySync')return this.directoryAction(name,p);
     const r=this.room,uid=user?.uid;
+    // Called only by the authenticated Worker's admin handler, never exposed
+    // as a normal /api or WebSocket command.
+    if(name==='adminKick'){
+      if(user?.admin!==true||typeof p.uid!=='string')throw Error('관리자 권한이 없습니다.');
+      if(!r?.members?.[p.uid])return {removed:false};
+      return this.action('leave',{}, {uid:p.uid});
+    }
     if(name==='create'){
       if(r)throw Error('이미 사용 중인 방 코드입니다.');
       const cfg=Core.validateConfig(p.config);
