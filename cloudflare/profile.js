@@ -83,7 +83,7 @@ export async function importV098Profile(db,user,local){
 export async function claimSoloProfile(db,user,runId,reward){
   if(typeof runId!=='string'||!/^[-a-f0-9]{36}$/.test(runId))throw Error('잘못된 솔로 플레이 기록입니다.');
   return updateProfile(db,user,p=>{
-    if(p.activeRoom)throw Error('멀티플레이 진행 중에는 솔로 보상을 정산할 수 없습니다.');
+    // Stale room pointers from pre-v0.9.8 solo rooms must never block solo rewards.
     p.claimedSoloRuns=Array.isArray(p.claimedSoloRuns)?p.claimedSoloRuns:[];
     if(p.claimedSoloRuns.includes(runId))return p; // D1 CAS: duplicate retries cannot duplicate rewards.
     Core.applyReward(p,reward);
