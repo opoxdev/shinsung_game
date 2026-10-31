@@ -113,7 +113,7 @@ export const EVOLUTIONS = {
     v('푸른 파동',6900,2.25,1.27,1.22,'wings','오로라가 여덟 적을 관통한다.',{chain:8,chainRange:255,slow:.5,slowTime:2.5}),
     v('무한의 나선',13500,3.4,1.44,1.35,'gear','성운의 나선이 열 대상을 찾아 이동한다.',{chain:10,chainRange:280,slow:.45,slowTime:3}),
     v('생명의 유전자',26000,4.9,1.65,1.46,'crown','빛의 사슬이 열두 적을 묶는다.',{chain:12,chainRange:300,slow:.4,slowTime:3.4}),
-    v('영원의 오로라',51000,7.2,1.9,1.62,'halo','푸른빛과 초록빛이 열네 목표를 휘감는다.',{chain:14,chainRange:330,slow:.32,slowTime:4,pierce:true})]
+    v('영원의 오로라',51000,7.2,1.9,1.62,'halo','푸른빛과 초록빛이 열네 목표를 휘감는다.',{chain:14,chainRange:330,slow:.32,slowTime:4,pierce:true})],
   starseed:[
     v('반짝이는 새싹',165,1.6,1.08,1.05,'star','가벼운 별가루가 조금 더 넓은 무리에 튄다.',{splash:56}),
     v('별꽃의 만개',395,2.4,1.2,1.12,'wings','작은 별꽃이 퍼져 초반 다수 적을 묶어 둔다.',{splash:72,slow:.84,slowTime:1.2}),
