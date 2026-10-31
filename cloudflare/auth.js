@@ -32,5 +32,6 @@ export async function authenticate(request, env) {
   const imported=await crypto.subtle.importKey('jwk',key,{name:'RSASSA-PKCS1-v1_5',hash:'SHA-256'},false,['verify']);
   if(!await crypto.subtle.verify('RSASSA-PKCS1-v1_5',imported,decode(parts[2]),new TextEncoder().encode(parts[0]+'.'+parts[1])))throw Error('서명이 올바르지 않습니다.');
   const name=String(p.name || p.email?.split('@')[0] || '모험가').replace(/[<>\u0000-\u001f]/g,'').slice(0,20);
-  return {uid:p.sub,name};
+  // Email is trustworthy only after full Firebase RS256 verification above.
+  return {uid:p.sub,name,email:typeof p.email==='string'?p.email.toLowerCase():'',emailVerified:p.email_verified===true};
 }
