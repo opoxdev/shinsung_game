@@ -1,5 +1,6 @@
-// Firebase Spark Auth + Cloudflare Workers Free / Durable Objects WebSockets.
-// All game state mutations happen on the authenticated Cloudflare server.
+// Firebase sign-in is identity only. Solo, wallet, shops, cosmetics and
+// story run locally; this network client is used only for PvP/co-op/admin
+// or a user-requested one-time legacy profile import.
 export class Online {
   constructor(){
     this.config=globalThis.__FIREBASE_CONFIG__||null;
