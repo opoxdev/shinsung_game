@@ -10,7 +10,8 @@ const make=()=>Core.createMatch(cfg,[player]);
 
 test('online prediction advances a cloned simulation without mutating authoritative state',()=>{
   const original=make(),before=JSON.stringify(original);
-  const predicted=visualPrediction(original,0.9);
+  const first=visualPrediction(original,0.9);
+  const predicted=visualPrediction(original,0.9,first.state,first.source);
   assert.notStrictEqual(predicted.state,original);
   assert.strictEqual(predicted.source,original);
   assert.equal(JSON.stringify(original),before);
@@ -28,11 +29,12 @@ test('online prediction reuses its private state and resets on newer server snap
   assert.strictEqual(b.state,a.state);
   assert.ok(b.state.time>=0.55);
   assert.equal(source.time,0);
-  Core.advance(source,0.9);
-  const c=visualPrediction(source,0.1,b.state,b.source);
+  const latest=JSON.parse(JSON.stringify(source));
+  Core.advance(latest,0.9);
+  const c=visualPrediction(latest,0.1,b.state,b.source);
   assert.notStrictEqual(c.state,b.state);
-  assert.strictEqual(c.source,source);
-  assert.ok(c.state.time>=source.time);
+  assert.strictEqual(c.source,latest);
+  assert.ok(c.state.time>=latest.time);
 });
 
 test('prediction is bounded to prevent CPU spikes after suspended browser tabs',()=>{
