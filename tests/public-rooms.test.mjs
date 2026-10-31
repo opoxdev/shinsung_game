@@ -13,16 +13,17 @@ function server(){
     get(name){
       if(!objects.has(name)){
         const store=new Map(),sockets=[];
-        const ctx={
-          storage:{
-            async get(k){return structuredClone(store.get(k));},
-            async put(k,v){store.set(k,structuredClone(v));},
-            async delete(k){store.delete(k);}
-          },
-          blockConcurrencyWhile:fn=>fn(),
-          getWebSockets:()=>sockets,
-          acceptWebSocket:s=>sockets.push(s)
+        const storage={
+          async get(k){return structuredClone(store.get(k));},
+          async put(k,v){store.set(k,structuredClone(v));},
+          async delete(k){store.delete(k);}
         };
+        let last=Promise.resolve();
+        storage.transaction=fn=>{
+          const result=last.then(()=>fn(storage));
+          last=result.then(()=>{},()=>{});return result;
+        };
+        const ctx={storage,blockConcurrencyWhile:fn=>fn(),getWebSockets:()=>sockets,acceptWebSocket:s=>sockets.push(s)};
         objects.set(name,new GameRoom(ctx,env));
       }
       const instance=objects.get(name);
@@ -85,6 +86,15 @@ test('co-op rooms show changing occupancy and disappear when the host exits',asy
   assert.equal((await listRooms(env))[0].count,1);
   await action(lobby,'leave',{},alice);
   assert.equal((await listRooms(env)).length,0);
+});
+test('concurrent room creates do not overwrite each other in shared directory',async()=>{
+  const {env}=server();
+  await Promise.all([
+    create(env,'PARA11','pvp'),
+    create(env,'PARA22','coop'),
+    create(env,'PARA33','pvp')
+  ]);
+  assert.deepEqual((await listRooms(env)).map(r=>r.code).sort(),['PARA11','PARA22','PARA33']);
 });
 test('stale listings are evicted and cannot remain indefinitely',async()=>{
   const {env}=server();
