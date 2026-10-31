@@ -29,6 +29,39 @@ async function switchAccountProfile(user){
 async function refreshCloudProfile(){profile=await online.call('profile');cloudProfileReady=true;return profile;}
 function requireAccountLoaded(){if(online.user&&!cloudProfileReady)throw Error('서버 프로필 연결이 필요합니다. 계정 메뉴에서 다시 불러오세요.');}
 let soloRunId=null;
+const pendingKey=uid=>'shinsung.pending.solo.v1.'+encodeURIComponent(uid);
+function readPendingSolo(uid){
+  if(!uid)return [];
+  try{const value=JSON.parse(playerStorage?.getItem(pendingKey(uid))||'[]');return Array.isArray(value)?value.slice(0,24):[];}catch{return [];}
+}
+function writePendingSolo(uid,list){
+  if(!uid)return;
+  try{playerStorage?.setItem(pendingKey(uid),JSON.stringify(list.slice(-24)));}catch{}
+}
+function queueSoloClaim(uid,claim){
+  const list=readPendingSolo(uid);
+  if(!list.some(item=>item.runId===claim.runId))writePendingSolo(uid,[...list,claim]);
+}
+function removeSoloClaim(uid,id){
+  writePendingSolo(uid,readPendingSolo(uid).filter(item=>item.runId!==id));
+}
+let claimSync=null;
+async function flushSoloClaims(user){
+  if(!user||claimSync)return;
+  const uid=user.uid,receipts=readPendingSolo(uid);
+  if(!receipts.length)return;
+  const pending=(async()=>{
+    for(const receipt of receipts){
+      if(online.user?.uid!==uid)break;
+      try{
+        const updated=await online.call('soloReward',receipt);
+        if(online.user?.uid===uid){profile=updated;cloudProfileReady=true;removeSoloClaim(uid,receipt.runId);}
+      }catch(e){console.warn('Pending solo reward awaits network:',e);break;}
+    }
+  })();
+  claimSync=pending;
+  try{await pending;}finally{if(claimSync===pending)claimSync=null;}
+}
 let profile=localProfile,page='home',selectedTower='scout',shopTab='towers',filter='',rarityFilter='all';
 let collectionTab='towers',selectedPack=null;
 let isAdminSession=false;
@@ -475,7 +508,12 @@ async function finish(){
   const reward=rewardFor(state,playerId);
   try{
     if(isOnlineMatch)profile=await online.call('claim',{code:room.code});
-    else if(online.user&&state.config.type==='solo')profile=await online.call('soloReward',{runId:soloRunId,config:state.config,wave:state.wave,win:reward.win});
+    else if(online.user&&state.config.type==='solo'){
+      const claim={runId:soloRunId,config:state.config,wave:state.wave,win:reward.win};
+      queueSoloClaim(online.user.uid,claim);
+      profile=await online.call('soloReward',claim);
+      removeSoloClaim(online.user.uid,soloRunId);
+    }
     else if(state.config.type==='pvp'){/* Local bot training is unranked and pays no account rewards. */}
     else{applyReward(localProfile,reward);profile=localProfile;saveLocal();}
   }catch(e){toast('보상 정산 실패 · 30초 뒤 다시 시도: '+e.message);claimAfter=performance.now()+30000;resultShown=false;return;}
@@ -588,7 +626,7 @@ const actions={
   },
   async retryCloudProfile(){
     if(!online.user)return;
-    try{await refreshCloudProfile();closeModal();shell();toast('서버 계정 정보를 다시 불러왔습니다.');}
+    try{await refreshCloudProfile();await flushSoloClaims(online.user);closeModal();shell();toast('서버 계정 정보 및 대기 중인 보상을 확인했습니다.');}
     catch(e){toast('서버 프로필 읽기 실패: '+e.message);}
   },
   async importLegacyProfile(){
@@ -669,7 +707,7 @@ document.addEventListener('change',async e=>{
     return;
   }
   if(e.target.id==='rarity-filter'){rarityFilter=e.target.value;collection();}else if(e.target.id==='lobby-map'&&MAPS.some(m=>m.id===e.target.value)){config.map=e.target.value;}else if(e.target.id==='lobby-difficulty'&&DIFFICULTIES.some(d=>d.id===e.target.value)){config.difficulty=e.target.value;}});
-document.addEventListener('submit',async e=>{e.preventDefault();const f=new FormData(e.target);if(e.target.id==='auth-form'){const buttons=e.target.querySelectorAll('button');buttons.forEach(b=>b.disabled=true);try{const credential=await online.signIn(f.get('email'),f.get('password'),e.submitter?.value==='signup');await switchAccountProfile(credential.user);closeModal();shell();if(pendingLobbyMode){const mode=pendingLobbyMode,code=pendingJoinCode;pendingLobbyMode=null;pendingJoinCode=null;special(mode);if(code)await actions.joinListedRoom(code);}}catch(err){$('#auth-error').textContent=err.message;}finally{buttons.forEach(b=>b.disabled=false);}}else if(e.target.id==='join-form'){try{const code=f.get('code').toUpperCase();await online.call('join',{code,loadout:multiplayerLoadout(profile)});profile.activeRoom=code;await openRoom(code);}catch(err){toast('방 참가 실패: '+err.message);}}else if(e.target.id==='admin-search-form'){
+document.addEventListener('submit',async e=>{e.preventDefault();const f=new FormData(e.target);if(e.target.id==='auth-form'){const buttons=e.target.querySelectorAll('button');buttons.forEach(b=>b.disabled=true);try{const credential=await online.signIn(f.get('email'),f.get('password'),e.submitter?.value==='signup');await switchAccountProfile(credential.user);await flushSoloClaims(credential.user);closeModal();shell();if(pendingLobbyMode){const mode=pendingLobbyMode,code=pendingJoinCode;pendingLobbyMode=null;pendingJoinCode=null;special(mode);if(code)await actions.joinListedRoom(code);}}catch(err){$('#auth-error').textContent=err.message;}finally{buttons.forEach(b=>b.disabled=false);}}else if(e.target.id==='join-form'){try{const code=f.get('code').toUpperCase();await online.call('join',{code,loadout:multiplayerLoadout(profile)});profile.activeRoom=code;await openRoom(code);}catch(err){toast('방 참가 실패: '+err.message);}}else if(e.target.id==='admin-search-form'){
   adminData.search=String(f.get('search')||'');adminData.offset=0;adminData.selected=null;await adminLoad({selected:false});
 }else if(e.target.id==='admin-balance-form'){
   await adminChange(String(f.get('field')),{amount:Number(f.get('amount'))});
@@ -714,6 +752,7 @@ shell();requestAnimationFrame(frame);online.onError=e=>toast(e.message);
 online.init(async user=>{
   if(user){
     await switchAccountProfile(user);
+    await flushSoloClaims(user);
     isAdminSession=false;
     // Ordinary sign-in does not contact Cloudflare. Admin status is checked
     // only for the configured administrator identity.
