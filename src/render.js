@@ -30,6 +30,17 @@ export function drawMelee(g,e,age){
 }
 const sprites=new Map();
 function sprite(id,skin,level=0){const key=id+'|'+skin+'|'+level;if(!sprites.has(key)){const img=new Image();img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(character(id,skin,level));sprites.set(key,img);}return sprites.get(key);}
+// World-space hit testing uses the same offset as the renderer's PvP fields.
+export function enemyUnderCursor(enemies,point,scale=1){
+  let closest=null,min=Infinity;
+  for(const e of enemies){
+    if(e.hp<=0)continue;
+    const radius=Math.max((ENEMIES[e.type]?.size||13)+11,20/Math.max(.01,scale));
+    const distance=Math.hypot(e.x+(e.field||0)*2100-point.x,e.y-point.y);
+    if(distance<=radius&&distance<min){closest=e;min=distance;}
+  }
+  return closest;
+}
 export class Renderer {
   constructor(canvas){this.canvas=canvas;this.ctx=canvas.getContext('2d',{alpha:false});this.cache=new Map();this.camera={x:900,y:550,zoom:1};this.keys=new Set();this.pointer=null;this.pointerScreen=null;this.preview=null;this.selected=null;this.width=1;this.height=1;this.resize();this.observer=new ResizeObserver(()=>this.resize());this.observer.observe(canvas);}
   dispose(){this.observer.disconnect();this.cache.clear();this.keys.clear();}
@@ -37,6 +48,7 @@ export class Renderer {
   zoomBy(factor){this.camera.zoom*=factor;this.scale=constrainCamera(this.camera,this.width,this.height,this.fields||1);}
   visible(x,y,pad=100){return Math.abs(x-this.camera.x)<this.width/(2*this.scale)+pad&&Math.abs(y-this.camera.y)<this.height/(2*this.scale)+pad;}
   screenToWorld(x,y){const scale=this.scale||1;return {x:(x-this.width/2)/scale+this.camera.x,y:(y-this.height/2)/scale+this.camera.y};}
+  enemyAt(state,screen){return enemyUnderCursor(state?.enemies||[],this.screenToWorld(screen.x,screen.y),this.scale||1);}
   frame(state,mapId,playerId,dt,now,lobby=false){
     if(this.dpr!==Math.min(devicePixelRatio||1,1.5))this.resize();const g=this.ctx;g.setTransform(this.dpr,0,0,this.dpr,0,0);
     const map=MAPS.find(m=>m.id===mapId)||MAPS[0],field=state?.players[playerId]?.field||0;
@@ -62,7 +74,18 @@ export class Renderer {
         for(const e of state.enemies)if(e.field===f&&this.visible(e.x+offset,e.y))this.enemy(g,e,now,state.time);
         for(const u of state.units)if(u.field===f&&this.visible(u.x+offset,u.y))this.summon(g,u,now);
         for(const e of state.events){const age=state.time-e.time;if(e.field!==f||age<0||age>.45)continue;g.globalAlpha=1-age/.45;g.strokeStyle=TOWERS[e.type]?.color||ENEMIES[e.type]?.color||'#ffd88c';g.lineWidth=e.type==='rail'?5:3;g.shadowColor=g.strokeStyle;g.shadowBlur=8;
-          if(e.kind==='boss-skill'){
+          if(e.kind==='damage'){
+            const amount=e.amount||0;
+            const label=amount<1?Number(amount.toFixed(2)).toString():amount<10?Number(amount.toFixed(1)).toString():Math.round(amount).toLocaleString('ko-KR');
+            const rise=age*90,spread=((e.id%5)-2)*6;
+            g.save();g.textAlign='center';g.textBaseline='middle';g.font='900 24px system-ui,sans-serif';
+            g.shadowBlur=5;g.shadowColor='#142944';
+            g.lineWidth=5;g.strokeStyle='#122139';
+            g.strokeText(label,e.x+spread,e.y-25-rise);
+            g.fillStyle=e.dot?'#a1f2a1':e.shield?'#85d9ff':'#fff2a5';
+            g.fillText(label,e.x+spread,e.y-25-rise);
+            g.restore();
+          }else if(e.kind==='boss-skill'){
             const r=Math.min(260,e.radius||85)*Math.min(1,age/.3);
             g.strokeStyle=e.skill==='jam'?'#e7a2ff':e.skill==='shield'?'#80eeff':'#ffc47e';
             g.lineWidth=7*(1-age/.45);
