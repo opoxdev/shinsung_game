@@ -1,5 +1,8 @@
 import { EVOLUTIONS } from './evolutions.js';
-export const VERSION = '0.8.0';
+export const VERSION = '0.9.0';
+// All combat health and damage numbers use a 1/6 display scale. Economy, ranges,
+// movement and relative time-to-kill are deliberately unchanged.
+export const COMBAT_SCALE = 6;
 export const WORLD = { width: 1800, height: 1100, road: 76 };
 export const RARITIES = {
   common: { name: '일반', color: '#a8b8b0' }, rare: { name: '희귀', color: '#65c8f3' },
@@ -43,6 +46,10 @@ export const TOWERS = {
 for(const [id,def] of Object.entries(TOWERS)) {
   if(!EVOLUTIONS[id])throw Error('타워 진화 데이터 누락: '+id);
   def.upgrades=EVOLUTIONS[id].map(step=>step.cost);
+  def.damage/=COMBAT_SCALE;
+  if(def.dot)def.dot/=COMBAT_SCALE;
+  // Evolution DoT traits are absolute DPS values; multipliers are unitless.
+  for(const step of EVOLUTIONS[id])if(step.dot)step.dot/=COMBAT_SCALE;
 }
 export const ENEMIES = {
   zombie: { name: '좀비', hp: 18, speed: 48, color: '#8eae7d', leak: 1 },
@@ -79,6 +86,11 @@ export const ENEMIES = {
   colossus:{name:'고대 콜로서스',hp:235000,speed:25,color:'#eca36a',shield:50000,armor:.4,leak:100,size:48},
   oblivion:{name:'소멸의 군주',hp:380000,speed:34,color:'#f4528e',shield:95000,armor:.4,regen:260,leak:100,size:52},
 };
+// Keep exact fractions (e.g. 28 HP -> 4.666…) rather than rounding them to
+// whole integers: that would change the balance between basic waves and bosses.
+for(const def of Object.values(ENEMIES)){
+  for(const key of ['hp','shield','heal','regen'])if(def[key]!==undefined)def[key]/=COMBAT_SCALE;
+}
 // Distinct boss mechanics, readable telegraphs and limited-frequency effects.
 export const BOSS_ABILITIES={
  boss:{name:'분노의 돌진',kind:'rush',cooldown:12,power:1.5,duration:3},
