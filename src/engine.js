@@ -84,7 +84,9 @@ function nextWave(s) {
   for(const [type,count] of w.groups)for(let i=0;i<count;i++) {
     s.fields.forEach((_,field)=>s.queue.push({type,field,at:s.time+delay}));delay+=w.spacing;
   }
-  event(s,{kind:'wave',wave:s.wave});
+  // Never start the next timed wave before the current formation has finished arriving.
+  s.waveDeadline=Math.max(w.duration,delay+8);
+  event(s,{kind:'wave',wave:s.wave,deadline:s.waveDeadline});
 }
 export function command(s,playerId,c) {
   if(s.status!=='playing')return {ok:false,error:'전투가 종료되었습니다.'};
@@ -281,7 +283,7 @@ export function tick(s,dt=STEP) {
   const clear=s.fields.map((_,i)=>!s.enemies.some(e=>e.field===i)&&!s.queue.some(e=>e.field===i));
   if(s.wave===d.waves.length) {
     if(clear.every(Boolean)){s.status='victory';s.winner=s.config.type==='pvp'?(s.fields[0]===s.fields[1]?null:s.fields[0]>s.fields[1]?0:1):0;}
-  } else if((s.config.type==='pvp'?clear.some(Boolean):clear.every(Boolean))||s.waveTime>=d.waves[s.wave-1].duration) {
+  } else if((s.config.type==='pvp'?clear.some(Boolean):clear.every(Boolean))||s.waveTime>=(s.waveDeadline??d.waves[s.wave-1].duration)) {
     // Backpressure keeps pathological skip/timeout combinations bounded without deleting enemies.
     if(s.queue.length<900)nextWave(s);
   }
