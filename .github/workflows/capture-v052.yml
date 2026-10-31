@@ -1,4 +1,4 @@
-name: Capture actual v0.6.0 game screens
+name: Capture actual v0.8.0 game screens
 on:
   push:
     paths: ['.github/workflows/capture-v052.yml']
@@ -29,7 +29,7 @@ jobs:
           await page.waitForSelector('[data-action="start"]');
           const shot=async(name)=>{
             await page.waitForTimeout(350);
-            await page.screenshot({path:'screenshots/v060-'+name+'.png',fullPage:true,animations:'disabled'});
+            await page.screenshot({path:'screenshots/v080-'+name+'.png',fullPage:true,animations:'disabled'});
             console.log('CAPTURED',name);
           };
           const click=async(action,id)=>{
@@ -42,11 +42,19 @@ jobs:
           await click('difficulty','easy');
           await click('nav','towers');
           if(await page.locator('.tower-card').count()!==30)throw Error('Expected all 30 tower cards');
+          if(await page.locator('.tower-card svg[data-design="v2"]').count()!==30)throw Error('Full redesigned SVG roster did not render');
+          if(!(await page.locator('[data-action="inspect"][data-id="scout"] .card-name').innerText()).includes('정찰병'))throw Error('Legacy cute scout identity still shown');
+          if(!(await page.locator('[data-action="inspect"][data-id="chef"] .card-name').innerText()).includes('수류탄병'))throw Error('Grenadier conversion missing');
           if(await page.locator('#rarity-filter option').count()!==6)throw Error('Expected five rarity choices plus all');
           await shot('03-tower-collection');
+          await click('inspect','chef');await shot('20-grenadier-default');
+          await click('inspect','blade');await shot('21-swordsman-default');
           await click('inspect','starseed');await shot('04-mythic-early-starseed');
           await click('inspect','hunter');await shot('05-rare-late-hunter');
-          await click('inspect','scout');await click('skin','scout');await shot('06-tower-skins');await click('close');
+          await click('inspect','scout');await click('skin','scout');
+          if(await page.locator('.skin-wardrobe-item').count()>=15)throw Error('All skins must not appear for one unit');
+          if(await page.locator('.skin-wardrobe-item').count()<=2)throw Error('Expected multiple authored scout costumes');
+          await shot('06-tower-skins');await click('close');
           await click('setCollectionTab','packs');
           if(await page.locator('.collection-layout').count())throw Error('Overlapping tower collection detected');
           if(await page.locator('.pack-choice').count()!==5)throw Error('Expected five monster packs');
@@ -56,6 +64,10 @@ jobs:
           await click('shopTab','packs');await shot('10-shop-monster-packs');
           await click('shopTab','crates');
           if(await page.locator('.crate-offer').count()!==5)throw Error('Five themed cosmetic crates must be displayed');
+          if(await page.locator('.crate-cosmetic-choice').count()!==19)throw Error('Missing skin-specific art previews');
+          if(await page.locator('.crate-skin-preview svg[data-design="v2"]').count()!==19)throw Error('Cosmetics must render new character models');
+          if(await page.locator('.crate-cosmetic-choice:has-text("구미호 가면검객")').count()!==1)throw Error('Kitsune skin not visible');
+          if(await page.locator('.crate-cosmetic-choice:has-text("도넛 요리사")').count()!==1)throw Error('Donut chef skin not visible');
           const expected={forest:400,wardrobe:1000,winter:1500,cyber:3000,astral:5000};
           for(const [id,price] of Object.entries(expected)){
             const one=page.locator('[data-action="openCrate"][data-id="'+id+':1"]');
@@ -101,8 +113,8 @@ jobs:
           rm capture.mjs
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add screenshots/v060-*.png
-          git commit -m 'Record actual v0.6.0 Chromium screenshots across game UI'
+          git add screenshots/v080-*.png
+          git commit -m 'Record actual v0.8.0 Chromium screenshots across game UI'
           git reset --hard HEAD
           git pull --rebase origin main
           git push origin HEAD:main
