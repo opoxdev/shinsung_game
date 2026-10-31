@@ -1,4 +1,4 @@
-name: Capture and validate latest game UI
+name: Capture actual v0.6.0 game screens
 on:
   push:
     paths: ['.github/workflows/capture-v052.yml']
@@ -16,61 +16,81 @@ jobs:
       - run: npm run build
       - run: npm install --no-save playwright
       - run: npx playwright install --with-deps chromium
-      - name: Capture current build in Chromium
+      - name: Capture live game UI in headless Chromium
         run: |
           mkdir -p screenshots
           cat > capture.mjs <<'EOF'
           import {chromium} from 'playwright';
           const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
           const page=await browser.newPage({viewport:{width:1440,height:900},deviceScaleFactor:1});
-          page.on('pageerror',err=>console.log('PAGE ERROR:',err.message));
+          const errors=[];
+          page.on('pageerror',err=>{errors.push(err.message);console.error('PAGE ERROR:',err.message)});
           await page.goto('file://' + process.cwd() + '/dist/index.html',{waitUntil:'domcontentloaded'});
-          await page.waitForTimeout(1200);
-          await page.screenshot({path:'screenshots/v052-lobby.png',fullPage:true});
-          async function click(action,id){
-            const sel='[data-action="'+action+'"]'+(id?'[data-id="'+id+'"]':'');
-            await page.locator(sel).first().click();await page.waitForTimeout(500);
-          }
-          await click('nav','towers');
-          await page.screenshot({path:'screenshots/v052-loadout.png',fullPage:true});
-          await click('setCollectionTab','packs');
-          if(await page.locator('.collection-layout').count())throw Error('Tower collection still overlaps monster pack page');
-          if(await page.locator('.pack-choice').count()!==5)throw Error('All five packs must be selectable for preview');
-          const checkLayout=async(label)=>{
-            const result=await page.evaluate(()=>{
-              const tabs=document.querySelector('.collection-switch').getBoundingClientRect();
-              const pack=document.querySelector('.pack-config-screen').getBoundingClientRect();
-              const detail=document.querySelector('.pack-detail-panel').getBoundingClientRect();
-              return {tabsBottom:tabs.bottom,packTop:pack.top,detailTop:detail.top,packBottom:pack.bottom};
-            });
-            if(result.packTop<result.tabsBottom-2||result.detailTop<result.packTop)
-              throw Error(label+' has overlapping panels: '+JSON.stringify(result));
+          await page.waitForSelector('[data-action="start"]');
+          const shot=async(name)=>{
+            await page.waitForTimeout(350);
+            await page.screenshot({path:'screenshots/v060-'+name+'.png',fullPage:true,animations:'disabled'});
+            console.log('CAPTURED',name);
           };
-          await checkLayout('desktop');
-          await click('previewPack','lab');
-          if(await page.locator('[data-action="visitPackShop"]').count()!==1)throw Error('Locked pack purchase link missing');
-          await click('previewPack','basic');
-          await page.screenshot({path:'screenshots/monster-pack-fixed-desktop.png',fullPage:true});
-          await page.setViewportSize({width:390,height:844});
-          await page.waitForTimeout(500);
-          await checkLayout('mobile');
-          await page.screenshot({path:'screenshots/monster-pack-fixed-mobile.png',fullPage:true});
-          await page.setViewportSize({width:1440,height:900});
-          await click('nav','shop');await click('shopTab','packs');
-          await page.screenshot({path:'screenshots/v052-monster-packs.png',fullPage:true});
-          await click('shopTab','crates');
-          await page.screenshot({path:'screenshots/v052-skin-crates.png',fullPage:true});
+          const click=async(action,id)=>{
+            const locator=page.locator('[data-action="'+action+'"]'+(id?'[data-id="'+id+'"]':'')).first();
+            await locator.click();
+            await page.waitForTimeout(180);
+          };
+          await shot('01-lobby');
+          await click('difficulty','hard');await shot('02-difficulty');
+          await click('difficulty','easy');
+          await click('nav','towers');
+          if(await page.locator('.tower-card').count()!==30)throw Error('Expected all 30 tower cards');
+          if(await page.locator('#rarity-filter option').count()!==6)throw Error('Expected five rarity choices plus all');
+          await shot('03-tower-collection');
+          await click('inspect','starseed');await shot('04-mythic-early-starseed');
+          await click('inspect','hunter');await shot('05-rare-late-hunter');
+          await click('inspect','scout');await click('skin','scout');await shot('06-tower-skins');await click('close');
+          await click('setCollectionTab','packs');
+          if(await page.locator('.collection-layout').count())throw Error('Overlapping tower collection detected');
+          if(await page.locator('.pack-choice').count()!==5)throw Error('Expected five monster packs');
+          await shot('07-monster-loadout');
+          await click('previewPack','lab');await shot('08-monster-pack-preview');
+          await click('nav','shop');await shot('09-shop-towers');
+          await click('shopTab','packs');await shot('10-shop-monster-packs');
+          await click('shopTab','crates');await shot('11-skin-crates');
+          await click('pvp');await shot('12-pvp-menu');await click('close');
+          await click('coop');await shot('13-coop-menu');await click('close');
+          await click('events');await shot('14-events');await click('close');
           await click('nav','home');await click('start');
-          await page.waitForTimeout(1500);
-          await page.screenshot({path:'screenshots/v052-battle.png',fullPage:true});
+          await page.waitForSelector('#battlefield');await page.waitForTimeout(800);
+          await shot('15-battle');
+          await click('selectPlace','scout');
+          const canvas=page.locator('#battlefield');
+          // World point 430,400 is beside the bend in the plains road,
+          // converted to canvas coordinates using the shipped camera's scale.
+          const coords=await canvas.evaluate(c=>{
+            const w=c.getBoundingClientRect();
+            const scale=Math.min(w.width/1800,w.height/1100)*1.18;
+            return {x:w.width/2+(430-900)*scale,y:w.height/2+(400-550)*scale};
+          });
+          await canvas.click({position:coords});
+          await click('cancelPlace');
+          await canvas.click({position:coords});
+          if(!(await page.locator('#tower-count').innerText()).startsWith('1 /'))throw Error('Failed to install tower for real combat screenshot');
+          if(!(await page.locator('#tower-inspector h2').count()))throw Error('Upgrade inspector did not open');
+          await shot('16-battle-upgrade');
+          await page.reload({waitUntil:'domcontentloaded'});await page.waitForSelector('[data-action="pvp"]');
+          await click('pvp');await click('trainingPvp');
+          await page.waitForSelector('.monster-tray');await shot('17-pvp-training');
+          await page.reload({waitUntil:'domcontentloaded'});await page.waitForSelector('[data-action="start"]');
+          await page.setViewportSize({width:390,height:844});await shot('18-mobile-lobby');
+          await click('nav','towers');await click('setCollectionTab','packs');await shot('19-mobile-monster-loadout');
+          if(errors.length)throw Error('Game page errors: '+errors.join(' | '));
           await browser.close();
           EOF
           node capture.mjs
-      - name: Save screenshots in repository
+      - name: Commit real screenshots to repository
         run: |
           rm capture.mjs
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add screenshots/v052-*.png screenshots/monster-pack-fixed-*.png
-          git commit -m 'Validate monster pack UI geometry and save real Chromium screenshots'
+          git add screenshots/v060-*.png
+          git commit -m 'Record actual v0.6.0 Chromium screenshots across game UI'
           git push origin HEAD:main
