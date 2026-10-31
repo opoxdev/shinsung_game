@@ -114,5 +114,32 @@ export const EVOLUTIONS = {
     v('무한의 나선',13500,3.4,1.44,1.35,'gear','성운의 나선이 열 대상을 찾아 이동한다.',{chain:10,chainRange:280,slow:.45,slowTime:3}),
     v('생명의 유전자',26000,4.9,1.65,1.46,'crown','빛의 사슬이 열두 적을 묶는다.',{chain:12,chainRange:300,slow:.4,slowTime:3.4}),
     v('영원의 오로라',51000,7.2,1.9,1.62,'halo','푸른빛과 초록빛이 열네 목표를 휘감는다.',{chain:14,chainRange:330,slow:.32,slowTime:4,pierce:true})]
+  starseed:[
+    v('반짝이는 새싹',165,1.6,1.08,1.05,'star','가벼운 별가루가 조금 더 넓은 무리에 튄다.',{splash:56}),
+    v('별꽃의 만개',395,2.4,1.2,1.12,'wings','작은 별꽃이 퍼져 초반 다수 적을 묶어 둔다.',{splash:72,slow:.84,slowTime:1.2}),
+    v('밤하늘 씨앗',920,3.5,1.4,1.22,'halo','가벼운 별꽃 폭발을 연달아 터뜨린다.',{splash:95,slow:.77,slowTime:1.5})],
+  hunter:[
+    v('그림자 조준경',1800,1.55,1.08,1.1,'goggles','세 번째 탄환이 강화되어 보스 체력을 깊이 깎는다.',{chargeEvery:3,chargeBonus:2.8}),
+    v('절명의 탄환',3900,2.5,1.22,1.2,'shades','강화탄의 위력이 상승하고 빈사 보스에게 치명타를 준다.',{chargeEvery:3,chargeBonus:3.1,execute:.25,executeBonus:1.7}),
+    v('심야의 저격왕',8200,4.4,1.4,1.35,'crown','두 발마다 강력한 저격탄을 장전한다.',{chargeEvery:2,chargeBonus:3.6,execute:.35,executeBonus:2,pierce:true})],
+  scrap:[
+    v('두꺼운 포탄',1200,1.6,1.08,1.07,'gear','고철 포탄의 파편이 인근 적을 함께 타격한다.',{splash:92}),
+    v('철갑 분쇄기',2800,2.65,1.18,1.14,'double','낡은 부품을 모아 강화장갑을 관통한다.',{splash:115,pierce:true}),
+    v('폐허의 심장',6000,4.2,1.32,1.26,'flame','거대한 고철탄이 주변 적에게 폭발 피해를 준다.',{splash:150,pierce:true})],
+  lullaby:[
+    v('작은 오르골',180,1,1,1.14,'orb','작은 음악으로 주변 타워 공격속도를 14% 높인다.',{haste:.14}),
+    v('파란 자장가',420,1,1,1.3,'wings','음악의 범위와 공격속도 보조 효과가 향상된다.',{haste:.21}),
+    v('꿈의 합창',990,1,1,1.52,'halo','이웃 타워의 공격속도를 30% 높인다.',{haste:.3})],
+  papercrane:[
+    v('바람 접기',300,1.5,1.1,1.05,'wings','종이학의 날갯짓이 더 빨라진다.',{summons:1,unitSpeed:365,unitLife:7}),
+    v('두 마리의 학',750,2.2,1.16,1.13,'double','접은 종이학 두 마리가 빠르게 적을 추격한다.',{summons:2,unitSpeed:390,unitLife:7}),
+    v('천 마리의 소원',1750,3.2,1.31,1.24,'star','세 마리의 종이학이 출구까지 적을 쫓는다.',{summons:3,unitSpeed:430,unitLife:9}),
+    v('종이비행 폭풍',3900,4.55,1.48,1.35,'halo','네 마리의 종이학이 지칠 때까지 전장을 누빈다.',{summons:4,unitSpeed:475,unitLife:11})],
+  marker:[
+    v('달무리 잉크',540,1.45,1.08,1.1,'crystal','명중한 적에게 28% 추가 피해 표식을 남긴다.',{markAmp:1.28,markTime:4}),
+    v('이중 낙인',1250,2.1,1.22,1.18,'double','두 적에게 동시에 표식을 각인한다.',{markAmp:1.32,markTime:4.4,multi:2}),
+    v('안개의 인장',2550,3,1.38,1.3,'aura','폭발형 잉크가 한 번에 여러 적을 표식 대상으로 바꾼다.',{kind:'splash',splash:76,markAmp:1.4,markTime:5}),
+    v('밤의 계약',5200,4.5,1.62,1.43,'halo','넓은 표식 지대가 아군 화력을 집중시키며 방어를 무너뜨린다.',{kind:'splash',splash:110,markAmp:1.55,markTime:6})],
+
 };
 export const evolutionAt=(type,level)=>level>0?EVOLUTIONS[type]?.[level-1]||null:null;
