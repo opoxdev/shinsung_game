@@ -475,7 +475,8 @@ async function finish(){
   const reward=rewardFor(state,playerId);
   try{
     if(isOnlineMatch)profile=await online.call('claim',{code:room.code});
-    else if(online.user)profile=await online.call('soloReward',{runId:soloRunId,config:state.config,wave:state.wave,win:reward.win});
+    else if(online.user&&state.config.type==='solo')profile=await online.call('soloReward',{runId:soloRunId,config:state.config,wave:state.wave,win:reward.win});
+    else if(state.config.type==='pvp'){/* Local bot training is unranked and pays no account rewards. */}
     else{applyReward(localProfile,reward);profile=localProfile;saveLocal();}
   }catch(e){toast('보상 정산 실패 · 30초 뒤 다시 시도: '+e.message);claimAfter=performance.now()+30000;resultShown=false;return;}
   const maxWaves=DIFFICULTIES.find(d=>d.id===state.config.difficulty).waves.length;
