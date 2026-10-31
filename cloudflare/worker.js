@@ -56,12 +56,7 @@ async function applyAction(env,action,p,user){
   if(action==='profile')return (await getProfile(db,user)).value;
   if(action==='listRooms')return listRooms(env);
   if(action==='diagnostic')return {name:(await getProfile(db,user)).value.name,serverTime:new Date().toISOString(),services:['Firebase Auth','Cloudflare Worker','D1','Durable Objects']};
-  if(action==='profileAction'){
-    return updateProfile(db,user,profile=>{
-      if(profile.activeRoom)throw Error('게임방에서 나간 뒤 컬렉션을 변경하세요.');
-      Core.profileAction(profile,p);return profile;
-    });
-  }
+  if(action==='profileAction')throw Error('상점과 타워 구성은 현재 브라우저에서만 처리됩니다. 게임을 새로고침하세요.');
   if(action==='createRoom'){
     const stored=(await getProfile(db,user)).value;
     if(stored.activeRoom)throw Error('기존 서버 방을 먼저 나가세요. 이전 버전에서 남은 방이라면 계정 메뉴에서 서버 방 정리를 실행하세요.');
