@@ -281,6 +281,7 @@ function waveAdvice(wave){
 }
 function inspector(){
   if(!$('#tower-inspector')||!renderer||!state)return;
+  const inspectorScroll=$('#tower-inspector').scrollTop;
   const t=state.towers.find(t=>t.id===renderer.selected);
   if(!t){$('#tower-inspector').innerHTML='';return;}
   const d=TOWERS[t.type],stats=towerStats(t),next=evolutionAt(t.type,t.level+1);
@@ -312,6 +313,7 @@ function inspector(){
       ${cost===undefined?'MAX · 진화 완료':!own?'다른 플레이어의 타워':cash<cost?'자금 부족 · ₩ '+fmt(cost):'진화 · ₩ '+fmt(cost)}</button>
     <button class="wide" data-action="target" ${own?'':'disabled'}>우선 공격: ${{first:'선두',strong:'강한 적',near:'가까운 적'}[t.target]} ⇄</button>
     <button class="sell wide" data-action="sell" ${own?'':'disabled'}>판매 · ₩ ${fmt(Math.floor(t.spent*7/10))}</button>`;
+  $('#tower-inspector').scrollTop=inspectorScroll;
 }
 let previousWave=0;function updateHud(){if(!state||!$('#cash'))return;const p=state.players[playerId],d=DIFFICULTIES.find(d=>d.id===state.config.difficulty);setText('#base-hp',`${state.fields[p.field]} / 100`);if(state.config.type==='pvp')setText('#opponent-hp',`${state.fields[1-p.field]} / 100`);setText('#cash','₩ '+fmt(p.money));setText('#tower-count',state.towers.filter(t=>t.field===p.field).length+' / '+modifiers(state.config).cap);setText('#wave-label',`WAVE ${String(state.wave).padStart(2,'0')} / ${d.waves.length}`);const wave=d.waves[state.wave-1];const next=d.waves[state.wave];const intel=$('#wave-intel');if(intel)setText('#wave-intel',wave.title+' · '+wave.groups.map(([id,n])=>ENEMIES[id].name+' '+n).join(' / ')+(next?' · 다음: '+next.groups.slice(0,2).map(([id])=>ENEMIES[id].name).join('·'):'')+waveAdvice(wave));setText('#wave-clock',`${Math.max(0,Math.ceil((state.waveDeadline??d.waves[state.wave-1].duration)-state.waveTime))}s · 적 ${state.enemies.length}`);const skip=$('#skip');skip.disabled=state.waveTime<8||state.wave===d.waves.length||state.votes.includes(playerId);const skipHtml=state.waveTime<8?`스킵 가능까지 ${Math.ceil(8-state.waveTime)}초`:`웨이브 스킵 <span>${state.votes.length} / ${requiredVotes(state)}</span>`;if(skip.innerHTML!==skipHtml)skip.innerHTML=skipHtml;
   // Keep the per-instance evolution button in sync with earned combat money.
@@ -395,7 +397,7 @@ const actions={
   async createRoom(){try{const r=await online.call('createRoom',{config});await openRoom(r.code);}catch(e){toast(e.message);}},joinPrompt(){modal('<h2>방 코드로 참가</h2><form id="join-form"><label>6자리 코드<input name="code" minlength="6" maxlength="6" pattern="[A-Za-z0-9]{6}" required autocomplete="off"></label><button class="primary wide">참가하기</button></form>');},async startRoom(){try{await online.call('start',{code:room.code});}catch(e){toast(e.message);}},async leaveRoom(){try{await online.call('leave',{code:room.code});online.stop();room=null;closeModal();profile=await online.call('profile');shell();}catch(e){toast(e.message);}}
 };
 document.addEventListener('click',async e=>{const b=e.target.closest('[data-action]');if(!b||b.disabled)return;e.preventDefault();try{await actions[b.dataset.action]?.(b.dataset.id);}catch(err){toast(err.message);}});
-document.addEventListener('input',e=>{if(e.target.id==='tower-search'){const pos=e.target.selectionStart;filter=e.target.value;collection();$('#tower-search').focus();$('#tower-search').setSelectionRange(pos,pos);}});
+document.addEventListener('input',e=>{if(e.target.id==='tower-search'){const pos=e.target.selectionStart;filter=e.target.value;collection();$('#tower-search').focus({preventScroll:true});$('#tower-search').setSelectionRange(pos,pos);}});
 document.addEventListener('change',e=>{if(e.target.id==='rarity-filter'){rarityFilter=e.target.value;collection();}});
 document.addEventListener('submit',async e=>{e.preventDefault();const f=new FormData(e.target);if(e.target.id==='auth-form'){const buttons=e.target.querySelectorAll('button');buttons.forEach(b=>b.disabled=true);try{await online.signIn(f.get('email'),f.get('password'),e.submitter?.value==='signup');closeModal();}catch(err){$('#auth-error').textContent=err.message;}finally{buttons.forEach(b=>b.disabled=false);}}else if(e.target.id==='join-form'){try{const code=f.get('code').toUpperCase();await online.call('join',{code});await openRoom(code);}catch(err){toast(err.message);}}});
 document.addEventListener('keydown',e=>{if(['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName))return;const key=e.key.toLowerCase();if(state){if(e.code==='Space'||key==='e'||key==='r')e.preventDefault();if(renderer&&!$('#modal-root').innerHTML)renderer.keys.add(key);if(e.repeat)return;if(key==='escape'){if($('#modal-root').innerHTML)closeModal();else battleMenu();}else if(!$('#modal-root').innerHTML){if(key==='q')selectPlacement(null);if('12345'.includes(key)){const id=state.players[playerId].loadout[Number(key)-1];if(id)selectPlacement(id);}if(e.code==='Space')sendCommand({kind:'skip'});}}});
