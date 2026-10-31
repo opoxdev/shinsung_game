@@ -37,3 +37,29 @@ body{background:#15203d;color:var(--text)}button{border:2px solid #101a35;border
 @keyframes immortalTwist{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
 @keyframes immortalBreathe{0%,100%{opacity:.55;transform:scale(.96)}50%{opacity:1;transform:scale(1.08)}}
 @media(prefers-reduced-motion:reduce){.tower-card.mythic,.tower-card.mythic:after,.tower-card.immortal:before,.tower-card.immortal:after{animation:none!important}}
+
+/* v0.5 individual unit evolution viewer. It scrolls instead of hiding upgrade data. */
+.battle-inspector{overflow-y:auto;scrollbar-width:thin;scrollbar-color:#93bcda66 transparent}
+.battle-inspector .evo-stage{margin:2px 0 5px;color:#ffdf91;font-size:12px;font-weight:700;text-align:center}
+.battle-inspector .inspector-art.evolved{position:relative;min-height:110px}
+.battle-inspector .evo-sparks{position:absolute;right:9px;top:3px;color:#bcf9ff;font-size:19px;
+  filter:drop-shadow(0 0 7px #a5faff);animation:evoSpark 2.3s ease-in-out infinite}
+.evo-progression{display:flex;gap:5px;margin:7px 0 12px;align-items:center}
+.evo-progression i{height:7px;flex:1;background:#435875;border:1px solid #7998bf80;border-radius:7px}
+.evo-progression i.reached{background:#e7c96f;border-color:#ffe8a0;box-shadow:0 0 8px #f2d67b66}
+.evo-progression i.active{background:#b4fbeb;border-color:#fff;box-shadow:0 0 12px #93ffeab3}
+.battle-inspector .stat-grid{gap:5px}
+.battle-inspector .stat-grid>div{min-width:0;word-break:keep-all}
+.battle-inspector .evo-delta{font-size:10px;color:#8ef1ca;white-space:nowrap}
+.evo-next{margin:10px 0;background:linear-gradient(110deg,#2e436a,#293451);border:1px solid #7fbbd079;
+  border-radius:10px;padding:10px 11px;box-shadow:inset 0 1px 0 #ffffff18}
+.evo-next-header{display:flex;flex-direction:column;gap:3px}
+.evo-next-header small{color:#a3dce5;font-size:9px;letter-spacing:1px}
+.evo-next-header b,.evo-next.max b{color:#ffdb9f;font-size:15px}
+.evo-next p{color:#d7e2f3;font-size:11px;line-height:1.5;margin:5px 0}
+.evo-next .evo-effect{font-size:10px;color:#abf9dd}
+.evo-next.max{background:linear-gradient(110deg,#3a3865,#4c3866);border-color:#e0bde5}
+.evo-extra{margin:7px 0;color:#9ff5da;font-size:11px;line-height:1.4}
+.battle-inspector button:disabled{opacity:.5;cursor:not-allowed}
+@keyframes evoSpark{0%,100%{opacity:.4;transform:scale(.85) rotate(0deg)}50%{opacity:1;transform:scale(1.15) rotate(40deg)}}
+@media(prefers-reduced-motion:reduce){.battle-inspector .evo-sparks{animation:none}}
