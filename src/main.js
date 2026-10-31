@@ -219,7 +219,7 @@ async function refreshRooms(){
   const mode=target.dataset.mode;
   if(!['pvp','coop'].includes(mode))return;
   roomListBusy=true;
-  roomListNext=performance.now()+8500;
+  roomListNext=performance.now()+30000;
   const refreshButton=document.querySelector('.mm-refresh');
   if(refreshButton)refreshButton.disabled=true;
   try{
@@ -227,10 +227,13 @@ async function refreshRooms(){
     if($('#public-room-list')!==target)return;
     // A room must be user-created, still waiting and belong to this tab.
     const list=rooms.filter(r=>r.type===mode&&r.count>0&&r.count<r.capacity);
+    // An empty list rarely changes: automatic retries are intentionally slower.
+    roomListNext=performance.now()+(list.length?22000:45000);
     target.innerHTML=matchmakingCards(list,mode,!!online.user);
     setText('#room-count',String(list.length));
   }catch(e){
     if($('#public-room-list')===target){
+      roomListNext=performance.now()+45000;
       target.innerHTML='<div class="mm-state mm-error"><b>방 목록에 연결하지 못했습니다</b><p>'+esc(e.message)+'</p><button type="button" data-action="refreshRooms">다시 시도 ↻</button></div>';
       setText('#room-count','!');
     }
@@ -563,7 +566,7 @@ function frame(now){
     }
     const display=isOnlineMatch?predictionState||state:state;
     const path=MAPS.find(m=>m.id===display.config.map).path;
-    const ahead=isOnlineMatch?Math.max(0,Math.min(STEP,Math.min(2.9,Math.max(0,(now-lastSnapshot)/1000))-(display.time-state.time))):0;
+    const ahead=isOnlineMatch?Math.max(0,Math.min(STEP,Math.min(4.25,Math.max(0,(now-lastSnapshot)/1000))-(display.time-state.time))):0;
     const visual=motion.sample(display,path,{online:isOnlineMatch,ahead,alpha:accumulator/STEP,dt,paused});
     renderer?.frame(visual,state.config.map,playerId,dt,now/1000);
     hoverVisual=visual;updateEnemyTooltip(visual);
@@ -571,7 +574,7 @@ function frame(now){
     if(state.status!=='playing'&&!resultShown&&!onlineBusy)finish();
   }else{
     if(renderer)renderer.frame(null,config.map,playerId,dt,now/1000,true);
-    if($('#public-room-list')&&now>=roomListNext&&!roomListBusy)void refreshRooms();
+    if(!document.hidden&&$('#public-room-list')&&now>=roomListNext&&!roomListBusy)void refreshRooms();
   }
   requestAnimationFrame(frame);
 }
