@@ -18,15 +18,29 @@ test('maps have distinct travel lengths, traversable routes, and matching previe
     assert.ok(landscape(map).includes(`d="${route}"`));
   }
 });
-test('all melee tower slashes point toward targets in every quadrant, including zero coordinates',()=>{
+test('all melee waves rotate continuously toward real target positions, not four sprite directions',()=>{
+  const angles=Array.from({length:33},(_,i)=>-Math.PI+i*Math.PI/16);
+  const targets=[
+    ...angles.map(a=>[100+85*Math.cos(a),100+85*Math.sin(a)]),
+    [0,100],[100,0],[0,0],[200,200],[100,100]
+  ];
   for(const type of Object.keys(TOWERS).filter(id=>TOWERS[id].kind==='melee')){
-    for(const [tx,ty] of [[200,100],[0,100],[100,0],[100,200],[0,0],[200,200]]){
-      let arc;const g={beginPath(){},stroke(){},arc(...args){arc=args;}};
+    for(const [tx,ty] of targets){
+      const calls={curves:[]};
+      const g={
+        save(){},restore(){},beginPath(){},closePath(){},fill(){},stroke(){},
+        translate(x,y){calls.origin=[x,y];},
+        rotate(a){calls.rotation=a;},
+        moveTo(){},
+        quadraticCurveTo(...args){calls.curves.push(args);}
+      };
       drawMelee(g,{type,x:100,y:100,tx,ty},.28);
-      const angle=(arc[3]+arc[4])/2,dx=tx-100,dy=ty-100;
-      assert.ok(Math.abs(Math.cos(angle)*Math.hypot(dx,dy)-dx)<1e-7);
-      assert.ok(Math.abs(Math.sin(angle)*Math.hypot(dx,dy)-dy)<1e-7);
-      assert.ok(Math.abs(arc[2]-Math.hypot(dx,dy))<1e-7);
+      const angle=Math.atan2(ty-100,tx-100);
+      assert.deepEqual(calls.origin,[100,100]);
+      assert.ok(Math.abs(calls.rotation-angle)<1e-10,`${type}: ${tx},${ty}`);
+      assert.ok(calls.curves.length>=4,'Sword wave needs an elongated directional shape');
+      const tip=calls.curves[0],distance=Math.hypot(tx-100,ty-100);
+      assert.ok(tip[2]>=Math.max(24,distance),'Slash must reach toward target');
     }
   }
 });
