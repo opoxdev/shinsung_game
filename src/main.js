@@ -1,4 +1,4 @@
-import { MAPS, TOWERS, ENEMIES, DIFFICULTIES, MODES, PACKS, RARITIES, SKIN_STYLES, CRATES, BOSS_ABILITIES, starterProfile } from './data.js';
+import { MAPS, TOWERS, ENEMIES, DIFFICULTIES, MODES, PACKS, RARITIES, SKIN_STYLES, CRATES, BOSS_ABILITIES, starterProfile, skinCandidates, skinOdds } from './data.js';
 import { evolutionAt } from './evolutions.js';
 import { createMatch, tick, command, modifiers, towerStats, requiredVotes, rewardFor, applyReward, profileAction, pointOnPath, STEP } from './engine.js';
 import { Renderer, portrait, landscape } from './render.js';
@@ -100,16 +100,27 @@ function packLoadout(){
 }
 function crateView(){
   return `<div class="crate-catalog">${Object.entries(CRATES).map(([id,c])=>{
-    const possible=profile.owned.length*c.styles.length;
-    const owned=profile.owned.reduce((n,t)=>n+c.styles.filter(style=>profile.skins?.[t+':'+style]).length,0);
-    const pity=profile.cratePities?.[id]||0;
+    const odds=skinOdds(c,profile.owned),chance=Object.fromEntries(odds.map(x=>[x.style,x.percent]));
+    const possible=c.styles.reduce((n,style)=>n+skinCandidates(style,profile.owned).length,0);
+    const owned=c.styles.reduce((n,style)=>n+skinCandidates(style,profile.owned).filter(t=>profile.skins?.[t+':'+style]).length,0);
+    const pity=profile.cratePities?.[id]||0,openable=odds.length>0;
     return `<article class="crate-offer" style="--crate-color:${c.color}">
-      <div class="crate-offer-head"><span class="crate-offer-icon">${c.icon}</span><div><span class="eyebrow">${c.theme} · SKIN CRATE</span><h2>${c.name}</h2><p>${c.description}</p></div></div>
-      <div class="crate-offer-odds">${Object.entries(c.odds).map(([style,chance])=>`<span style="--rarity:${SKIN_STYLES[style].color}"><b>${SKIN_STYLES[style].name}</b><small>${RARITIES[SKIN_STYLES[style].rarity].name} · ${chance}%</small></span>`).join('')}</div>
-      <div class="crate-offer-info"><strong>◈ ${fmt(c.price)} <small>/ 1회</small></strong><span>보유 스킨 ${owned}/${possible} · 중복 ${pity}/10</span></div>
-      <div class="crate-actions"><button class="buy" data-action="openCrate" data-id="${id}:1" ${profile.coins<c.price?'disabled':''}>1회 열기 · ◈ ${fmt(c.price)}</button><button class="buy primary" data-action="openCrate" data-id="${id}:10" ${profile.coins<c.price*10?'disabled':''}>10회 열기 · ◈ ${fmt(c.price*10)}</button></div>
+      <div class="crate-offer-head"><span class="crate-offer-icon">${c.icon}</span><div><span class="eyebrow">${c.theme} · THEMED SKIN CRATE</span><h2>${c.name}</h2><p>${c.description}</p></div></div>
+      <div class="crate-offer-odds">${c.styles.map(style=>{
+        const spec=SKIN_STYLES[style],idPreview=skinCandidates(style,profile.owned)[0]||spec.targets[0];
+        const rate=chance[style]||0;
+        return `<div class="crate-cosmetic-choice ${rate?'':'skin-locked'}" style="--rarity:${spec.color}">
+          <div class="crate-skin-preview">${portrait(idPreview,style)}</div>
+          <div class="crate-cosmetic-copy"><b>${spec.name}</b><small>${RARITIES[spec.rarity].name} · ${rate.toFixed(1)}%</small>
+          <span title="${spec.targets.map(t=>TOWERS[t].name).join(', ')}">${spec.targets.map(t=>TOWERS[t].name).join(' · ')}</span>
+          ${rate?'':'<em>해당 타워 영입 시 등장</em>'}</div>
+        </div>`;
+      }).join('')}</div>
+      <div class="crate-offer-info"><strong>◈ ${fmt(c.price)} <small>/ 1회</small></strong><span>내 타워의 보유 스킨 ${owned}/${possible} · 중복 ${pity}/10</span></div>
+      <div class="crate-actions"><button class="buy" data-action="openCrate" data-id="${id}:1" ${!openable||profile.coins<c.price?'disabled':''}>1회 열기 · ◈ ${fmt(c.price)}</button><button class="buy primary" data-action="openCrate" data-id="${id}:10" ${!openable||profile.coins<c.price*10?'disabled':''}>10회 열기 · ◈ ${fmt(c.price*10)}</button></div>
+      ${!openable?'<p class="crate-eligibility">이 상자 전용 스킨을 사용할 타워를 먼저 영입하세요.</p>':''}
     </article>`;
-  }).join('')}</div><p class="crate-catalog-note">스킨 등급: 일반 · 희귀 · 에픽 · 전설 · 신화 / 상자별 확률 공개 · 중복 보상 및 상자별 10연속 중복 방지 · 전투 능력치 변화 없음</p>`;
+  }).join('')}</div><p class="crate-catalog-note">표시 확률은 현재 보유한 타워로 획득 가능한 전용 스킨만 합산한 실제 확률입니다. 해당 타워를 영입하면 확률이 다시 계산됩니다. 상자별 10연속 중복 방지 · 스킨은 외형만 변경합니다.</p>`;
 }
 function shop(){resetRenderer();$('#content').innerHTML=`<div class="page-heading"><div><span class="eyebrow">SHOP</span><h1>어떤 친구를 데려갈까?<span>.</span></h1></div><div class="edition">EARN. COLLECT. DEFEND.<b>플레이로 얻는 보급품</b></div></div><div class="shop-tabs">${[['towers','타워'],['packs','몬스터 팩'],['crates','스킨 상자']].map(([id,name])=>`<button class="${shopTab===id?'selected':''}" data-action="shopTab" data-id="${id}">${name}</button>`).join('')}<span>등급 ≠ 설치 가격 · 역할별 선택</span></div><div class="shop-scroll">${shopTab==='towers'?`<div class="featured">${['starseed','hunter'].map(id=>{const t=TOWERS[id];return `<article class="feature-card" style="--rarity:${RARITIES[t.rarity].color}"><div><span class="eyebrow">${id==='starseed'?'신화지만 초반부터 활약':'희귀지만 후반 보스 저격'}</span><h2>${t.name}</h2><p>${t.desc}</p><p class="battle-cost">전투 배치 ₩ ${fmt(t.cost)} · ${RARITIES[t.rarity].name}</p><button class="buy" data-action="buyTower" data-id="${id}" ${profile.owned.includes(id)?'disabled':''}>${profile.owned.includes(id)?'보유 중':'◈ '+fmt(t.price)+' · 영입'}</button></div>${portrait(id)}</article>`;}).join('')}</div><div class="shop-grid">${Object.entries(TOWERS).filter(([id,t])=>!['starseed','hunter'].includes(id)&&t.price>0).map(([id,t])=>`<article class="supply-card" style="--rarity:${RARITIES[t.rarity].color}">${portrait(id)}<div><small>${RARITIES[t.rarity].name}</small><h3>${t.name}</h3><p>${t.role} · 설치 ₩ ${fmt(t.cost)}</p><button class="buy" data-action="buyTower" data-id="${id}" ${profile.owned.includes(id)?'disabled':''}>${profile.owned.includes(id)?'보유 중':'◈ '+fmt(t.price)}</button></div></article>`).join('')}</div>`:shopTab==='packs'?`<div class="pack-grid">${Object.entries(PACKS).map(([id,p])=>`<article class="pack-card"><span class="eyebrow">PVP MONSTER PACK</span><h2>${p.name}</h2>${monsterList(p)}<button class="buy" data-action="buyPack" data-id="${id}" ${profile.packs.includes(id)?'disabled':''}>${profile.packs.includes(id)?'✓ 보유 · 구성탭에서 장착':'◈ '+fmt(p.price)+' · 구매'}</button></article>`).join('')}</div>`:crateView()}</div>`;}
 async function mutate(a,reveal=false){try{if(online.user){profile=await online.call('profileAction',a);}else{profileAction(profile,a);saveLocal();}shell();if(reveal&&profile.lastCrate){const rolls=profile.lastCrate.rolls;const opened=profile.lastCrate.crate;modal(`<span class="eyebrow">CRATE REVEAL</span><h2>✦ 상자 개봉 결과 ✦</h2><div class="crate-results">${rolls.map((r,i)=>`<div class="crate-result" style="--rarity:${SKIN_STYLES[r.style].color};animation-delay:${i*.075}s"><span>${portrait(r.id,r.style)}</span><b>${TOWERS[r.id].name}</b><small>${RARITIES[SKIN_STYLES[r.style].rarity].name} · ${SKIN_STYLES[r.style].name} 스킨</small><strong>${r.duplicate?'중복 · +◈'+fmt(r.refund):r.guaranteed?'보장 획득':'NEW 획득!'}</strong></div>`).join('')}</div><p>획득한 스킨은 타워 구성 → 스킨에서 장착할 수 있습니다.</p><div class="crate-actions"><button class="primary" data-action="openCrate" data-id="${opened}:1">같은 상자 한 번 더 열기</button><button data-action="close">확인</button></div>`);}}catch(e){toast(e.message);}}
@@ -265,7 +276,19 @@ const actions={
   mapPreview(){modal('<h2>'+MAPS.find(m=>m.id===config.map).name+'</h2><canvas id="world" class="terrain-preview" aria-label="실제 전투 맵"></canvas><p>빛나는 분홍 입구에서 시작해 파란 출구로 향합니다.</p>');resetRenderer();renderer=new Renderer($('#world'));},
   nav(id){page=id;config.type='solo';shell();},setCollectionTab(id){if(!['towers','packs'].includes(id))return;collectionTab=id;collection();},previewPack(id){if(!Object.hasOwn(PACKS,id))return;selectedPack=id;collection();},visitPackShop(id){if(!Object.hasOwn(PACKS,id))return;shopTab='packs';page='shop';shell();},map(id){config.map=id;home();},difficulty(id){config.difficulty=id;home();},mode(id){config.modes=config.modes.includes(id)?config.modes.filter(x=>x!==id):[...config.modes,id];home();},
   inspect(id){selectedTower=id;page='towers';collectionTab='towers';shell();},equip(id){mutate({kind:'equip',id});},shopTab(id){shopTab=id;shop();},buyTower(id){mutate({kind:'buyTower',id});},buyPack(id){mutate({kind:'buyPack',id});},pack(id){mutate({kind:'pack',id});},
-  skin(id){const options=['default',...Object.keys(SKIN_STYLES)].map(style=>{const owned=style==='default'||profile.skins[id+':'+style];return `<button data-action="setSkin" data-id="${id}|${style}" ${owned?'':'disabled'}>${portrait(id,style)}<b>${style==='default'?'기본':SKIN_STYLES[style].name} ${owned?profile.equippedSkins[id]===style?'· 장착 중':'· 보유':'· 미보유'}</b></button>`}).join('');modal(`<span class="eyebrow">TOWER COSMETICS</span><h2>${TOWERS[id].name} · 스킨</h2><div class="skin-options">${options}</div><p>스킨은 상점의 스킨 상자에서 획득하며 전투 성능은 변하지 않습니다.</p><button data-action="visitCrates">스킨 상자 보러 가기</button>`);},
+  skin(id){
+    const styles=['default',...Object.keys(SKIN_STYLES).filter(style=>SKIN_STYLES[style].targets.includes(id)||profile.skins?.[id+':'+style])];
+    const options=styles.map(style=>{
+      const owned=style==='default'||profile.skins?.[id+':'+style];
+      const label=style==='default'?'기본 지급 외형':SKIN_STYLES[style].name;
+      const rank=style==='default'?'기본':RARITIES[SKIN_STYLES[style].rarity].name;
+      return `<button class="skin-wardrobe-item ${owned?'owned':'unowned'}" data-action="setSkin" data-id="${id}|${style}" ${owned?'':'disabled'} style="--skin-accent:${SKIN_STYLES[style]?.color||'#b4c4d7'}">
+        ${portrait(id,style)}
+        <b>${label}</b><small>${rank} · ${owned?profile.equippedSkins[id]===style?'장착 중':'보유':'미보유'}</small>
+      </button>`;
+    }).join('');
+    modal(`<span class="eyebrow">AUTHORED CHARACTER SKINS</span><h2>${TOWERS[id].name} · 전용 스킨</h2><div class="skin-options">${options}</div><p>선별된 타워에만 제작한 전용 의상입니다. 단순 색상 변경이 아니라 무장·헬멧·복장과 실루엣을 교체합니다. 기존에 보유한 스킨은 계속 사용할 수 있습니다.</p><button data-action="visitCrates">전용 스킨 상자 보러 가기</button>`);
+  },
   setSkin(key){const [id,style]=key.split('|');closeModal();mutate({kind:'skin',id,skin:style});},
   setDefault(id){closeModal();mutate({kind:'skin',id,skin:'default'});},setArctic(id){closeModal();mutate({kind:'skin',id,skin:'arctic'});},
   visitCrates(){closeModal();page='shop';shopTab='crates';shell();},
