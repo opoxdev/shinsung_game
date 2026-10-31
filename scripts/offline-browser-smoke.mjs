@@ -19,7 +19,7 @@ const fixture=original+[
 ].join('\n');
 html=html.replace(original,fixture);
 const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
-let server=starterProfile('Test Student'),actions=[],claims=new Set();
+let server=starterProfile('Test Student'),actions=[],claims=new Set(),failNextReward=false;
 try{
   const page=await browser.newPage({viewport:{width:1280,height:800},acceptDownloads:true});
   const errors=[],external=[];
@@ -30,6 +30,7 @@ try{
     if(action==='profile')return structuredClone(server);
     if(action==='profileAction'){profileAction(server,payload);return structuredClone(server);}
     if(action==='soloReward'){
+      if(failNextReward){failNextReward=false;throw Error('Temporary offline connection');}
       if(!claims.has(payload.runId)){
         claims.add(payload.runId);
         applyReward(server,{coins:1200,xp:200,sonic:false,aurora:false,win:true});
@@ -66,7 +67,20 @@ try{
   assert.equal(server.coins,1400);
   assert.equal(actions.filter(a=>a==='soloReward').length,1);
   assert.equal(actions.filter(a=>['createRoom','start','pulse','ticket','command'].includes(a)).length,0);
+  // An offline failure must not lose earned server rewards on reload.
+  await page.locator('[data-action="leave"]').click();
+  await page.locator('[data-action="start"]').click();
+  await page.waitForSelector('#battlefield');
+  failNextReward=true;
+  await page.evaluate(()=>window.__finishTestSolo());
+  assert.equal(server.coins,1400,'failed post-battle request cannot pay locally');
+  const pending=await page.evaluate(()=>JSON.parse(localStorage.getItem('shinsung.pending.solo.v1.school-test')));
+  assert.equal(pending.length,1,'failed solo result is queued, not the wallet');
+  await page.reload({waitUntil:'domcontentloaded'});
+  await page.waitForFunction(()=>document.querySelector('.wallet')?.textContent.includes('2,600'));
+  assert.equal(server.coins,2600,'login settlement credits pending reward exactly once');
+  assert.deepEqual(await page.evaluate(()=>JSON.parse(localStorage.getItem('shinsung.pending.solo.v1.school-test'))),[]);
   assert.deepEqual(external,[],'no third-party font/network calls during local solo and shop');
   assert.deepEqual(errors,[],'no browser JS errors');
-  console.log('Cloud profile + local solo browser passed: D1 purchase, login reload, zero combat network, one settlement.');
+  console.log('Cloud profile + local solo browser passed: D1 purchases, zero combat network, one-shot rewards and reconnect recovery.');
 }finally{await browser.close();}
