@@ -17,7 +17,7 @@ const install=(s,type,x=240,y=100,owner='a')=>{
   assert.equal(result.ok,true,JSON.stringify({type,x,y,result}));
   return s.towers.at(-1);
 };
-test('all 24 towers have curated 2–5 stage paths and distinct price scaling',()=>{
+test('all 30 towers have curated 2–5 stage paths and distinct price scaling',()=>{
   assert.deepEqual(Object.keys(EVOLUTIONS).sort(),Object.keys(TOWERS).sort());
   assert.ok(new Set(Object.values(EVOLUTIONS).map(v=>v.length)).size>=4);
   for(const [id,path] of Object.entries(EVOLUTIONS)){
