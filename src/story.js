@@ -106,12 +106,12 @@ export function storyProgress(difficulty,wave){
   const b=book[difficulty];return b?b.scenes.filter(([w])=>w<=wave).length:0;
 }
 const safe=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-export function storyPreviewMarkup(difficulty){
+export function storyPreviewMarkup(difficulty,maxWave=0){
   const b=book[difficulty];if(!b)return '';
   return '<section class="story-preview story-theme-'+b.theme+'"><div class="story-preview-header"><span>✧ STORY CAMPAIGN / '+b.number+'</span><b>'+safe(b.genre)+'</b></div>'+
     '<h3>'+safe(b.title)+'</h3><p class="story-subtitle">'+safe(b.subtitle)+'</p>'+
     '<p class="story-synopsis">'+safe(b.synopsis)+'</p>'+
-    '<div class="story-preview-actions"><span>주요 대화 '+b.scenes.length+'장면 · 진행 중 자동 재생</span>'+
+    '<div class="story-preview-actions"><span>주요 대화 '+b.scenes.length+'장면 · 기록 '+storyProgress(difficulty,maxWave)+' / '+b.scenes.length+'</span>'+
     '<button type="button" data-action="storyGuide">스토리 보기 <span>↗</span></button></div></section>';
 }
 export function storyGuideMarkup(difficulty,maxWave=0,{full=false}={}){
