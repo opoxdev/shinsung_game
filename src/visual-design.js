@@ -146,7 +146,13 @@ function weapon(type,c,style){
  if(type==='donut')return line('M118 125L151 88',p,9)+'<circle cx="150" cy="84" r="17" fill="#bc7963" stroke="#704651" stroke-width="4"/>'+circle(150,84,8,'#ffb0cb')+circle(150,84,4,c.dark)+circle(159,79,2,'#fff7ce');
  if(type==='cannon'||type==='launcher')return rect(121,87,45,32,p,8)+rect(134,91,37,18,m,4)+rect(159,92,18,15,a,4)+line('M124 121l-16 20',p,8);
  if(type==='vial')return line('M112 121l24-32',p,8)+path('M136 85l-5-15 18-15 16 16-16 23Z',a,p,4)+circle(151,71,5,'#e4f7c6');
- if(type==='cryo'||type==='flame'||type==='tesla')return rect(126,87,40,33,p,7)+rect(137,92,28,21,m,2)+rect(158,94,16,14,a,4)+line('M126 125l-13 18',p,7)+line('M149 88l-7-20',a,5);
+ if(type==='cryo'||type==='flame'||type==='tesla'){
+   let body=rect(126,87,40,33,p,7)+rect(137,92,28,21,m,2)+rect(158,94,16,14,a,4)+line('M126 125l-13 18',p,7)+line('M149 88l-7-20',a,5);
+   if(type==='cryo')body+=path('M163 96L178 77 178 110 163 106Z','#a8d8e5',p,3)+path('M134 85l-8-16 18-9 7 23Z',a,p,2);
+   if(type==='flame')body+=path('M165 96Q184 80 178 68q22 23-7 42l-6-5Z','#f7b177',p,3)+path('M135 90l-9-22 9-17 8 36Z',a,p,2);
+   if(type==='tesla')body+=path('M165 91l9-22 7 29-14 15Z',a,p,3)+line('M166 76l-12-18 14-5',a,4);
+   return body;
+ }
  if(type==='controller'||type==='radio'||type==='clock')return rect(119,93,46,49,p,7)+rect(125,99,34,29,m,3)+circle(135,110,6,a)+circle(151,110,6,a)+line('M141 92V76',a,4);
  if(type==='summon'||type==='phoenix'||type==='storm'||type==='rail'||type==='aurora')return line('M138 158L153 41',p,9)+path('M151 22l17 18-16 22-16-22Z',a,p,4)+circle(152,42,8,'#f6f4d8');
  if(type==='prism')return line('M138 158l10-81',p,9)+path('M145 34L170 67 147 99 128 68Z',a,p,5)+path('M145 34l2 65 23-32Z','#d7ebf5','none',0);
