@@ -6,6 +6,14 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#151c1a">
   <title>신성 디펜스</title>
+  <style>
+    #gas-boot-error{display:none;position:fixed;z-index:999999;left:50%;top:22%;transform:translateX(-50%);
+      max-width:500px;width:calc(100% - 32px);padding:22px 24px;border:1px solid #ffb29f;border-radius:12px;
+      color:#fff3de;background:#242c42;box-shadow:0 20px 70px #030712b5;font:14px/1.6 sans-serif}
+    #gas-boot-error[data-visible="true"]{display:block}
+    #gas-boot-error strong{display:block;font-size:20px;margin-bottom:6px}
+    #gas-boot-error a{color:#a0e9ff;text-decoration:underline}
+  </style>
   <!-- Public, revisioned game graphics served by the existing Cloudflare Worker. -->
   <link rel="stylesheet" href="<?!= assetBase ?>/game.css">
 </head>
@@ -13,9 +21,35 @@
   <div id="app"></div>
   <div id="toast" role="status" aria-live="polite"></div>
   <div id="modal-root"></div>
+  <div id="gas-boot-error" role="alert">
+    <strong>게임 화면을 불러오지 못했습니다.</strong>
+    <p id="gas-boot-message">게임 스크립트 연결 상태를 확인하세요.</p>
+    <a href="<?!= assetBase ?>/game.js" target="_blank" rel="noopener">Cloudflare 게임 파일 확인</a>
+  </div>
   <script>
     globalThis.__FIREBASE_CONFIG__ = <?!= firebaseConfig ?>;
     globalThis.__CLOUDFLARE_API__ = <?!= cloudflareApi ?>;
+    // GAS iframe can hide a failed external script; show an actionable diagnosis.
+    globalThis.__showGASLoadError__ = function (message) {
+      var pane = document.getElementById("gas-boot-error");
+      if (!pane) return;
+      pane.dataset.visible = "true";
+      document.getElementById("gas-boot-message").textContent = message;
+    };
+    window.addEventListener("error", function (e) {
+      var script = e.target && e.target.tagName === "SCRIPT" && e.target.src;
+      if (script && script.includes("/game.js")) {
+        globalThis.__showGASLoadError__("Cloudflare game.js 요청에 실패했습니다. Worker 배포와 공개 주소를 확인하세요.");
+      } else if (!document.getElementById("app").firstElementChild) {
+        globalThis.__showGASLoadError__("초기 실행 중 오류가 발생했습니다. 브라우저 콘솔을 확인하세요.");
+      }
+    }, true);
+    setTimeout(function () {
+      var app = document.getElementById("app");
+      if (app && !app.firstElementChild) {
+        globalThis.__showGASLoadError__("10초 동안 게임 화면이 생성되지 않았습니다. game.js 주소와 브라우저 콘솔을 확인하세요.");
+      }
+    }, 10000);
   </script>
   <script defer src="<?!= assetBase ?>/game.js"></script>
 </body>
