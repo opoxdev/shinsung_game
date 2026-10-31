@@ -48,6 +48,7 @@ test('obsolete combat effects are pruned before full snapshot broadcast and pers
   const after=JSON.stringify(game.view()).length;
   assert.ok(game.room.state.events.every(e=>game.room.state.time-e.time<=EFFECT_WINDOW));
   assert.ok(after<before*.5,'wire snapshot should discard large obsolete effects');
+  console.log('Snapshot old/new bytes (140 obsolete effects):',before,after,'saved:',Math.round((1-after/before)*100)+'%');
   assert.ok(game.room.state.events.length<140,'serialized Durable Object state is smaller');
 });
 test('guest only becomes authoritative if host disappears, never doubles simulation',async()=>{
@@ -88,4 +89,31 @@ test('room storage writes are throttled while command responses remain immediate
   const response=await game.action('command',{command:{kind:'place',type:'scout',x:250,y:440,seq:1}},alice);
   assert.equal(response.ok,true);
   assert.ok(counters.writes>before,'mutating commands must be persisted immediately');
+});
+
+test('public WebSocket room payload never leaks persistence metadata or membership IDs',async()=>{
+  const {game}=await setup();
+  const wire=game.view();
+  assert.equal(wire.host,'alice');
+  assert.deepEqual(Object.keys(wire).sort(),['code','config','host','names','stateJson','status'].sort());
+  assert.equal(wire.members,undefined);
+  assert.equal(wire.profiles,undefined);
+  assert.equal(wire.lastSavedAt,undefined);
+});
+
+test('D1 existing profiles are read without repeated INSERT statements',async()=>{
+  const {getProfile}=await import('../cloudflare/profile.js');
+  const {Core}=await import('../dist/cloudflare/core.js');
+  const record=Core.starterProfile('Alice');
+  const counters={selects:0,inserts:0};
+  const db={prepare(sql){
+    return {
+      bind(){return this;},
+      async first(){counters.selects++;return {profile_json:JSON.stringify(record),version:0};},
+      async run(){counters.inserts++;return {meta:{changes:0}};}
+    };
+  }};
+  for(let i=0;i<5;i++)assert.equal((await getProfile(db,alice)).value.name,record.name);
+  assert.equal(counters.selects,5);
+  assert.equal(counters.inserts,0,'a known user should not spend D1 write queries on each authenticated call');
 });
