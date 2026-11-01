@@ -1,5 +1,5 @@
 import { EVOLUTIONS } from './evolutions.js';
-export const VERSION = '0.9.9';
+export const VERSION = '0.9.10';
 // All combat health and damage numbers use a 1/6 display scale. Economy, ranges,
 // movement and relative time-to-kill are deliberately unchanged.
 export const COMBAT_SCALE = 6;
