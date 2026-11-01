@@ -909,3 +909,49 @@ body{background:#15203d;color:var(--text)}button{border:2px solid #101a35;border
  .nav-item.temple-nav:before{animation:none}
  .nav-item.temple-nav,.temple-start,.temple-coop{transition:none}
 }
+
+
+/* v0.11.3 — God is imposing IN CARDS, not physically oversized in combat. */
+.loadout-slot:has(svg[data-base="oldgod"]){isolation:isolate}
+.loadout-slot svg[data-base="oldgod"]{
+  width:146px;height:auto;max-width:none;left:50%;top:-18px;
+  transform:translateX(-50%) scale(1.02);transform-origin:50% 10%;
+  opacity:1;filter:drop-shadow(0 5px 8px #080e24aa)
+}
+.loadout-slot:has(svg[data-base="oldgod"]) .slot-number,
+.loadout-slot:has(svg[data-base="oldgod"]) .slot-name,
+.loadout-slot:has(svg[data-base="oldgod"])>strong{
+  z-index:2;text-shadow:0 2px 4px #0b0c22,1px 0 4px #0b0c22,-1px 0 4px #0b0c22
+}
+.loadout-slot:has(svg[data-base="oldgod"])::before{
+  content:'';position:absolute;inset:52% 0 0;z-index:1;pointer-events:none;
+  background:linear-gradient(transparent,#111b37b3 65%,#111b37f0)
+}
+/* Navigation is allowed to scroll INSIDE its sidebar, never stretch the
+   entire grid and push the team dock above an empty body-sized tail. */
+@media(min-width:621px){
+  .shell{height:100dvh;min-height:0;max-height:100dvh}
+  .shell>.sidebar{min-height:0;min-width:0;overflow-x:hidden;overflow-y:auto;
+    overscroll-behavior-y:contain;scrollbar-width:thin;scrollbar-color:#6b83ab transparent}
+  .shell>.content{min-height:0}
+}
+@media(min-width:621px) and (max-width:850px){
+  .shell{grid-template-rows:72px minmax(0,1fr) 130px}
+}
+@media(min-width:621px) and (max-height:920px){
+  .shell .sidebar{padding-top:12px;padding-bottom:8px;gap:2px}
+  .shell .sidebar .nav-item{min-height:47px;padding-top:7px;padding-bottom:7px;margin-bottom:3px}
+  .shell .sidebar .temple-nav{min-height:56px}
+  .shell .sidebar .nav-item[data-action="pvp"]{margin-top:8px}
+  .shell .sidebar .sidebar-bottom{padding-top:8px}
+  .shell .sidebar .sidebar-bottom small{margin:8px 0}
+  .shell .sidebar .sidebar-bottom button{padding:6px}
+}
+@media(max-width:620px){
+  .shell{height:auto;min-height:100dvh;max-height:none}
+  .shell>.sidebar{min-height:0}
+  .loadout-slot svg[data-base="oldgod"]{width:118px;top:-14px}
+}
+@media(prefers-reduced-motion:reduce){
+  .loadout-slot svg[data-base="oldgod"]{transition:none}
+}
