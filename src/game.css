@@ -732,3 +732,10 @@ body{background:#15203d;color:var(--text)}button{border:2px solid #101a35;border
   .achievement-nav-count{display:none}
 }
 @media(prefers-reduced-motion:reduce){.achievement-progress-bar i{transition:none}}
+
+/* Achievement archive uses a single scroll area so long lists remain accessible. */
+.shell:has(.achievement-page) .content{overflow-y:auto;overflow-x:hidden;overscroll-behavior-y:contain;scrollbar-width:thin}
+@media(max-width:620px){
+  .shell:has(.achievement-page) .content{overflow:visible}
+  .shell:has(.achievement-page){height:auto;min-height:100dvh}
+}
