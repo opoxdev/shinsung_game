@@ -170,8 +170,8 @@ const compileWaves=(script,pace,spacing,bonus)=>{
 };
 export const DIFFICULTIES = [
   {id:'easy',name:'쉬움',color:'#9ac985',reward:180,startMoney:500,hp:1,waves:compileWaves(WAVE_SCRIPTS.easy,45,1.18,75)},
-  {id:'normal',name:'기본',color:'#6bc4e3',reward:350,startMoney:2200,hp:1.05,waves:compileWaves(WAVE_SCRIPTS.normal,48,1.0,95)},
-  {id:'hard',name:'어려움',color:'#e8bd6b',reward:650,startMoney:850,hp:1.15,waves:compileWaves(WAVE_SCRIPTS.hard,51,.9,125)},
+  {id:'normal',name:'기본',color:'#6bc4e3',reward:350,startMoney:850,hp:1.05,waves:compileWaves(WAVE_SCRIPTS.normal,48,1.0,95)},
+  {id:'hard',name:'어려움',color:'#e8bd6b',reward:650,startMoney:2200,hp:1.15,waves:compileWaves(WAVE_SCRIPTS.hard,51,.9,125)},
   {id:'extreme',name:'익스트림',color:'#ed8c67',reward:1100,startMoney:4500,hp:1.25,waves:compileWaves(WAVE_SCRIPTS.extreme,55,.78,160)},
   {id:'hell',name:'지옥',color:'#f47f9b',reward:1800,startMoney:9000,hp:1.5,waves:compileWaves(WAVE_SCRIPTS.hell,58,.68,210)},
   {id:'ruin',name:'파멸',color:'#b491ea',reward:3000,startMoney:16000,hp:1.8,waves:compileWaves(WAVE_SCRIPTS.ruin,60,.58,270)}
