@@ -37,7 +37,9 @@ test('all 32 basic and evolved tower presences can be rendered with normal and r
    for(const lvl of [0,def.upgrades.length]){
     drawTowerPresence(g,{id:42,type:id,level:lvl},1.2,{...def,kind:def.kind},quality);
    }
-   assert.ok(commands.length>0,'aura failed to render for '+id);
+   if(quality>0||['legendary','mythic'].includes(def.rarity))
+    assert.ok(commands.length>0,'aura failed to render for '+id);
+   else assert.equal(commands.length,0,'reduced effects should omit common passive auras');
    assert.equal(g.shadowBlur,0,id);
   }
  }
