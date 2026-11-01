@@ -1,4 +1,4 @@
-import { MAPS, WORLD, TOWERS, ENEMIES, RARITIES } from './data.js';
+import { MAPS, WORLD, TOWERS, ENEMIES, RARITIES, formatDamage } from './data.js';
 import { pointOnPath, pathDistance, towerStats, canPlace } from './engine.js';
 import { character } from './art.js';
 import { makeTerrain } from './terrain.js';
@@ -29,7 +29,7 @@ export function drawMelee(g,e,age){
   g.quadraticCurveTo(reach*.6,-halfWidth*.71,reach+6,-halfWidth*.12);
   g.stroke();g.restore();
 }
-export const formatCombatNumber=n=>Number.isFinite(n)?Math.round(Math.max(0,n)).toLocaleString('ko-KR'):'0';
+export const formatCombatNumber=n=>formatDamage(n);
 const sprites=new Map();
 function sprite(id,skin,level=0){
   const key=id+'|'+skin+'|'+level;
