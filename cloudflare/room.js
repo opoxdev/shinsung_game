@@ -136,7 +136,7 @@ export class GameRoom {
     }
     if(name==='reward'){
       if(!r.state||r.state.status==='playing')throw Error('전투가 끝나지 않았습니다.');
-      return Core.rewardFor(r.state,uid);
+      return {...Core.rewardFor(r.state,uid),achievementRun:Core.achievementRun(r.state,uid)};
     }
     if(name==='leave'){
       delete r.members[uid];delete r.names[uid];delete r.profiles[uid];
