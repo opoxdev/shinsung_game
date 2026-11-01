@@ -8,6 +8,8 @@ function make(over={},ids=['a']){
  const type=over.type||'solo';
  const s=createMatch(config(over),ids.map(id=>({id,profile:{...starterProfile(),loadout:['scout']}})));
  s.queue=[];s.enemies=[];
+ // Final wave prevents normal wave-advance bonuses from obscuring combat income.
+ s.wave=10;
  Object.values(s.players).forEach(p=>p.money=0);
  return s;
 }
@@ -50,7 +52,7 @@ test('dark redistribution adds payable health budget without multiplying the min
  assert.equal(receiver.hp,11);
  near(receiver.bonusDamageBudget,.5);
  // The extra one HP is real, but its damage income budget increases by .5 only.
- receiver.paidDamage=10;receiver.hp=1;receiver.progress=50;
+ receiver.paidDamage=10;receiver.hp=1;receiver.progress=50;receiver.x=200;receiver.y=200;
  s.towers[0].cd=0;tick(s);
  near(s.players.a.money,.85*bounty(.5*COMBAT_SCALE)*(.2/.5)+.85*bounty(10*COMBAT_SCALE)*(.5/10));
 });
