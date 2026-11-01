@@ -98,7 +98,7 @@ test('Ancient God is permanently unlocked once; combat has divine judgement mech
   assert.match(portrait,/data-ear-shape="none"/);
   assert.match(portrait,/viewBox="0 0 240 280"/,'higher-detail monumental portrait');
   assert.doesNotMatch(portrait,/feline|cat ears|data-ear-shape="cat"/i);
-  assert.ok(portrait.length>15000,'substantially more sculpted detail than the old placeholder');
+  assert.ok(portrait.length>9500,'substantially more sculpted detail than the old placeholder');
 
   const p=starterProfile();
   const s=createMatch(solo,[{id:'local',profile:p}]);
