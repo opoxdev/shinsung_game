@@ -381,7 +381,62 @@ function relicPortrait(id,c,skin){
   if(skin==='starlight'||skin==='celestial')out+=path('M93 5l5 13 15 2-11 10 3 14-12-7-12 7 2-14-10-10 14-2Z',a,'none',0);
   return out;
 }
+
+// Hand-authored in-game artwork, based on the supplied Ancient God reference.
+// White feline-horned titan, gold halo/arm, orange-red chest cores,
+// dark organic right side and ragged blood-red waistcloth.
+function oldGodPortrait(){
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 210" data-design="v2" data-base="oldgod" data-costume="default" aria-label="고대의 신">'+
+  '<defs>'+
+  '<linearGradient id="god-gold" x2=".85" y2="1"><stop stop-color="#fff8aa"/><stop offset=".25" stop-color="#ffdd39"/><stop offset=".75" stop-color="#ffad09"/><stop offset="1" stop-color="#d75d09"/></linearGradient>'+
+  '<linearGradient id="god-ivory" x2="1" y2="1"><stop stop-color="#fffef4"/><stop offset=".55" stop-color="#e1d8c5"/><stop offset="1" stop-color="#adb2ae"/></linearGradient>'+
+  '<linearGradient id="god-flesh" x2="1" y2="1"><stop stop-color="#dc9292"/><stop offset=".4" stop-color="#773b53"/><stop offset="1" stop-color="#301b39"/></linearGradient>'+
+  '<radialGradient id="god-core"><stop stop-color="#fff0a2"/><stop offset=".48" stop-color="#ffae17"/><stop offset=".83" stop-color="#ed3e16"/><stop offset="1" stop-color="#9a112a"/></radialGradient>'+
+  '<filter id="god-glow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="4"/></filter></defs>'+
+  '<ellipse cx="91" cy="201" rx="77" ry="8" fill="#160e23" opacity=".45"/>'+
+  // Celestial halo behind the head
+  '<ellipse cx="91" cy="15" rx="43" ry="8" fill="none" stroke="#ffdd5e" stroke-width="6" opacity=".75" filter="url(#god-glow)"/>'+
+  '<ellipse cx="91" cy="15" rx="42" ry="8" fill="none" stroke="#fff7aa" stroke-width="3"/>'+
+  // Dark organic side, curling appendages and open abyss-mouth
+  '<path d="M126 62 Q169 38 162 94 Q151 119 176 149 Q167 168 150 150 Q175 191 160 200 Q140 192 128 170 L123 87Z" fill="url(#god-flesh)" stroke="#392538" stroke-width="4"/>'+
+  '<path d="M143 87 Q171 108 156 142 Q171 156 174 171 Q154 164 145 149 Q129 158 139 182 Q124 171 124 141Z" fill="#ad5d60" stroke="#4c2b3a" stroke-width="3"/>'+
+  '<path d="M146 129 Q166 122 167 147 Q154 157 145 145 Q139 139 146 129Z" fill="#100e22" stroke="#cb8e89" stroke-width="4"/>'+
+  '<path d="M126 154 Q158 181 146 201 Q128 184 116 176" fill="none" stroke="#c8786d" stroke-width="8"/>'+
+  // Broad ivory body, oversized left shoulder
+  '<path d="M58 69 Q68 55 87 53 Q111 49 132 70 L140 151 Q128 174 92 177 Q55 173 45 150L42 92Z" fill="url(#god-ivory)" stroke="#423a3d" stroke-width="4"/>'+
+  '<path d="M47 73Q23 67 15 94L18 137 49 144 58 91Z" fill="url(#god-ivory)" stroke="#4a4445" stroke-width="4"/>'+
+  // Head: simple white feline with triangular ears
+  '<path d="M68 46 L66 25 81 34 Q92 29 108 34 L120 23 123 50 Q132 61 123 72 Q94 84 68 69 Q59 57 68 46Z" fill="url(#god-ivory)" stroke="#494444" stroke-width="4"/>'+
+  '<path d="M66 51Q50 59 54 86Q42 86 41 64Q45 50 52 48Z" fill="#ede9e4" stroke="#53464a" stroke-width="3"/>'+
+  '<path d="M125 50Q142 63 136 85Q124 90 122 77Z" fill="#f9f5ee" stroke="#453b42" stroke-width="3"/>'+
+  '<ellipse cx="79" cy="48" rx="5" ry="5.7" fill="#eb571d" stroke="#432d36" stroke-width="2"/>'+
+  '<ellipse cx="110" cy="45" rx="5" ry="5.7" fill="#ec6019" stroke="#432d36" stroke-width="2"/>'+
+  '<path d="M91 62q7-13 15-1l-8 2-8 7" fill="none" stroke="#454047" stroke-width="3"/>'+
+  // White tusks at shoulders
+  '<path d="M47 76Q22 70 18 50Q13 77 30 92Q41 99 52 91" fill="#f8f8ee" stroke="#3e4143" stroke-width="3"/>'+
+  '<path d="M128 79Q147 68 142 49Q154 65 150 84Q143 96 133 96" fill="#fcfaf3" stroke="#3e4143" stroke-width="3"/>'+
+  // Gold shoulder circle, white armor rib panels
+  '<ellipse cx="39" cy="89" rx="17" ry="22" fill="#fffdf5" stroke="#ffd124" stroke-width="5"/>'+
+  '<path d="M59 93Q87 87 120 91 M57 117Q88 127 126 111 M57 143Q85 151 128 136" fill="none" stroke="#e4b64a" stroke-width="3"/>'+
+  '<path d="M74 84l-3 70m37-67 6 64" stroke="#dba63d" stroke-width="2" opacity=".8"/>'+
+  // Massive golden glowing left arm
+  '<path d="M23 111Q17 109 16 126L10 170Q5 198 24 201Q43 209 48 187L55 118Q47 108 23 111Z" fill="url(#god-gold)" stroke="#e77e0b" stroke-width="3"/>'+
+  '<path d="M14 166Q27 158 46 166M14 181Q28 175 46 184" fill="none" stroke="#ffe75e" stroke-width="3" opacity=".7"/>'+
+  // Red bioelectric veins and chest cores
+  '<g stroke="#d47b4e" stroke-width="2.1" opacity=".72" fill="none"><path d="M82 89l-12 19 20 12-4 28M94 83l15 27-15 22 17 22M119 98l-7 18 14 18M64 121l17-10 14 12"/></g>'+
+  '<g fill="url(#god-core)" stroke="#8b382d" stroke-width="2.5">'+
+  '<circle cx="91" cy="91" r="8"/><circle cx="125" cy="102" r="10"/><circle cx="73" cy="126" r="6.7"/>'+
+  '<circle cx="113" cy="141" r="7"/><circle cx="91" cy="155" r="4.8"/><circle cx="125" cy="160" r="5.2"/>'+
+  '</g>'+
+  // Glowing gold collar and waist wrapped in tattered ritual cloth
+  '<path d="M69 78Q84 74 100 80L112 88 105 91 91 85 76 90Z" fill="#fbd447" stroke="#b57a19" stroke-width="2"/>'+
+  '<path d="M59 166Q90 176 132 162L124 185 108 198 90 178 77 206 69 186 52 193Z" fill="#743d38" stroke="#3b2d36" stroke-width="3"/>'+
+  '<path d="M68 171l11 29 10-22 19 15 12-23" fill="none" stroke="#dc8b62" stroke-width="2.5"/>'+
+  '<path d="M60 188l-3 18h28l6-23 12 23h23l-5-21" fill="#eeeae1" stroke="#4f4545" stroke-width="3"/>'+
+  '</svg>';
+}
 export function redesignedPortrait(id,skin='default'){
+  if(id==='oldgod')return oldGodPortrait();
  const base=DESIGNS[id];if(!base)return null;
  const suit=SCHEMES[skin];
  const c=suit?{...base,...suit}:base;
