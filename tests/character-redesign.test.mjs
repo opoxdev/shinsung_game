@@ -15,7 +15,7 @@ test('all thirty baseline characters have unique silhouettes across five rarity 
   for(const id of ids){
     const plain=character(id);
     assert.match(plain,/data-design="v2"/,id);
-    assert.match(plain,/<svg[^>]+viewBox="0 0 180 210"/,id);
+    assert.match(plain,id==='oldgod'?/<svg[^>]+viewBox="0 0 240 280"/:/<svg[^>]+viewBox="0 0 180 210"/,id);
     assert.ok(plain.includes('data-base="'+id+'"'),id);
     assert.ok(plain.includes('</svg>'),id);
     assert.ok(!plain.includes('style="filter:'),'No recolor filter allowed: '+id);
