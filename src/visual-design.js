@@ -560,7 +560,7 @@ function oldGodPortrait(){
     <path d="M112 222l8-7 8 7-8 9z" fill="#fff1a5" stroke="#b67c33" stroke-width="2"/>
     <g fill="#f7d696" opacity=".8"><circle cx="81" cy="226" r="1.6"/>
       <circle cx="157" cy="228" r="1.6"/><circle cx="95" cy="236" r="1.6"/></g>
-    <!-- NO cat ears. A smooth round head with gold forehead sigil instead. -->
+    <!-- Smooth divine cranium with an engraved golden forehead seal. -->
     <path data-anatomy="smooth-head" d="M84 49Q86 34 103 31Q119 27 137 32Q154 37 157 53
       Q162 73 152 91Q143 104 120 105Q96 104 86 89Q78 75 84 49Z"
       fill="url(#god-ivory)" stroke="#403a47" stroke-width="4.6"/>
