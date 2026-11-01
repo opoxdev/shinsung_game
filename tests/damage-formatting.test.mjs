@@ -87,7 +87,7 @@ test('attack speed, range and related tower stats never display a fractional num
   for(const [id,tower] of Object.entries(TOWERS)){
     for(const label of [formatAttackInterval(tower.interval),formatWholeStat(tower.range),formatDamage(tower.damage)]){
       assert.doesNotMatch(label,/\d\.\d/,'fractional stat displayed: '+id+' '+label);
-      assert.match(label,/^[\\d,]+(?:ms|초)?$/,'valid whole-number stat label: '+id);
+      assert.match(label,/^[\d,]+(?:ms|초)?$/,'valid whole-number stat label: '+id);
     }
   }
 });
