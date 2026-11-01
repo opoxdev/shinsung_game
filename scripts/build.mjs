@@ -14,7 +14,7 @@ function stripModules(source){
     .replace(/^export\s+\{[^\n]*\}\s+from\s+['"][^'"\n]+['"];?\s*$/gm,'')
     .replace(/^export\s+(?=(const|let|var|function|class)\b)/gm,'');
 }
-const sources=['evolutions','data','engine','achievements','visual-design','art','presentation','terrain','render','online','matchmaking','admin-panel','achievement-page','online-prediction','story','client-profile','main'];
+const sources=['evolutions','data','engine','achievements','visual-design','art','presentation','terrain','enemy-art','render','online','matchmaking','admin-panel','achievement-page','online-prediction','story','client-profile','main'];
 const files=await Promise.all(sources.map(x=>read(`src/${x}.js`)));
 const stitched=files.map((s,i)=>`// --- ${sources[i]}.js ---\n${stripModules(s)}`).join('\n');
 const js=`(()=>{\n'use strict';\n${stitched}\n})();`;

@@ -85,7 +85,7 @@ test('new evolutions unlock additional gameplay rather than only scaling stats',
  assert.equal(towerStats({type:'marker',level:3}).kind,'splash');
  assert.equal(towerStats({type:'hunter',level:3}).chargeEvery,2);
  assert.equal(towerStats({type:'papercrane',level:4}).summons,4);
- assert.equal(towerStats({type:'lullaby',level:3}).haste,.3);
+ assert.equal(towerStats({type:'lullaby',level:3}).haste,.36);
  assert.ok(towerStats({type:'scrap',level:3}).pierce);
  assert.ok(towerStats({type:'starseed',level:3}).splash>TOWERS.starseed.splash);
 });

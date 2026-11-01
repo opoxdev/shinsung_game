@@ -1,5 +1,5 @@
 import { EVOLUTIONS } from './evolutions.js';
-export const VERSION = '0.11.3';
+export const VERSION = '0.12.0';
 // All combat health and damage numbers use a 1/6 display scale. Economy, ranges,
 // movement and relative time-to-kill are deliberately unchanged.
 export const COMBAT_SCALE = 6;
@@ -15,7 +15,7 @@ export const TOWERS = {
   blade: { name:'검객', role: '근접 · 관통', rarity: 'rare', cost: 230, price: 0, color: '#ff6a92', damage: 25, interval: .9, range: 100, kind: 'melee', cap: 10, upgrades: [260,600,1200], desc:'무명 도복과 연습용 칼집을 가진 떠돌이 검객. 화려한 가면은 특별 스킨의 몫이다.' },
   cannon: { name:'폭파 전문가', role: '폭발 · 광역', rarity: 'epic', cost: 450, price: 1800, color: '#ff9b54', damage: 35, interval: 2, range: 235, splash: 85, kind: 'splash', cap: 6, upgrades: [480,1000,2200], desc:'유탄 발사기와 탄약 배낭을 장착한 폭발물 전문가. 광역 폭발로 적 진형을 무너뜨린다.' },
   summoner: { name: '고블린 소환사', role: '소환', rarity: 'epic', cost: 500, price: 2200, color: '#a4e68b', damage: 65, interval: 4, range: 260, kind: 'summon', cap: 4, upgrades: [550,1200,2400], desc: '고블린을 소환해 적을 추격한다. 소환수는 목표에 도달하면 공격하고 사라진다.' },
-  workshop: { name: '버섯 정원', role: '지원 · 버프', rarity: 'epic', cost: 610, price: 1500, color: '#ff88a8', damage: 0, interval: 1, range: 210, kind: 'buff', cap: 3, upgrades: [450,900,1800], desc: '빛나는 포자로 아군 공격력을 20% 강화하는 작은 버섯집. 여러 정원의 효과는 중첩되지 않는다.' },
+  workshop: { name: '버섯 정원', role: '지원 · 버프', rarity: 'epic', cost: 610, price: 1500, color: '#ff88a8', damage: 0, interval: 1, range: 210, kind: 'buff', power:.2, cap: 3, upgrades: [450,900,1800], desc: '빛나는 포자로 아군 공격력을 24% 강화하는 작은 버섯집. 여러 정원의 효과는 중첩되지 않는다.' },
   rail: { name: '별술사', role: '별빛 · 장거리', rarity: 'legendary', cost: 850, price: 5000, color: '#a6d8ff', damage: 170, interval: 2.8, range: 420, kind: 'ranged', cap: 3, upgrades: [1300,2600,5200], desc: '커다란 모자 아래 반짝이는 두 눈. 멀리 있는 적에게 장갑을 꿰뚫는 별빛을 떨어뜨린다.', pierce: true },
   oldgod: { name:'고대의 신',role:'신벌 · 종말의 심판',rarity:'mythic',cost:8500,price:null,color:'#ffd45d',damage:1950,interval:3.5,range:560,splash:170,kind:'judgement',pierce:true,bossBonus:2.2,cap:1,upgrades:[10500,19500,33000],desc:'파멸의 신전 30웨이브 최초 클리어 보상. 후광을 두른 거대한 백색 신체와 황금의 팔, 붉은 오염된 육체가 공명한다. 신벌의 빛으로 광역을 초토화하며 보스에게 추가 피해를 준다.' },
   sonic: { name: '소닉', role: '중반 · 초고속 광역', rarity: 'mythic', cost: 720, price: null, color: '#f784cb', damage: 26, interval: .22, range: 240, splash: 45, kind: 'splash', cap: 2, upgrades: [1900,3800,7000], desc: '익스트림 이상 + 슈퍼소닉 모드 클리어 보상. 음파로 적의 대열을 분쇄한다.' },
@@ -47,6 +47,17 @@ export const TOWERS = {
 for(const [id,def] of Object.entries(TOWERS)) {
   if(!EVOLUTIONS[id])throw Error('타워 진화 데이터 누락: '+id);
   def.upgrades=EVOLUTIONS[id].map(step=>step.cost);
+  // v0.12: buff tower output, not enemy HP or campaign composition.
+  const attackBuff=id==='oldgod'?.88:def.kind==='melee'?1.45:1.35;
+  def.damage*=attackBuff;
+  def.interval*=id==='oldgod'?1.04:def.kind==='buff'||def.kind==='income'?1:.92;
+  if(id!=='oldgod'){
+    def.range*=def.kind==='melee'?1.12:1.08;
+    for(const key of ['income','power','haste'])if(def[key])def[key]*=1.2;
+    for(const step of EVOLUTIONS[id])for(const key of ['income','power','haste'])if(step[key])step[key]*=1.2;
+  }
+  if(def.dot)def.dot*=attackBuff;
+  for(const step of EVOLUTIONS[id])if(step.dot)step.dot*=attackBuff;
   def.damage/=COMBAT_SCALE;
   if(def.dot)def.dot/=COMBAT_SCALE;
   // Evolution DoT traits are absolute DPS values; multipliers are unitless.
