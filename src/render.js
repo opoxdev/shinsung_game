@@ -145,7 +145,7 @@ export class Renderer {
     g.restore();
     if(lobby){const grad=g.createLinearGradient(0,0,0,this.height);grad.addColorStop(0,'#101b1230');grad.addColorStop(.45,'#101b1200');grad.addColorStop(1,'#18234780');g.fillStyle=grad;g.fillRect(0,0,this.width,this.height);}
   }
-  tower(g,t,time,clock=time){const d=TOWERS[t.type],c=d.color,lev=t.level||0,stats=towerStats(t);g.save();g.translate(t.x,t.y);g.fillStyle='#18294b55';g.beginPath();g.ellipse(4,6,25,13,0,0,7);g.fill();g.strokeStyle=RARITIES[d.rarity].color;g.lineWidth=2;g.beginPath();g.ellipse(0,3,25,12,0,0,7);g.stroke();
+  tower(g,t,time,clock=time){const d=TOWERS[t.type],c=d.color,lev=t.level||0,stats=towerStats(t);g.save();g.translate(t.x,t.y);g.fillStyle='#18294b55';g.beginPath();g.ellipse(4,6,t.type==='oldgod'?51:25,t.type==='oldgod'?24:13,0,0,7);g.fill();g.strokeStyle=RARITIES[d.rarity].color;g.lineWidth=t.type==='oldgod'?4:2;g.beginPath();g.ellipse(0,3,t.type==='oldgod'?51:25,t.type==='oldgod'?23:12,0,0,7);g.stroke();
     if(['buff','summon','chain'].includes(stats.kind)||t.type==='sonic'){g.strokeStyle=c+'99';g.beginPath();g.ellipse(0,3,29+Math.sin(time*3)*5,14,0,0,7);g.stroke();}
     if(t.type==='oldgod'){
       const phase=time*1.2;g.save();g.shadowColor='#ffcf61';g.shadowBlur=15;g.lineWidth=3;
@@ -167,7 +167,7 @@ export class Renderer {
       g.strokeStyle='#ef9dff';g.lineWidth=3;g.beginPath();g.arc(0,-20,30,0,7);g.stroke();
       g.fillStyle='#fcceff';g.font='bold 20px sans-serif';g.fillText('⚡',-10,-54);
     }
-    const img=sprite(t.type,t.skin||'default',lev),size=(t.type==='oldgod'?132:75)+lev*3,bob=Math.sin(time*(t.type==='sonic'?5:2)+t.x)*1.6;
+    const img=sprite(t.type,t.skin||'default',lev),size=(t.type==='oldgod'?194:75)+lev*(t.type==='oldgod'?8:3),bob=Math.sin(time*(t.type==='sonic'?5:2)+t.x)*1.6;
     if(img.complete&&img.naturalWidth){
       // Keep tactical weapons pointing toward their actual targets, rather
       // than leaving non-melee fighters aiming right while they shoot left.
