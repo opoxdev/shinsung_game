@@ -30,5 +30,5 @@ test('linear target selection keeps first, strongest and nearest targeting seman
  }
 });
 test('all species use a defined visual family including every temple enemy',()=>{
- const styles=new Set();for(const [id,d] of Object.entries(ENEMIES)){const style=enemyStyle(id);styles.add(style);assert.ok(style);if(d.eventOnly)assert.equal(style,'temple');}assert.equal(styles.size,7);
+ const styles=new Set();for(const [id,d] of Object.entries(ENEMIES)){const style=enemyStyle(id);styles.add(style);assert.ok(style);if(d.eventOnly)assert.equal(style,'temple');}assert.equal(styles.size,8);assert.ok(styles.has('flesh'));
 });
