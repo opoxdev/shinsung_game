@@ -3,6 +3,13 @@ export const VERSION = '0.12.0';
 // All combat health and damage numbers use a 1/6 display scale. Economy, ranges,
 // movement and relative time-to-kill are deliberately unchanged.
 export const COMBAT_SCALE = 6;
+// Presentation boundary for ALL tower attack / combat damage text. Combat
+// mechanics retain their original fractional precision; only UI text is rounded.
+// New UI must call formatDamage() instead of interpolating *.damage directly.
+export const formatDamage=value=>{
+  const n=Number(value);
+  return Number.isFinite(n)?Math.round(Math.max(0,n)).toLocaleString('ko-KR'):'0';
+};
 export const WORLD = { width: 1800, height: 1100, road: 76 };
 export const RARITIES = {
   common: { name: '일반', color: '#a8b8b0' }, rare: { name: '희귀', color: '#65c8f3' },
