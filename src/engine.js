@@ -9,13 +9,16 @@ export function bounty(hp) {
 }
 const dist = (a,b) => Math.hypot(a.x-b.x,a.y-b.y);
 export function mapOf(s) { return MAPS.find(m=>m.id===s.config.map); }
-export function pointOnPath(path, distance) {
-  for (let i=1;i<path.length;i++) {
-    const a=path[i-1],b=path[i],len=Math.hypot(b[0]-a[0],b[1]-a[1]);
-    if(distance<=len) return {x:a[0]+(b[0]-a[0])*distance/len,y:a[1]+(b[1]-a[1])*distance/len};
-    distance-=len;
-  }
-  const end=path[path.length-1]; return {x:end[0],y:end[1],end:true};
+const pathMetrics=new WeakMap();
+export function pointOnPath(path,distance){
+  let segments=pathMetrics.get(path);
+  if(!segments){let total=0;segments=path.slice(1).map((b,i)=>{const a=path[i],dx=b[0]-a[0],dy=b[1]-a[1],length=Math.hypot(dx,dy);const segment={a,dx,dy,length,start:total,end:total+length};total+=length;return segment;});pathMetrics.set(path,segments);}
+  let lo=0,hi=segments.length-1;
+  while(lo<hi){const mid=(lo+hi)>>1;if(distance<=segments[mid].end)hi=mid;else lo=mid+1;}
+  const segment=segments[lo];
+  if(!segment||distance>segment.end){const end=path.at(-1);return {x:end[0],y:end[1],end:true};}
+  const ratio=segment.length?(distance-segment.start)/segment.length:0;
+  return {x:segment.a[0]+segment.dx*ratio,y:segment.a[1]+segment.dy*ratio};
 }
 export function pathDistance(path,x,y) {
   let min=Infinity;
@@ -54,17 +57,20 @@ export function createMatch(config, players) {
   nextWave(s); return s;
 }
 // Each tower instance resolves its own evolution; same-type siblings stay independent.
+const resolvedStats=new Map();
 export function towerStats(t) {
+  const key=t.type+':'+(t.level||0);if(resolvedStats.has(key))return resolvedStats.get(key);
   const d=TOWERS[t.type];if(!d)throw Error('존재하지 않는 타워입니다.');
   const step=evolutionAt(t.type,t.level||0);
-  return {...d,...step,
+  const stats=Object.freeze({...d,...step,
     damage:d.damage*(step?.damageMult??1),
     interval:d.interval/(step?.rateMult??1),
     range:d.range*(step?.rangeMult??1),
     splash:step?.splash??d.splash??0,
     kind:step?.kind??d.kind,
     stageName:step?.name??'기본 장비'
-  };
+  });
+  resolvedStats.set(key,stats);return stats;
 }
 export function canPlace(s,field,x,y) {
   return Number.isFinite(x)&&Number.isFinite(y)&&x>=45&&y>=45&&x<=WORLD.width-45&&y<=WORLD.height-45&&pathDistance(mapOf(s).path,x,y)>WORLD.road/2+22&&!s.towers.some(t=>t.field===field&&Math.hypot(t.x-x,t.y-y)<50);
@@ -264,8 +270,10 @@ export function tick(s,dt=STEP) {
       continue;
     }
     if(t.cd>0)continue;
-    const candidates=s.enemies.filter(e=>e.field===t.field&&e.hp>0&&dist(t,e)<=stats.range);
-    candidates.sort(t.target==='strong'?(a,b)=>b.hp-a.hp:t.target==='near'?(a,b)=>dist(a,t)-dist(b,t):(a,b)=>b.progress-a.progress);
+    const candidates=s.enemies.filter(e=>e.field===t.field&&e.hp>0&&(t.x-e.x)**2+(t.y-e.y)**2<=stats.range**2);
+    const order=t.target==='strong'?(a,b)=>b.hp-a.hp:t.target==='near'?(a,b)=>(a.x-t.x)**2+(a.y-t.y)**2-(b.x-t.x)**2-(b.y-t.y)**2:(a,b)=>b.progress-a.progress;
+    if(stats.kind==='melee'||(stats.multi||1)>1)candidates.sort(order);
+    else {let best=0;for(let i=1;i<candidates.length;i++)if(order(candidates[i],candidates[best])<0)best=i;if(best)[candidates[0],candidates[best]]=[candidates[best],candidates[0]];}
     const e=candidates[0];if(!e)continue;
     const buffs=auras.filter(({t:b,stats:bs})=>b.field===t.field&&dist(b,t)<=bs.range);
     // Strongest aura of each category wins; different kinds may coexist.
@@ -293,7 +301,7 @@ export function tick(s,dt=STEP) {
       const targets=[e],left=new Set([e.id]),max=stats.chain||3;
       while(targets.length<max){
         const prev=targets[targets.length-1];
-        const next=s.enemies.filter(a=>a.field===t.field&&a.hp>0&&!left.has(a.id)&&dist(prev,a)<=(stats.chainRange||120)).sort((a,b)=>dist(a,prev)-dist(b,prev))[0];
+        let next=null,bestDistance=(stats.chainRange||120)**2;for(const a of s.enemies){if(a.field!==t.field||a.hp<=0||left.has(a.id))continue;const distance=(a.x-prev.x)**2+(a.y-prev.y)**2;if(distance<=bestDistance&&(!next||distance<bestDistance)){next=a;bestDistance=distance;}}
         if(!next)break;targets.push(next);left.add(next.id);
       }
       targets.forEach((target,i)=>{

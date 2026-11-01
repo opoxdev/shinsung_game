@@ -136,7 +136,9 @@ test('Temple event is separate in UI and visible to player without additional se
   assert.match(main,/const list=rooms\.filter\(r=>r\.type===mode/);
   const render=readFileSync(new URL('../src/render.js',import.meta.url),'utf8');
   assert.match(render,/e\.kind==='divine'/);
-  assert.match(render,/d\.eventOnly==='temple_of_ruin'/);
+  assert.match(render,/drawEnemy/);
+  const enemyArt=readFileSync(new URL('../src/enemy-art.js',import.meta.url),'utf8');
+  assert.match(enemyArt,/if\(d.eventOnly\)return 'temple'/);
   const terrain=readFileSync(new URL('../src/terrain.js',import.meta.url),'utf8');
   assert.match(terrain,/map\.biome==='temple'/);
 });

@@ -108,15 +108,15 @@ test('income evolution changes only that unit and old tower data remains unmodif
   const s=match();grant(s);s.queue=[];
   const base=install(s,'banker'),gold=install(s,'banker',330,100);
   gold.level=2;
-  assert.equal(towerStats(base).income,120);
-  assert.equal(towerStats(gold).income,270);
+  assert.equal(towerStats(base).income,144);
+  assert.equal(towerStats(gold).income,324);
   assert.ok(towerStats(gold).interval<towerStats(base).interval);
   // No shared mutation even after an authoritative tick and JSON round-trip.
   s.enemies=[summonTarget(s,'tank',100000,1550,900)];
   advance(s,1);
   const copy=JSON.parse(JSON.stringify(s));
   assert.deepEqual(copy.towers.map(t=>t.level),[0,2]);
-  assert.equal(towerStats(copy.towers[0]).income,120);
+  assert.equal(towerStats(copy.towers[0]).income,144);
 });
 test('all upgraded SVG costumes are nonempty and distinct from base portraits',()=>{
   for(const [id,path] of Object.entries(EVOLUTIONS)){

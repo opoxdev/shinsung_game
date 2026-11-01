@@ -63,7 +63,7 @@ test('slow, poison, split on death and regeneration run inside the deterministic
 test('income tower pays periodically, not instantly or per player in a lobby',()=>{
   const s=fresh();s.enemies=[enemy(s,'heavy',50000,{x:1500,y:900})];const b=tower(s,'banker');b.cd=15;
   const start=s.players.hero.money;advance(s,10);assert.equal(s.players.hero.money,start);
-  advance(s,5.1);assert.equal(s.players.hero.money,start+120);
+  advance(s,5.1);assert.equal(s.players.hero.money,start+144);
 });
 test('spirit and phoenix each summon two unique animated helpers',()=>{
   const s=fresh();s.enemies=[enemy(s,'heavy',5000)];

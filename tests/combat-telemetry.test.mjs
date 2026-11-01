@@ -17,11 +17,11 @@ const putTower=(s,type='scout',extra={})=>{
   const t={id:s.nextId++,type,field:0,owner:'p',x:240,y:400,level:0,cd:0,shots:0,target:'first',...extra};
   s.towers.push(t);return t;
 };
-test('all combat numbers are six times smaller, preserving attack-to-health proportions',()=>{
+test('combat units stay scaled while v0.12 buffs tower output, not enemy health',()=>{
   assert.equal(COMBAT_SCALE,6);
-  assert.equal(TOWERS.scout.damage,1);
-  assert.equal(TOWERS.soldier.damage,1.5);
-  assert.equal(TOWERS.hunter.damage,620/6);
+  assert.ok(Math.abs(TOWERS.scout.damage-1.35)<1e-10);
+  assert.ok(Math.abs(TOWERS.soldier.damage-1.5*1.35)<1e-10);
+  assert.equal(TOWERS.hunter.damage,620*1.35/6);
   assert.equal(TOWERS.workshop.damage,0);
   assert.equal(ENEMIES.zombie.hp,3);
   assert.equal(ENEMIES.runner.hp,28/6);
@@ -29,8 +29,8 @@ test('all combat numbers are six times smaller, preserving attack-to-health prop
   assert.equal(ENEMIES.shieldling.shield,120/6);
   assert.equal(ENEMIES.medic.heal,14/6);
   assert.equal(ENEMIES.behemoth.regen,110/6);
-  assert.ok(Math.abs(TOWERS.scout.damage/ENEMIES.zombie.hp-6/18)<1e-12);
-  assert.equal(towerStats({type:'chemist',level:3}).dot,35/6);
+  assert.ok(Math.abs(TOWERS.scout.damage/ENEMIES.zombie.hp-6*1.35/18)<1e-12);
+  assert.equal(towerStats({type:'chemist',level:3}).dot,35*1.35/6);
   assert.equal(bounty(5000),500,'Combat income curve remains unchanged');
 });
 test('authoritative per-hit float label equals actual HP damage',()=>{
@@ -40,8 +40,8 @@ test('authoritative per-hit float label equals actual HP damage',()=>{
   const pop=s.events.find(x=>x.kind==='damage');
   assert.ok(pop);
   assert.equal(pop.field,0);
-  assert.equal(pop.amount,old-e.hp);
-  assert.equal(pop.amount,1);
+  assert.ok(Math.abs(pop.amount-(old-e.hp))<1e-10);
+  assert.equal(pop.amount,TOWERS.scout.damage);
 });
 test('shield damage pops reflect absorbed damage and do not pierce HP by accident',()=>{
   const s=make(),e=putEnemy(s,'shieldling');
@@ -60,7 +60,7 @@ test('lethal overkill shows full attack damage, not the last sliver of HP',()=>{
   tick(s);
   const hit=s.events.find(v=>v.kind==='damage');
   assert.ok(hit,'A lethal hit must still produce a damage number');
-  assert.equal(hit.amount,1,'Show the full 1-damage attack instead of 0.1 remaining HP');
+  assert.equal(hit.amount,TOWERS.scout.damage,'Show the full attack instead of the remaining HP');
   assert.equal(e.hp,0,'Actual HP must still clamp at zero');
   assert.equal(s.kills,1);
   assert.ok(s.players.p.money>fundsBefore,'Kill payout must remain unchanged');
