@@ -133,7 +133,7 @@ export async function applyAction(env,action,p,user){
 export default {
   async fetch(request,env){
     const url=new URL(request.url);
-    if(url.pathname==='/health')return response({ok:true,service:'shinsung-cloudflare',version:'0.11.1'});
+    if(url.pathname==='/health')return response({ok:true,service:'shinsung-cloudflare',version:'0.11.2'});
     // Browsing rooms is public; mutating a lobby still requires Firebase auth.
     if(url.pathname==='/rooms'&&request.method==='GET'){
       const mode=url.searchParams.get('mode');
