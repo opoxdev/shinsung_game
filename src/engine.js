@@ -43,7 +43,7 @@ export function createMatch(config, players) {
   const s={version:1,config,players:{},fields:config.type==='pvp'?[100,100]:[100],towers:[],enemies:[],units:[],queue:[],events:[],wave:0,time:0,waveTime:0,spawnClock:0,nextId:1,status:'playing',votes:[],kills:0,winner:null};
   players.forEach((p,i)=>{
     const profile=p.profile||starterProfile();
-    s.players[p.id]={id:p.id,name:String(profile.name).slice(0,20),field:config.type==='pvp'?i:0,money:startMoney,loadout:[...profile.loadout],pack:profile.pack,cooldowns:{},seq:0,skins:profile.equippedSkins||{}};
+    s.players[p.id]={id:p.id,name:String(profile.name).slice(0,20),field:config.type==='pvp'?i:0,money:startMoney,loadout:[...profile.loadout],pack:profile.pack,cooldowns:{},seq:0,skins:profile.equippedSkins||{},ach:{places:0,upgrades:0}};
   });
   nextWave(s); return s;
 }
@@ -105,12 +105,12 @@ export function command(s,playerId,c) {
     if(s.towers.filter(t=>t.field===p.field&&t.type===c.type).length>=d.cap)return fail('이 타워의 배치 한도에 도달했습니다.');
     if(p.money<d.cost)return fail('전투 자금이 부족합니다.');
     if(!canPlace(s,p.field,c.x,c.y))return fail('도로와 다른 타워를 피해 배치하세요.');
-    p.money-=d.cost;s.towers.push({id:s.nextId++,owner:playerId,field:p.field,type:c.type,x:c.x,y:c.y,level:0,cd:d.kind==='income'?d.interval:0,spent:d.cost,target:'first',skin:p.skins[c.type]||'default',shots:0});
+    p.ach=p.ach||{places:0,upgrades:0};p.ach.places++;p.money-=d.cost;s.towers.push({id:s.nextId++,owner:playerId,field:p.field,type:c.type,x:c.x,y:c.y,level:0,cd:d.kind==='income'?d.interval:0,spent:d.cost,target:'first',skin:p.skins[c.type]||'default',shots:0});
   } else if(['upgrade','sell','target'].includes(c.kind)) {
     const t=s.towers.find(t=>t.id===c.id);if(!t||t.owner!==playerId)return fail('자신의 타워를 선택하세요.');
     if(c.kind==='upgrade') {
       const cost=TOWERS[t.type].upgrades[t.level];if(cost===undefined)return fail('최대 레벨입니다.');if(p.money<cost)return fail('전투 자금이 부족합니다.');
-      p.money-=cost;t.level++;t.spent+=cost;t.cd=Math.min(t.cd,towerStats(t).interval);event(s,{kind:'upgrade',x:t.x,y:t.y,field:t.field,type:t.type,level:t.level});
+      p.ach=p.ach||{places:0,upgrades:0};p.ach.upgrades++;p.money-=cost;t.level++;t.spent+=cost;t.cd=Math.min(t.cd,towerStats(t).interval);event(s,{kind:'upgrade',x:t.x,y:t.y,field:t.field,type:t.type,level:t.level});
     } else if(c.kind==='sell') {p.money+=Math.floor(t.spent*7/10);s.towers=s.towers.filter(a=>a.id!==t.id);}
     else {if(!['first','strong','near'].includes(c.target))return fail('잘못된 타겟입니다.');t.target=c.target;}
   } else if(c.kind==='skip') {
@@ -328,6 +328,14 @@ export function tick(s,dt=STEP) {
   }
 }
 export function advance(s,seconds) {let n=Math.min(1200,Math.floor(seconds/STEP+1e-8));while(n-->0&&s.status==='playing')tick(s);return s;}
+// Compact end-of-match metrics; no extra live network traffic.
+export function achievementRun(s,id){
+  const p=s.players?.[id];if(!p)return null;
+  return {type:s.config.type,difficulty:s.config.difficulty,map:s.config.map,
+    modes:[...s.config.modes],win:s.config.type==='pvp'?s.winner===p.field:s.status==='victory',
+    kills:s.kills||0,places:p.ach?.places||0,upgrades:p.ach?.upgrades||0,
+    flawless:s.status==='victory'&&s.fields[p.field]===100};
+}
 export function rewardFor(s,id) {
   const p=s.players[id];if(!p||s.status==='playing')return {coins:0,xp:0,sonic:false,aurora:false,win:false,clearBonus:0};
   const win=s.config.type==='pvp'?s.winner===p.field:s.status==='victory';
