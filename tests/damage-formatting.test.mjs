@@ -31,7 +31,7 @@ test('main player stats and HP both use nearest-integer formatting',()=>{
   assert.match(source,/compare\(stats.damage,nextStats\?\.damage\)/);
   // Balance patches make TOWERS.*.damage fractional; never interpolate it raw.
   assert.match(source,/피해량<b>\$\{t\.damage>0\?formatDamage\(t\.damage\)/);
-  assert.doesNotMatch(source,/\$\{\s*t\.damage\b/,'raw damage must use integer UI formatter');
+  assert.doesNotMatch(source,/\$\{\s*t\.damage\s*(?:\}|\|\||\?\?)/,'raw damage must use integer UI formatter');
   for(const [id,tower] of Object.entries(TOWERS)){
     const displayed=formatDamage(tower.damage);
     assert.match(displayed,/^\d[\d,]*$/,'integer-only: '+id);
