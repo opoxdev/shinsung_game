@@ -116,7 +116,7 @@ test('PvP and coop progress can only be recorded once per authenticated room cla
 
 test('map exploration, elite, supersonic and flawless clears increment independently',()=>{
   const p=starterProfile('Traveler');
-  for(const map of ['plains','shadow','crystal']){
+  for(const map of ['plains','mountains','crystal']){
     recordAchievementRun(p,{type:'solo',difficulty:'extreme',map,modes:['supersonic','elite'],win:true,kills:40,places:5,upgrades:4,flawless:true});
   }
   assert.equal(achievementProgress(p,ACHIEVEMENTS.find(a=>a.id==='explorer_3')),3);
