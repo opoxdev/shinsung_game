@@ -7,9 +7,9 @@ import { profileAction } from '../src/engine.js';
 
 const pathGeometry=svg=>Array.from(svg.matchAll(/<path d="([^"]+)"/g),m=>m[1]).join('|');
 
-test('all thirty baseline characters have unique silhouettes across five rarity tiers',()=>{
+test('all thirty-two baseline characters have unique silhouettes across five rarity tiers',()=>{
   const ids=Object.keys(TOWERS);
-  assert.equal(ids.length,31);
+  assert.equal(ids.length,32);
   assert.deepEqual(Object.keys(CHARACTER_DESIGNS).sort(),ids.sort());
   const portraits=new Set();
   for(const id of ids){
