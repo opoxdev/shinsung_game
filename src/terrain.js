@@ -20,6 +20,20 @@ export function makeTerrain(map){
   }
   for(let i=0;i<65;i++){const x=noise(i)*1800,y=noise(i+300)*1100;poly(g,[[x-100,y],[x-30,y-60],[x+100,y-20],[x+90,y+50],[x-40,y+70]],i%2?'#ffffff09':'#142b3510');}
   for(let i=0;i<500;i++){const x=noise(i+90)*1800,y=noise(i+500)*1100;if(pathDistance(map.path,x,y)<70)continue;g.strokeStyle=map.id==='plains'?'#a4e27899':'#ffffff20';g.lineWidth=2;g.beginPath();g.moveTo(x-4,y);g.lineTo(x-7,y-7);g.moveTo(x,y);g.lineTo(x,y-10);g.moveTo(x+4,y);g.lineTo(x+7,y-5);g.stroke();if(i%9===0&&map.id==='plains')oval(g,x,y-8,3,3,i%2?'#fff0ad':'#ffacd1');}
+  if(map.biome==='temple'){
+    for(let k=0;k<12;k++){const x=120+(k%6)*270,y=95+Math.floor(k/6)*780;
+      if(pathDistance(map.path,x,y)<122)continue;g.fillStyle='#55425a';g.fillRect(x-42,y-32,84,65);
+      g.fillStyle='#947b77';g.fillRect(x-35,y-42,70,20);g.fillStyle='#ffc16f';
+      g.beginPath();g.arc(x,y-44,7,0,7);g.fill();g.strokeStyle='#e7bd70';g.strokeRect(x-34,y-28,68,50);}
+    g.shadowColor='#fa5d74';g.shadowBlur=14;g.strokeStyle='#b43a58';g.lineWidth=6;
+    for(let k=0;k<16;k++){const x=50+noise(k+420)*1700,y=65+noise(k+620)*960;
+      if(pathDistance(map.path,x,y)<95)continue;g.beginPath();g.moveTo(x-27,y-12);
+      g.lineTo(x,y+7);g.lineTo(x+20,y-17);g.lineTo(x+40,y+12);g.stroke();}
+    g.shadowBlur=0;g.save();g.translate(900,450);g.strokeStyle='#f6cb7966';g.lineWidth=8;
+    for(let k=0;k<3;k++){g.beginPath();g.arc(0,0,40+k*25,0,7);g.stroke();}
+    for(let k=0;k<8;k++){const p=k*Math.PI/4;g.beginPath();g.moveTo(Math.cos(p)*50,Math.sin(p)*50);
+      g.lineTo(Math.cos(p)*112,Math.sin(p)*112);g.stroke();}g.restore();
+  }
   if(map.id==='plains'){oval(g,940,500,130,90,'#4a9d92');oval(g,940,488,115,72,'#63cbd7');oval(g,935,477,95,52,'#7ee4e0');g.strokeStyle='#d9ffff88';g.lineWidth=4;g.beginPath();g.ellipse(940,482,70,35,0,.2,2.5);g.stroke();}
   if(map.id==='volcano'){g.shadowColor='#ff733b';g.shadowBlur=24;g.strokeStyle='#ff8550';g.lineWidth=12;g.beginPath();g.moveTo(80,100);g.lineTo(240,160);g.lineTo(360,80);g.moveTo(1200,720);g.lineTo(1280,640);g.lineTo(1300,940);g.stroke();g.shadowBlur=0;g.strokeStyle='#ffdc78';g.lineWidth=4;g.stroke();}
   if(map.id==='mountains'){for(let i=0;i<6;i++){const x=130+i*300;poly(g,[[x-110,90],[x,5],[x+125,95],[x+60,140]],'#303147');poly(g,[[x,5],[x+125,95],[x+60,140]],'#242b40');poly(g,[[x-40,38],[x,5],[x+40,34],[x+6,26]],'#9e8eaf');}}
