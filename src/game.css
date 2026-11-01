@@ -739,3 +739,62 @@ body{background:#15203d;color:var(--text)}button{border:2px solid #101a35;border
   .shell:has(.achievement-page) .content{overflow:visible}
   .shell:has(.achievement-page){height:auto;min-height:100dvh}
 }
+
+
+/* v0.11 — Independent Temple of Ruin raid. Pure CSS, zero image requests. */
+.temple-page{display:grid;gap:19px;padding-bottom:35px}
+.temple-hero{position:relative;padding:24px 25px 18px;border:2px solid #bc8e55;border-radius:17px;overflow:hidden;
+  background:radial-gradient(ellipse at 84% 7%,#e1784255,transparent 60%),
+    linear-gradient(130deg,#282038,#493044 55%,#282338);
+  box-shadow:0 10px 30px #110b204c,inset 0 0 35px #ffc65b0d}
+.temple-rune{letter-spacing:2.3px;font-weight:900;font-size:11px;color:#ffd17c}
+.temple-hero h1{font-size:clamp(30px,5vw,52px);color:#fff0d2;margin:8px 0}
+.temple-hero p{color:#f5d4bd;font-size:13px;line-height:1.75;max-width:680px}
+.temple-features{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}
+.temple-features span,.temple-mm-meta span{border-radius:8px;padding:8px 11px;
+  border:1px solid #aa825a;background:#241729bd;font-size:11px;color:#ffdfa2;font-weight:700}
+.temple-art{height:200px;border-radius:10px;border:1px solid #c19b66;overflow:hidden;
+  background:#2e243d}
+.temple-art svg{width:100%;height:100%;display:block;object-fit:cover}
+.temple-panels{display:grid;grid-template-columns:minmax(275px,.9fr) minmax(0,1.3fr);gap:16px}
+.temple-reward,.temple-deployment{border:1px solid #967765;border-radius:14px;padding:19px;
+  background:linear-gradient(140deg,#2b253d,#242a3e);min-width:0}
+.temple-reward{box-shadow:inset 0 2px #ffffff17,0 6px 22px #0f0d1d55}
+.temple-reward h2,.temple-deployment h2{font-size:27px;margin:8px 0;color:#ffdf93}
+.temple-reward .eyebrow,.temple-deployment .eyebrow{color:#e1a980;letter-spacing:1.4px}
+.temple-reward p,.temple-deployment p{font-size:12px;color:#d6ccdb;line-height:1.75}
+.temple-reward strong{display:block;color:#ffde7f;font-size:12px;margin:10px 0}
+.temple-god-preview{position:relative;height:265px;display:flex;justify-content:center;align-items:center;
+  border-radius:12px;background:radial-gradient(ellipse at center,#a65c3a55,transparent 63%),
+    linear-gradient(180deg,#392f43,#18152e);overflow:hidden}
+.temple-god-preview:before{content:'';position:absolute;width:140px;height:140px;border-radius:50%;
+  border:3px solid #ffce63;box-shadow:0 0 25px #ffb5418a,inset 0 0 22px #ff8a55aa;
+  animation:templeHalo 9s linear infinite}
+.temple-god-preview svg{height:95%;max-width:100%;width:auto;position:relative;z-index:1;
+  filter:drop-shadow(0 12px 16px #0009)}
+@keyframes templeHalo{to{transform:rotate(360deg)}}
+.temple-enemy-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin:17px 0}
+.temple-enemy-grid>div{border:1px solid #684a64;border-radius:9px;min-width:0;
+  background:#1c1c2f;display:grid;gap:3px;text-align:center;padding:5px}
+.temple-enemy-grid svg{width:100%;height:80px;max-width:110px;margin:auto}
+.temple-enemy-grid small{font-size:10px;color:#edcee0;line-height:1.4}
+.temple-start,.temple-coop{display:block;width:100%;padding:13px 12px;margin-top:11px;border-radius:9px;
+  font-weight:900;font-size:14px;text-align:center}
+.temple-start{border:1px solid #ffe4a3;color:#3b2331;
+  background:linear-gradient(180deg,#fff1bb,#e9af59)}
+.temple-coop{border:1px solid #d6b0ff;color:#fcecff;background:linear-gradient(160deg,#7a4d85,#4c3b74)}
+.temple-deployment>small{display:block;margin-top:12px;color:#af9bb2;font-size:10px;line-height:1.6}
+.temple-clear-prize{padding:12px;border-radius:8px;border:1px solid #ffc85e;background:#62432c;
+  color:#fff1b5;font-weight:850}
+.temple-mm-meta{display:flex;gap:7px;flex-wrap:wrap;margin:15px 0 19px}
+.temple-mm .mm-overline{color:#ffdb7e}
+.temple-mm h2{color:#ffde98}
+.temple-mm .mm-create{background:linear-gradient(#ffe4ac,#dca45e);color:#301c34}
+@media(max-width:760px){
+  .temple-panels{grid-template-columns:1fr}
+  .temple-hero{padding:16px}.temple-art{height:170px}
+  .temple-reward,.temple-deployment{padding:15px}
+  .temple-god-preview{height:215px}
+  .temple-enemy-grid svg{height:65px}
+}
+@media(prefers-reduced-motion:reduce){.temple-god-preview:before{animation:none}}
