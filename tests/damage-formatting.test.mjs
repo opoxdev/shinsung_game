@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {DIFFICULTIES,EVENTS,TOWERS,starterProfile} from '../src/data.js';
+import {DIFFICULTIES,EVENTS,TOWERS,starterProfile,formatDamage} from '../src/data.js';
 import {createMatch} from '../src/engine.js';
 import {formatCombatNumber} from '../src/render.js';
 import {Core} from '../dist/cloudflare/core.js';
@@ -14,7 +14,7 @@ test('floating damage displays are always whole numbers, rounded to nearest inte
     [0.0001,'0'],[0.333333333333,'0'],[0.5,'1'],[1.333333333333,'1'],
     [1.6,'2'],[12.333333333333,'12'],[12.5,'13'],[1234.66666,'1,235'],
     [2999.9999,'3,000'],[NaN,'0'],[Infinity,'0']
-  ])assert.equal(formatCombatNumber(value),label);
+  ])assert.equal(formatCombatNumber(value),label),assert.equal(formatDamage(value),label);
   const source=readFileSync(new URL('../src/render.js',import.meta.url),'utf8');
   assert.match(source,/const label=formatCombatNumber\(amount\)/);
   assert.doesNotMatch(source,/const label=amount<1\?/);
@@ -29,6 +29,15 @@ test('main player stats and HP both use nearest-integer formatting',()=>{
   assert.match(source,/const fmt=n=>Number.isFinite\(Number\(n\)\)\?Math.round/);
   assert.match(source,/const fmtHp=n=>Number.isFinite\(n\)\?Math.round/);
   assert.match(source,/compare\(stats.damage,nextStats\?\.damage\)/);
+  // Balance patches make TOWERS.*.damage fractional; never interpolate it raw.
+  assert.match(source,/피해량<b>\$\{t\.damage>0\?formatDamage\(t\.damage\)/);
+  assert.doesNotMatch(source,/\$\{\s*t\.damage\b/,'raw damage must use integer UI formatter');
+  for(const [id,tower] of Object.entries(TOWERS)){
+    const displayed=formatDamage(tower.damage);
+    assert.match(displayed,/^\d[\d,]*$/,'integer-only: '+id);
+    assert.ok(!displayed.includes('.'),'no decimal point: '+id);
+  }
+
 });
 
 test('higher difficulties have a steeply increasing starting wallet, shared by all matchmaking types',()=>{
