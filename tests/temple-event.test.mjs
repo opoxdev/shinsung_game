@@ -161,9 +161,13 @@ test('Temple cinematic art and visual proportions are dedicated, not borrowed fr
   assert.doesNotMatch(svg,/id="sky-temple_ruin"/);
   assert.notEqual(svg,landscape(MAPS.find(m=>m.id===event.map)));
   const render=readFileSync(new URL('../src/render.js',import.meta.url),'utf8');
-  assert.match(render,/oldgod'\?194:75/);
+  assert.match(render,/oldgod'\?132:75/);
   const css=readFileSync(new URL('../src/game.css',import.meta.url),'utf8');
   assert.match(css,/\.shell:has\(\.temple-page\) \.content/);
   assert.match(css,/\.nav-item\.temple-nav/);
   assert.match(css,/\.temple-god-preview svg/);
+  assert.match(css,/\.loadout-slot svg\[data-base="oldgod"\]/,'big image confined to cards');
+  assert.match(css,/\.shell>\.sidebar\{min-height:0/,'sidebar scrolling not full document');
+  assert.match(css,/\.shell\{height:100dvh;min-height:0;max-height:100dvh\}/);
+  assert.doesNotMatch(render,/size=\(t\.type==='oldgod'\?194/);
 });
