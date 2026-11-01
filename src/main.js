@@ -74,8 +74,16 @@ let motion=new MotionView(),placementRevision=0;
 function resetRenderer(){renderer?.dispose();renderer=null;}
 function setText(selector,value){const el=$(selector);if(el&&el.textContent!==value)el.textContent=value;}
 let config={map:'plains',difficulty:'easy',type:'solo',modes:[]};
-const normalConfig=()=>{delete config.eventId;if(MAPS.find(m=>m.id===config.map)?.eventOnly)config.map='plains';};
-const templeConfig=type=>({eventId:'temple_of_ruin',map:'temple_ruin',difficulty:'normal',type,modes:[]});
+let preEventConfig=null;
+const normalConfig=()=>{
+  if(config.eventId&&preEventConfig){config={...preEventConfig,modes:[...preEventConfig.modes]};preEventConfig=null;}
+  delete config.eventId;
+  if(MAPS.find(m=>m.id===config.map)?.eventOnly)config.map='plains';
+};
+const templeConfig=type=>{
+  if(!config.eventId)preEventConfig={...config,modes:[...config.modes]};
+  return {eventId:'temple_of_ruin',map:'temple_ruin',difficulty:'normal',type,modes:[]};
+};
 let renderer,state=null,playerId='local',placement=null,paused=false,resultShown=false,accumulator=0,lastTime=0,lastHud=0;
 let isOnlineMatch=false,room=null,onlineBusy=false,lastPulse=0,lastSnapshot=0,seenSnapshot=-1,seq=0,botClock=0,claimAfter=0;
 let predictionState=null,predictionBase=null,lastPaintTime=0;
