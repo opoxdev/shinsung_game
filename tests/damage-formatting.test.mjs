@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {DIFFICULTIES,EVENTS,TOWERS,starterProfile,formatDamage} from '../src/data.js';
+import {DIFFICULTIES,EVENTS,TOWERS,starterProfile,formatDamage,formatWholeStat,formatAttackInterval} from '../src/data.js';
 import {createMatch} from '../src/engine.js';
 import {formatCombatNumber} from '../src/render.js';
 import {Core} from '../dist/cloudflare/core.js';
@@ -72,4 +72,35 @@ test('separate Temple event remains unchanged at 4,200 starting coins',()=>{
   const config={map:evt.map,difficulty:'normal',type:'solo',modes:[],eventId:evt.id};
   assert.equal(createMatch(config,[{id:'p',profile:starterProfile()}]).players.p.money,4200);
   assert.equal(Core.createMatch(config,[{id:'p',profile:starterProfile()}]).players.p.money,4200);
+});
+
+test('attack speed, range and related tower stats never display a fractional number',()=>{
+  for(const [seconds,display] of [
+    [0,'0ms'],[.22,'220ms'],[.333333333333,'333ms'],
+    [.35,'350ms'],[.91999999999,'920ms'],[1,'1초'],
+    [1.23,'1,230ms'],[1.5,'1,500ms'],[2,'2초'],
+    [2.832333333,'2,832ms'],[NaN,'0ms'],[Infinity,'0ms']
+  ])assert.equal(formatAttackInterval(seconds),display,String(seconds));
+  for(const [number,display] of [
+    [123.2,'123'],[123.5,'124'],[345.555,'346'],[1276.111,'1,276']
+  ])assert.equal(formatWholeStat(number),display);
+  for(const [id,tower] of Object.entries(TOWERS)){
+    for(const label of [formatAttackInterval(tower.interval),formatWholeStat(tower.range),formatDamage(tower.damage)]){
+      assert.doesNotMatch(label,/\d\.\d/,'fractional stat displayed: '+id+' '+label);
+      assert.match(label,/^[\\d,]+(?:ms|초)?$/,'valid whole-number stat label: '+id);
+    }
+  }
+});
+
+test('tower collection and in-game inspector use the same integer-only stat formatter',()=>{
+  const main=readFileSync(new URL('../src/main.js',import.meta.url),'utf8');
+  assert.match(main,/공격 간격<b>\$\{formatAttackInterval\(t\.interval\)\}<\/b>/);
+  assert.match(main,/사거리<b>\$\{formatWholeStat\(t\.range\)\}<\/b>/);
+  assert.match(main,/compare\(stats\.interval,nextStats\?\.interval,'interval'\)/);
+  assert.match(main,/const show=kind==='interval'\?formatAttackInterval:formatWholeStat/);
+  assert.match(main,/formatAttackInterval\(stats\.interval\)/,'income interval is also a whole-number label');
+  assert.match(main,/formatAttackInterval\(stats\.markTime\|\|3\)/,'mark duration shows whole-number time');
+  assert.doesNotMatch(main,/\.interval\.toFixed\(/,'do not format an interval using decimal seconds');
+  assert.doesNotMatch(main,/\$\{\s*(?:t|stats)\.(?:interval|range)\s*\}/,'raw interval/range text is forbidden');
+  assert.doesNotMatch(main,/Number\(now\)\.toFixed/,'inspector old decimal formatter must not return');
 });
