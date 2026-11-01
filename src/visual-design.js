@@ -388,7 +388,7 @@ function relicPortrait(id,c,skin){
 // ivory/porcelain torso, left solar gauntlet and right corrupt bio-organic arm.
 // The same high-resolution illustration is reused by the battle, shop and event.
 function oldGodPortrait(){
-  return \`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 280"
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 280"
     aria-label="고대의 신" data-design="v2" data-art-tier="myth" data-base="oldgod"
     data-costume="default" data-god-form="monumental" data-ear-shape="none">
     <defs>
@@ -581,7 +581,7 @@ function oldGodPortrait(){
       Q135 121 120 122Q105 121 89 106Z"
       fill="#e9bd4d" stroke="#a87531" stroke-width="2.6"/>
     <path d="M100 108L120 115 143 107" fill="none" stroke="#fff2af" stroke-width="2"/>
-  </svg>\`;
+  </svg>`;
 }
 export function redesignedPortrait(id,skin='default'){
   if(id==='oldgod')return oldGodPortrait();
