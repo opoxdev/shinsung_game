@@ -84,7 +84,7 @@ const templeConfig=type=>{
   if(!config.eventId)preEventConfig={...config,modes:[...config.modes]};
   return {eventId:'temple_of_ruin',map:'temple_ruin',difficulty:'normal',type,modes:[]};
 };
-let renderer,state=null,playerId='local',placement=null,paused=false,resultShown=false,accumulator=0,lastTime=0,lastHud=0;
+let renderer,state=null,playerId='local',placement=null,paused=false,resultShown=false,accumulator=0,lastTime=0,lastHud=0,lastTooltip=0;
 let isOnlineMatch=false,room=null,onlineBusy=false,lastPulse=0,lastSnapshot=0,seenSnapshot=-1,seq=0,botClock=0,claimAfter=0;
 let predictionState=null,predictionBase=null,lastPaintTime=0;
 // All story state lives in this browser, never in Firebase/D1/DO/WebSockets.
@@ -274,7 +274,7 @@ function collection(){
     return;
   }
   const t=TOWERS[selectedTower],owned=profile.owned.includes(selectedTower);
-  $('#content').innerHTML=collectionHeader()+`<div class="collection-layout"><section class="collection-list"><div class="collection-toolbar"><input id="tower-search" placeholder="타워 이름으로 검색" value="${esc(filter)}" aria-label="타워 검색"><select id="rarity-filter" aria-label="등급 필터"><option value="all">모든 등급</option>${Object.entries(RARITIES).map(([id,r])=>`<option value="${id}" ${id===rarityFilter?'selected':''}>${r.name}</option>`).join('')}</select><span>장착 ${profile.loadout.length}/5</span></div><div class="tower-groups">${Object.entries(RARITIES).map(([r,v])=>{const ids=Object.keys(TOWERS).filter(id=>TOWERS[id].rarity===r&&(rarityFilter==='all'||rarityFilter===r)&&TOWERS[id].name.includes(filter));return ids.length?`<div class="rarity-title" style="color:${v.color}">${v.name}<span></span><small>${ids.length}</small></div><div class="tower-grid">${ids.map(towerCard).join('')}</div>`:'';}).join('')||'<p class="empty-message">검색 결과가 없습니다.</p>'}</div></section><section class="tower-detail tier-${t.rarity}" style="--rarity:${RARITIES[t.rarity].color}"><span class="eyebrow">${RARITIES[t.rarity].name} / ${t.role}</span><h2>${t.name}</h2><div class="detail-art">${portrait(selectedTower,profile.equippedSkins[selectedTower])}<span class="art-ring"></span></div><div class="stat-grid"><div>배치 비용<b>₩ ${fmt(t.cost)}</b></div><div>피해량<b>${t.damage>0?formatDamage(t.damage):(t.income?'수입 +'+fmt(t.income):'지원')}</b></div><div>공격 간격<b>${formatAttackInterval(t.interval)}</b></div><div>사거리<b>${formatWholeStat(t.range)}</b></div></div><p>${t.desc}</p><p class="tier-hint">등급은 배치 비용이나 사용 시기를 결정하지 않습니다. 각 타워의 역할과 강화 경로를 확인하세요.</p><div class="detail-actions"><button class="primary" data-action="equip" data-id="${selectedTower}" ${owned?'':'disabled'}>${profile.loadout.includes(selectedTower)?'장착 해제':'장착하기'}</button><button data-action="skin" data-id="${selectedTower}" ${owned?'':'disabled'}>스킨</button></div>${!owned?`<small class="unlock-note">${t.price===null?(selectedTower==='aurora'?'파멸 + 엘리트 모드 클리어로 획득':'익스트림 이상 + 슈퍼소닉 클리어로 획득'):'상점에서 '+fmt(t.price)+' 코인으로 획득'}</small>`:''}</section></div>`;
+  $('#content').innerHTML=collectionHeader()+`<div class="collection-layout"><section class="collection-list"><div class="collection-toolbar"><input id="tower-search" placeholder="타워 이름으로 검색" value="${esc(filter)}" aria-label="타워 검색"><select id="rarity-filter" aria-label="등급 필터"><option value="all">모든 등급</option>${Object.entries(RARITIES).map(([id,r])=>`<option value="${id}" ${id===rarityFilter?'selected':''}>${r.name}</option>`).join('')}</select><span>장착 ${profile.loadout.length}/5</span></div><div class="tower-groups">${Object.entries(RARITIES).map(([r,v])=>{const ids=Object.keys(TOWERS).filter(id=>TOWERS[id].rarity===r&&(rarityFilter==='all'||rarityFilter===r)&&TOWERS[id].name.includes(filter));return ids.length?`<div class="rarity-title" style="color:${v.color}">${v.name}<span></span><small>${ids.length}</small></div><div class="tower-grid">${ids.map(towerCard).join('')}</div>`:'';}).join('')||'<p class="empty-message">검색 결과가 없습니다.</p>'}</div></section><section class="tower-detail tier-${t.rarity}" style="--rarity:${RARITIES[t.rarity].color}"><span class="eyebrow">${RARITIES[t.rarity].name} / ${t.role}</span><h2>${t.name}</h2><div class="detail-art">${portrait(selectedTower,profile.equippedSkins[selectedTower])}<span class="art-ring"></span></div><div class="stat-grid"><div>배치 비용<b>₩ ${fmt(t.cost)}</b></div><div>피해량<b>${t.damage>0?formatDamage(t.damage):(t.income?'수입 +'+fmt(t.income):'지원')}</b></div><div>공격 간격<b>${formatAttackInterval(t.interval)}</b></div><div>사거리<b>${formatWholeStat(t.range)}</b></div></div><p>${t.desc}</p><p class="tier-hint">등급은 배치 비용이나 사용 시기를 결정하지 않습니다. 각 타워의 역할과 강화 경로를 확인하세요.</p><div class="detail-actions"><button class="primary" data-action="equip" data-id="${selectedTower}" ${owned?'':'disabled'}>${profile.loadout.includes(selectedTower)?'장착 해제':'장착하기'}</button><button data-action="skin" data-id="${selectedTower}" ${owned?'':'disabled'}>스킨</button></div>${!owned?`<small class="unlock-note">${t.price===null?(selectedTower==='aurora'?'파멸 + 엘리트 모드 클리어로 획득':selectedTower==='oldgod'?'파멸의 신전 이벤트 30웨이브 클리어로 획득':selectedTower==='voidwalker'?'익스트림 이상 + 암흑 에너지 모드 클리어로 획득':'익스트림 이상 + 슈퍼소닉 클리어로 획득'):'상점에서 '+fmt(t.price)+' 코인으로 획득'}</small>`:''}</section></div>`;
   restore();
 }
 function monsterList(p){return `<div class="monster-roster">${p.monsters.map(([id,cost,cd])=>{const e=ENEMIES[id],tags=[e.shield?'방패':null,e.heal?'치유':null,e.regen?'재생':null,e.onDeath?'분열':null,e.speed>=110?'속공':null,e.hp>=10000?'보스':null].filter(Boolean);return `<div class="monster-portrait" title="${esc(e.name)}"><div class="monster-art">${monsterPortrait(id)}</div><b>${esc(e.name)}</b><small>₩ ${fmt(cost)} / ${formatAttackInterval(cd)}</small><span>${tags.join(' · ')||'기본'}</span></div>`}).join('')}</div>`;}
@@ -435,18 +435,28 @@ function updateEnemyTooltip(visual){
   }
   const e=r.enemyAt(visual,r.hoverScreen);
   if(!e){tip.classList.remove('visible');return;}
-  const d=ENEMIES[e.type],hp=Math.max(0,e.hp),max=Math.max(.001,e.maxHp);
-  const percent=Math.max(0,Math.min(100,100*hp/max));
-  tip.innerHTML=`<strong>${esc(d.name)}</strong><span class="enemy-hover-type">${d.size>=25?'대형 · ':''}${d.armor?'장갑 '+Math.round(d.armor*100)+'% · ':''}이동 ${fmt(d.speed)}</span>
-    <div class="enemy-hover-bar"><i style="width:${percent}%"></i></div>
-    <b>체력 ${fmtHp(hp)} / ${fmtHp(e.maxHp)}</b>
-    ${e.maxShield?'<span>보호막 '+fmtHp(e.shield)+' / '+fmtHp(e.maxShield)+'</span>':''}
-    ${d.heal?'<span>주변 적 회복 · '+fmtHp(d.heal)+'/초</span>':''}
-    ${d.regen?'<span>체력 재생 · '+fmtHp(d.regen)+'/초</span>':''}
-    ${e.slowUntil>visual.time?'<span>감속 효과 적용 중</span>':''}`;
-  const x=r.hoverScreen.x+19,y=r.hoverScreen.y+20;
-  tip.style.left=Math.max(8,Math.min(r.width-210,x))+'px';
-  tip.style.top=Math.max(8,Math.min(r.height-144,y))+'px';
+  const d=ENEMIES[e.type];
+  // Avoid rebuilding and reflowing the entire tooltip on every hover tick.
+  if(tip.dataset.enemyId!==String(e.id)||tip.dataset.enemyType!==e.type){
+    tip.dataset.enemyId=String(e.id);tip.dataset.enemyType=e.type;
+    tip.innerHTML=`<strong>${esc(d.name)}</strong><span class="enemy-hover-type">${d.size>=25?'대형 · ':''}${d.armor?'장갑 '+Math.round(d.armor*100)+'% · ':''}이동 ${fmt(d.speed)}</span>
+      <div class="enemy-hover-bar"><i></i></div><b class="enemy-hover-hp"></b>
+      ${e.maxShield?'<span class="enemy-hover-shield"></span>':''}
+      ${d.heal?'<span>주변 적 회복 · '+fmtHp(d.heal)+'/초</span>':''}
+      ${d.regen?'<span>체력 재생 · '+fmtHp(d.regen)+'/초</span>':''}
+      <span class="enemy-hover-slow" hidden>감속 효과 적용 중</span>`;
+  }
+  const hp=Math.max(0,e.hp),max=Math.max(.001,e.maxHp);
+  const healthText='체력 '+fmtHp(hp)+' / '+fmtHp(e.maxHp);
+  const health=tip.querySelector('.enemy-hover-hp');
+  if(health.textContent!==healthText)health.textContent=healthText;
+  tip.querySelector('.enemy-hover-bar i').style.transform='scaleX('+Math.min(1,hp/max)+')';
+  const shield=tip.querySelector('.enemy-hover-shield');
+  if(shield){const label='보호막 '+fmtHp(e.shield)+' / '+fmtHp(e.maxShield);if(shield.textContent!==label)shield.textContent=label;}
+  tip.querySelector('.enemy-hover-slow').hidden=!(e.slowUntil>visual.time);
+  const x=Math.max(8,Math.min(r.width-210,r.hoverScreen.x+19));
+  const y=Math.max(8,Math.min(r.height-144,r.hoverScreen.y+20));
+  tip.style.transform='translate3d('+x+'px,'+y+'px,0)';
   tip.classList.add('visible');
 }
 function selectPlacement(id){placementRevision++;placement=id;renderer.preview=id;renderer.selected=null;inspector();document.querySelectorAll('.loadout-slot').forEach(el=>el.classList.toggle('selected',!!id&&el.dataset.id===id));$('#placement-hint').textContent=id?`${TOWERS[id].name} 배치 · 클릭으로 설치 · Q / 우클릭 취소`:'';}
@@ -580,7 +590,7 @@ async function finish(){
   const rewardText=state.config.type==='pvp'?'비랭크 PvP에는 계정 코인 보상이 없습니다.':
     reward.win?'클리어 보너스 ◈ '+fmt(reward.clearBonus)+' 포함':
       '진행률 '+Math.round(100*state.wave/maxWaves)+'% · 클리어 보너스 제외 · 기본 보상의 50% × 진행률';
-  modal(`<span class="eyebrow">OPERATION COMPLETE</span><h2>${reward.win?'방어 성공':state.config.type==='pvp'&&state.winner===null?'무승부':'방어선 붕괴'}</h2><p>${state.wave} 웨이브 · 처치 ${state.kills} · ${Math.floor(state.time/60)}분 ${Math.floor(state.time%60)}초</p><div class="result-reward">◈ ${fmt(reward.coins)} <small>COINS</small> <span>+${reward.xp} XP</span></div><p class="result-reward-info">${esc(rewardText)}</p>${state.config.type==='pvp'||state.config.eventId?'':`<div class="story-ending"><span>✧ ${esc(STORIES[state.config.difficulty]?.title||'전장 기록')}</span><p>${esc(reward.win?STORIES[state.config.difficulty]?.ending:STORIES[state.config.difficulty]?.failure)}</p></div>`}${reward.sonic?'<p>신화 타워 「소닉」 획득!</p>':''}${reward.aurora?'<p>신화 타워 「오로라 정령」 획득!</p>':''}${firstGodUnlock?'<p class="temple-clear-prize">☼ 파멸의 신전 격파 · 신화 타워 「고대의 신」 영구 해금!</p>':reward.oldgod?'<p class="temple-clear-prize">☼ 파멸의 신전 재클리어 · 신화 타워 보유 중</p>':''}${achievementMessage}<button class="primary wide" data-action="leave">로비로</button>`);}
+  modal(`<span class="eyebrow">OPERATION COMPLETE</span><h2>${reward.win?'방어 성공':state.config.type==='pvp'&&state.winner===null?'무승부':'방어선 붕괴'}</h2><p>${state.wave} 웨이브 · 처치 ${state.kills} · ${Math.floor(state.time/60)}분 ${Math.floor(state.time%60)}초</p><div class="result-reward">◈ ${fmt(reward.coins)} <small>COINS</small> <span>+${reward.xp} XP</span></div><p class="result-reward-info">${esc(rewardText)}</p>${state.config.type==='pvp'||state.config.eventId?'':`<div class="story-ending"><span>✧ ${esc(STORIES[state.config.difficulty]?.title||'전장 기록')}</span><p>${esc(reward.win?STORIES[state.config.difficulty]?.ending:STORIES[state.config.difficulty]?.failure)}</p></div>`}${reward.sonic?'<p>신화 타워 「소닉」 획득!</p>':''}${reward.aurora?'<p>신화 타워 「오로라 정령」 획득!</p>':''}${reward.voidwalker?'<p>✦ 신화 타워 「심연의 방랑자」 영구 해금!</p>':''}${firstGodUnlock?'<p class="temple-clear-prize">☼ 파멸의 신전 격파 · 신화 타워 「고대의 신」 영구 해금!</p>':reward.oldgod?'<p class="temple-clear-prize">☼ 파멸의 신전 재클리어 · 신화 타워 보유 중</p>':''}${achievementMessage}<button class="primary wide" data-action="leave">로비로</button>`);}
 function battleMenu(){if(!isOnlineMatch)paused=true;modal(`<span class="eyebrow">FIELD PLAY</span><h2>${isOnlineMatch?'전투는 계속 진행됩니다':'일시 정지'}</h2><p>전투에서 나가면 클리어 보상을 받을 수 없습니다.${isOnlineMatch?' 방장은 참가자가 이어서 동기화를 요청할 수 있습니다.':''}</p><button class="primary wide" data-action="close">전투 계속</button><button class="wide secondary" data-action="leave">본부로 돌아가기</button>`);}
 async function leave(){
   if(isOnlineMatch&&room){try{await online.call('leave',{code:room.code});}catch(e){toast(e.message);return;}}
@@ -827,7 +837,7 @@ function frame(now){
     const ahead=isOnlineMatch?Math.max(0,Math.min(STEP,Math.min(4.25,Math.max(0,(now-lastSnapshot)/1000))-(display.time-state.time))):0;
     const visual=motion.sample(display,path,{online:isOnlineMatch,ahead,alpha:accumulator/STEP,dt,paused});
     renderer?.frame(visual,state.config.map,playerId,dt,now/1000);
-    hoverVisual=visual;if(now-lastHud>150)updateEnemyTooltip(visual);
+    hoverVisual=visual;if(now-lastTooltip>=40){updateEnemyTooltip(visual);lastTooltip=now;}
     if(now-lastHud>150){updateHud();lastHud=now;}
     if(state.status!=='playing'&&!resultShown&&!onlineBusy)finish();
   }else{
