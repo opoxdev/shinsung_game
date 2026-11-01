@@ -1,6 +1,6 @@
 import { MAPS, TOWERS, ENEMIES, DIFFICULTIES, MODES, PACKS, RARITIES, SKIN_STYLES, CRATES, BOSS_ABILITIES, starterProfile, skinCandidates, skinOdds } from './data.js';
 import { evolutionAt } from './evolutions.js';
-import { createMatch, tick, command, modifiers, towerStats, requiredVotes, rewardFor, applyReward, profileAction, pointOnPath, STEP } from './engine.js';
+import { createMatch, tick, command, modifiers, towerStats, requiredVotes, rewardFor, applyReward, profileAction, pointOnPath, achievementRun, STEP } from './engine.js';
 import { Renderer, portrait, landscape } from './render.js';
 import { monsterPortrait } from './art.js';
 import { Online } from './online.js';
@@ -10,6 +10,8 @@ import {adminPageMarkup} from './admin-panel.js';
 import {visualPrediction} from './online-prediction.js';
 import {STORIES,sceneForWave,storySceneIndex,storyPreviewMarkup,storyGuideMarkup,dialogueMarkup,storyProgress} from './story.js';
 import {loadClientProfile,saveClientProfile,multiplayerLoadout,validProfile,exportSave,importSave} from './client-profile.js';
+import {achievementView,achievementSummary,recordAchievementRun,claimAchievementReward} from './achievements.js';
+import {achievementPageMarkup} from './achievement-page.js';
 const $=s=>document.querySelector(s), app=$('#app'), online=new Online();
 const fmt=n=>Math.floor(n).toLocaleString('ko-KR');
 const fmtHp=n=>Number.isFinite(n)?Number(Math.max(0,n).toFixed(Math.abs(n)<10?1:0)).toLocaleString('ko-KR'):'0';
@@ -63,7 +65,7 @@ async function flushSoloClaims(user){
   try{await pending;}finally{if(claimSync===pending)claimSync=null;}
 }
 let profile=localProfile,page='home',selectedTower='scout',shopTab='towers',filter='',rarityFilter='all';
-let collectionTab='towers',selectedPack=null;
+let collectionTab='towers',selectedPack=null,achievementFilter='all',achievementBusy=false;
 let isAdminSession=false;
 let adminData={summary:null,listing:null,selected:null,audit:null,diagnostics:null,search:'',offset:0,busy:false,error:'',status:''};
 let openCrateBusy=false,roomListBusy=false,roomListNext=0,hoverVisual=null;
@@ -153,11 +155,17 @@ function profileBar(){return `<div class="identity"><div class="insignia">S<span
 function loadout(inGame=false){return Array.from({length:5},(_,i)=>{const id=(inGame?state.players[playerId].loadout:profile.loadout)[i];return id?`<button class="loadout-slot ${placement===id?'selected':''}" data-action="${inGame?'selectPlace':'inspect'}" data-id="${id}" style="--rarity:${RARITIES[TOWERS[id].rarity].color}"><span class="slot-number">0${i+1}</span>${portrait(id,profile.equippedSkins[id])}<span class="slot-name">${TOWERS[id].name}</span><strong>₩ ${TOWERS[id].cost}</strong></button>`:`<button class="loadout-slot empty" data-action="${inGame?'noop':'nav'}" data-id="towers"><span class="slot-number">0${i+1}</span><span>＋</span><small>빈 슬롯</small></button>`;}).join('');}
 function shell(){
   const restore=preserveScroll();
-  app.innerHTML=`<div class="shell"><header class="topbar"><a class="brand" href="#" data-action="nav" data-id="home"><span class="brand-symbol">S</span><div>신성 디펜스<small>SHINSUNG DEFENSE</small></div></a><div class="build-label">ALPHA <span>01</span></div><div class="profilebar">${profileBar()}</div></header><aside class="sidebar"><div class="nav-caption">PLAY</div>${['home','towers','shop'].map(id=>`<button class="nav-item ${page===id?'active':''}" data-action="nav" data-id="${id}"><span>${icons[id]}</span>${{home:'로비',towers:'타워 구성',shop:'상점'}[id]}<i>›</i></button>`).join('')}<div class="nav-caption second">친구들과 더 재미있게</div><button class="nav-item" data-action="pvp"><span>⚔</span>대전 · PVP<i>›</i></button><button class="nav-item" data-action="coop"><span>♟</span>친구와 함께<i>›</i></button><button class="nav-item" data-action="events"><span>✧</span>도전 과제<i>›</i></button>${isAdminSession?`<div class="nav-caption second">ADMIN</div><button class="nav-item ${page==='admin'?'active':''}" data-action="adminOpen"><span>⚙</span>관리자 패널<i>›</i></button>`:''}<div class="sidebar-bottom"><span class="status-dot"></span>${online.user?'ONLINE ACCOUNT':'LOCAL PLAY'}<small>모으고, 키우고,<br>함께 지켜내자!</small><button data-action="backupMenu">진행도 백업 ↧</button><button data-action="help">조작 안내 <span>?</span></button></div></aside><main class="content" id="content"></main><footer class="loadout-bar"><div class="loadout-label"><span>MY TEAM</span><b>내 팀</b><small>${profile.loadout.length} / 5 SLOTS</small></div><div class="loadout-slots">${loadout()}</div><div class="footer-note">진행도는 이 브라우저에 저장됩니다.<br><span>BUILD 0.9.10 · GAME TOWER STORY PORTRAITS</span></div></footer></div>`;
-  if(page==='home')home();else if(page==='towers')collection();else if(page==='admin'&&isAdminSession)adminRender();else shop();
+  app.innerHTML=`<div class="shell"><header class="topbar"><a class="brand" href="#" data-action="nav" data-id="home"><span class="brand-symbol">S</span><div>신성 디펜스<small>SHINSUNG DEFENSE</small></div></a><div class="build-label">ALPHA <span>01</span></div><div class="profilebar">${profileBar()}</div></header><aside class="sidebar"><div class="nav-caption">PLAY</div>${['home','towers','shop'].map(id=>`<button class="nav-item ${page===id?'active':''}" data-action="nav" data-id="${id}"><span>${icons[id]}</span>${{home:'로비',towers:'타워 구성',shop:'상점'}[id]}<i>›</i></button>`).join('')}<div class="nav-caption second">친구들과 더 재미있게</div><button class="nav-item" data-action="pvp"><span>⚔</span>대전 · PVP<i>›</i></button><button class="nav-item" data-action="coop"><span>♟</span>친구와 함께<i>›</i></button><button class="nav-item ${page==='achievements'?'active':''}" data-action="events"><span>✧</span>도전 과제${achievementSummary(profile).ready?'<b class="achievement-nav-count">'+achievementSummary(profile).ready+'</b>':''}<i>›</i></button>${isAdminSession?`<div class="nav-caption second">ADMIN</div><button class="nav-item ${page==='admin'?'active':''}" data-action="adminOpen"><span>⚙</span>관리자 패널<i>›</i></button>`:''}<div class="sidebar-bottom"><span class="status-dot"></span>${online.user?'ONLINE ACCOUNT':'LOCAL PLAY'}<small>모으고, 키우고,<br>함께 지켜내자!</small><button data-action="backupMenu">진행도 백업 ↧</button><button data-action="help">조작 안내 <span>?</span></button></div></aside><main class="content" id="content"></main><footer class="loadout-bar"><div class="loadout-label"><span>MY TEAM</span><b>내 팀</b><small>${profile.loadout.length} / 5 SLOTS</small></div><div class="loadout-slots">${loadout()}</div><div class="footer-note">진행도는 이 브라우저에 저장됩니다.<br><span>BUILD 0.9.10 · GAME TOWER STORY PORTRAITS</span></div></footer></div>`;
+  if(page==='home')home();else if(page==='towers')collection();else if(page==='achievements')achievementRender();else if(page==='admin'&&isAdminSession)adminRender();else shop();
   restore();
 }
 
+function achievementRender(){
+  const target=$('#content');if(!target)return;
+  const restore=preserveScroll();
+  target.innerHTML=achievementPageMarkup(profile,achievementFilter);
+  restore();
+}
 function adminRender(){
   if(!isAdminSession){page='home';shell();return;}
   const target=$('#content');if(!target)return;
@@ -506,22 +514,28 @@ function bot(){if(!state.players.bot)return;botClock+=STEP;if(botClock<2)return;
 async function finish(){
   if(resultShown||performance.now()<claimAfter)return;resultShown=true;
   const reward=rewardFor(state,playerId);
+  const alreadyEarned=new Set(achievementView(profile).filter(a=>a.earned).map(a=>a.id));
   try{
     if(isOnlineMatch)profile=await online.call('claim',{code:room.code});
     else if(online.user&&state.config.type==='solo'){
-      const claim={runId:soloRunId,config:state.config,wave:state.wave,win:reward.win};
+      const claim={runId:soloRunId,config:state.config,wave:state.wave,win:reward.win,achievementRun:achievementRun(state,playerId)};
       queueSoloClaim(online.user.uid,claim);
       profile=await online.call('soloReward',claim);
       removeSoloClaim(online.user.uid,soloRunId);
     }
     else if(state.config.type==='pvp'){/* Local bot training is unranked and pays no account rewards. */}
-    else{applyReward(localProfile,reward);profile=localProfile;saveLocal();}
+    else{recordAchievementRun(localProfile,achievementRun(state,playerId));applyReward(localProfile,reward);profile=localProfile;saveLocal();}
   }catch(e){toast('보상 정산 실패 · 30초 뒤 다시 시도: '+e.message);claimAfter=performance.now()+30000;resultShown=false;return;}
+  const achievementNew=achievementView(profile).filter(a=>a.earned&&!alreadyEarned.has(a.id));
+  const achievementMessage=achievementNew.length?
+    '<div class="achievement-result"><b>✦ 새로운 도전과제 '+achievementNew.length+'개 달성!</b><p>'+
+    achievementNew.slice(0,3).map(a=>esc(a.title)).join(' · ')+
+    '</p><button data-action="viewAchievements">도전과제 보상 확인 ↗</button></div>':'';
   const maxWaves=DIFFICULTIES.find(d=>d.id===state.config.difficulty).waves.length;
   const rewardText=state.config.type==='pvp'?'비랭크 PvP에는 계정 코인 보상이 없습니다.':
     reward.win?'클리어 보너스 ◈ '+fmt(reward.clearBonus)+' 포함':
       '진행률 '+Math.round(100*state.wave/maxWaves)+'% · 클리어 보너스 제외 · 기본 보상의 50% × 진행률';
-  modal(`<span class="eyebrow">OPERATION COMPLETE</span><h2>${reward.win?'방어 성공':state.config.type==='pvp'&&state.winner===null?'무승부':'방어선 붕괴'}</h2><p>${state.wave} 웨이브 · 처치 ${state.kills} · ${Math.floor(state.time/60)}분 ${Math.floor(state.time%60)}초</p><div class="result-reward">◈ ${fmt(reward.coins)} <small>COINS</small> <span>+${reward.xp} XP</span></div><p class="result-reward-info">${esc(rewardText)}</p>${state.config.type==='pvp'?'':`<div class="story-ending"><span>✧ ${esc(STORIES[state.config.difficulty]?.title||'전장 기록')}</span><p>${esc(reward.win?STORIES[state.config.difficulty]?.ending:STORIES[state.config.difficulty]?.failure)}</p></div>`}${reward.sonic?'<p>신화 타워 「소닉」 획득!</p>':''}${reward.aurora?'<p>신화 타워 「오로라 정령」 획득!</p>':''}<button class="primary wide" data-action="leave">로비로</button>`);}
+  modal(`<span class="eyebrow">OPERATION COMPLETE</span><h2>${reward.win?'방어 성공':state.config.type==='pvp'&&state.winner===null?'무승부':'방어선 붕괴'}</h2><p>${state.wave} 웨이브 · 처치 ${state.kills} · ${Math.floor(state.time/60)}분 ${Math.floor(state.time%60)}초</p><div class="result-reward">◈ ${fmt(reward.coins)} <small>COINS</small> <span>+${reward.xp} XP</span></div><p class="result-reward-info">${esc(rewardText)}</p>${state.config.type==='pvp'?'':`<div class="story-ending"><span>✧ ${esc(STORIES[state.config.difficulty]?.title||'전장 기록')}</span><p>${esc(reward.win?STORIES[state.config.difficulty]?.ending:STORIES[state.config.difficulty]?.failure)}</p></div>`}${reward.sonic?'<p>신화 타워 「소닉」 획득!</p>':''}${reward.aurora?'<p>신화 타워 「오로라 정령」 획득!</p>':''}${achievementMessage}<button class="primary wide" data-action="leave">로비로</button>`);}
 function battleMenu(){if(!isOnlineMatch)paused=true;modal(`<span class="eyebrow">FIELD PLAY</span><h2>${isOnlineMatch?'전투는 계속 진행됩니다':'일시 정지'}</h2><p>전투에서 나가면 클리어 보상을 받을 수 없습니다.${isOnlineMatch?' 방장은 참가자가 이어서 동기화를 요청할 수 있습니다.':''}</p><button class="primary wide" data-action="close">전투 계속</button><button class="wide secondary" data-action="leave">본부로 돌아가기</button>`);}
 async function leave(){
   if(isOnlineMatch&&room){try{await online.call('leave',{code:room.code});}catch(e){toast(e.message);return;}}
@@ -607,7 +621,30 @@ const actions={
     try{await mutate({kind:'openCrate',id,count:n},true);}
     finally{openCrateBusy=false;buttons.forEach(b=>{b.disabled=false;delete b.dataset.pending;});}
   },
-  pvp(){special('pvp');},coop(){special('coop');},events(){modal('<span class="eyebrow">PERMANENT CHALLENGE / 01</span><h2>음속을 넘어서</h2><div class="challenge-art">'+portrait('sonic')+'</div><p>익스트림 이상의 난이도에서 「슈퍼소닉」 모드를 적용해 클리어하세요.</p><p>보상: 신화 타워 <b>소닉</b> · 최초 클리어 시 영구 획득</p><button class="primary wide" data-action="challenge">도전 설정 적용</button>');},challenge(){config.difficulty='extreme';config.modes=['supersonic'];config.type='solo';closeModal();page='home';shell();},
+  pvp(){special('pvp');},coop(){special('coop');},
+  events(){achievementFilter='all';page='achievements';closeModal();shell();},
+  achievementFilter(id){achievementFilter=id;achievementRender();},
+  async achievementClaim(id){
+    if(achievementBusy)return;
+    achievementBusy=true;
+    const button=document.querySelector('[data-action="achievementClaim"][data-id="'+id+'"]');
+    if(button)button.disabled=true;
+    try{
+      if(online.user){requireAccountLoaded();profile=await online.call('claimAchievement',{id});}
+      else{claimAchievementReward(localProfile,id);profile=localProfile;saveLocal();}
+      achievementRender();toast('도전과제 보상을 수령했습니다!');
+    }catch(e){toast('보상 수령 실패: '+e.message);if(button?.isConnected)button.disabled=false;}
+    finally{achievementBusy=false;}
+  },
+  achievementPrepare(id){
+    const difficulty=id.startsWith('clear_')?id.slice(6):id==='sonic_trial'?'extreme':id==='aurora_trial'?'ruin':null;
+    if(difficulty)config.difficulty=difficulty;
+    if(id==='sonic_trial')config.modes=['supersonic'];
+    if(id==='aurora_trial')config.modes=['elite'];
+    config.type='solo';page='home';shell();toast('도전 조건에 맞는 전투를 설정했습니다.');
+  },
+  viewAchievements(){state=null;isOnlineMatch=false;online.stop();room=null;resetRenderer();placement=null;paused=false;closeModal();config.type='solo';page='achievements';achievementFilter='ready';shell();},
+  challenge(){config.difficulty='extreme';config.modes=['supersonic'];config.type='solo';closeModal();page='home';shell();},
   start(){try{startLocal('solo');}catch(e){toast(e.message);}},trainingPvp(){startLocal('pvp');},
   selectPlace:selectPlacement,cancelPlace(){selectPlacement(null);},skip(){sendCommand({kind:'skip'});},send(id){sendCommand({kind:'send',type:id});},upgrade(){sendCommand({kind:'upgrade',id:renderer.selected});},sell(){sendCommand({kind:'sell',id:renderer.selected});},target(){const t=state.towers.find(t=>t.id===renderer.selected),targets=['first','strong','near'];if(t)sendCommand({kind:'target',id:t.id,target:targets[(targets.indexOf(t.target)+1)%3]});},battleMenu,leave,
   zoomIn(){renderer.zoomBy(1.2);},zoomOut(){renderer.zoomBy(1/1.2);},zoomReset(){renderer.camera={x:900+state.players[playerId].field*2100,y:550,zoom:1.18};},field(){renderer.camera.x=renderer.camera.x<1800?3000:900;},
