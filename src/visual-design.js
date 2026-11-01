@@ -383,58 +383,205 @@ function relicPortrait(id,c,skin){
   return out;
 }
 
-// Hand-authored in-game artwork, based on the supplied Ancient God reference.
-// White feline-horned titan, gold halo/arm, orange-red chest cores,
-// dark organic right side and ragged blood-red waistcloth.
+// Monumental Ancient God — pure inline SVG, no external image/network request.
+// Smooth human-like god head (NO cat ears), ceremonial forehead seal, muscular
+// ivory/porcelain torso, left solar gauntlet and right corrupt bio-organic arm.
+// The same high-resolution illustration is reused by the battle, shop and event.
 function oldGodPortrait(){
-  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 210" data-design="v2" data-art-tier="myth" data-base="oldgod" data-costume="default" aria-label="고대의 신">'+
-  '<defs>'+
-  '<linearGradient id="god-gold" x2=".85" y2="1"><stop stop-color="#fff8aa"/><stop offset=".25" stop-color="#ffdd39"/><stop offset=".75" stop-color="#ffad09"/><stop offset="1" stop-color="#d75d09"/></linearGradient>'+
-  '<linearGradient id="god-ivory" x2="1" y2="1"><stop stop-color="#fffef4"/><stop offset=".55" stop-color="#e1d8c5"/><stop offset="1" stop-color="#adb2ae"/></linearGradient>'+
-  '<linearGradient id="god-flesh" x2="1" y2="1"><stop stop-color="#dc9292"/><stop offset=".4" stop-color="#773b53"/><stop offset="1" stop-color="#301b39"/></linearGradient>'+
-  '<radialGradient id="god-core"><stop stop-color="#fff0a2"/><stop offset=".48" stop-color="#ffae17"/><stop offset=".83" stop-color="#ed3e16"/><stop offset="1" stop-color="#9a112a"/></radialGradient>'+
-  '<filter id="god-glow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="4"/></filter></defs>'+
-  '<ellipse cx="91" cy="201" rx="77" ry="8" fill="#160e23" opacity=".45"/>'+
-  // Celestial halo behind the head
-  '<ellipse id="god-halo" cx="91" cy="15" rx="43" ry="8" fill="none" stroke="#ffdd5e" stroke-width="6" opacity=".75" filter="url(#god-glow)"/>'+
-  '<ellipse cx="91" cy="15" rx="42" ry="8" fill="none" stroke="#fff7aa" stroke-width="3"/>'+
-  // Dark organic side, curling appendages and open abyss-mouth
-  '<path d="M126 62 Q169 38 162 94 Q151 119 176 149 Q167 168 150 150 Q175 191 160 200 Q140 192 128 170 L123 87Z" fill="url(#god-flesh)" stroke="#392538" stroke-width="4"/>'+
-  '<path d="M143 87 Q171 108 156 142 Q171 156 174 171 Q154 164 145 149 Q129 158 139 182 Q124 171 124 141Z" fill="#ad5d60" stroke="#4c2b3a" stroke-width="3"/>'+
-  '<path d="M146 129 Q166 122 167 147 Q154 157 145 145 Q139 139 146 129Z" fill="#100e22" stroke="#cb8e89" stroke-width="4"/>'+
-  '<path d="M126 154 Q158 181 146 201 Q128 184 116 176" fill="none" stroke="#c8786d" stroke-width="8"/>'+
-  // Broad ivory body, oversized left shoulder
-  '<path d="M58 69 Q68 55 87 53 Q111 49 132 70 L140 151 Q128 174 92 177 Q55 173 45 150L42 92Z" fill="url(#god-ivory)" stroke="#423a3d" stroke-width="4"/>'+
-  '<path d="M47 73Q23 67 15 94L18 137 49 144 58 91Z" fill="url(#god-ivory)" stroke="#4a4445" stroke-width="4"/>'+
-  // Head: simple white feline with triangular ears
-  '<path d="M68 46 L66 25 81 34 Q92 29 108 34 L120 23 123 50 Q132 61 123 72 Q94 84 68 69 Q59 57 68 46Z" fill="url(#god-ivory)" stroke="#494444" stroke-width="4"/>'+
-  '<path d="M66 51Q50 59 54 86Q42 86 41 64Q45 50 52 48Z" fill="#ede9e4" stroke="#53464a" stroke-width="3"/>'+
-  '<path d="M125 50Q142 63 136 85Q124 90 122 77Z" fill="#f9f5ee" stroke="#453b42" stroke-width="3"/>'+
-  '<ellipse cx="79" cy="48" rx="5" ry="5.7" fill="#eb571d" stroke="#432d36" stroke-width="2"/>'+
-  '<ellipse cx="110" cy="45" rx="5" ry="5.7" fill="#ec6019" stroke="#432d36" stroke-width="2"/>'+
-  '<path d="M91 62q7-13 15-1l-8 2-8 7" fill="none" stroke="#454047" stroke-width="3"/>'+
-  // White tusks at shoulders
-  '<path d="M47 76Q22 70 18 50Q13 77 30 92Q41 99 52 91" fill="#f8f8ee" stroke="#3e4143" stroke-width="3"/>'+
-  '<path d="M128 79Q147 68 142 49Q154 65 150 84Q143 96 133 96" fill="#fcfaf3" stroke="#3e4143" stroke-width="3"/>'+
-  // Gold shoulder circle, white armor rib panels
-  '<ellipse cx="39" cy="89" rx="17" ry="22" fill="#fffdf5" stroke="#ffd124" stroke-width="5"/>'+
-  '<path d="M59 93Q87 87 120 91 M57 117Q88 127 126 111 M57 143Q85 151 128 136" fill="none" stroke="#e4b64a" stroke-width="3"/>'+
-  '<path d="M74 84l-3 70m37-67 6 64" stroke="#dba63d" stroke-width="2" opacity=".8"/>'+
-  // Massive golden glowing left arm
-  '<path d="M23 111Q17 109 16 126L10 170Q5 198 24 201Q43 209 48 187L55 118Q47 108 23 111Z" fill="url(#god-gold)" stroke="#e77e0b" stroke-width="3"/>'+
-  '<path d="M14 166Q27 158 46 166M14 181Q28 175 46 184" fill="none" stroke="#ffe75e" stroke-width="3" opacity=".7"/>'+
-  // Red bioelectric veins and chest cores
-  '<g stroke="#d47b4e" stroke-width="2.1" opacity=".72" fill="none"><path d="M82 89l-12 19 20 12-4 28M94 83l15 27-15 22 17 22M119 98l-7 18 14 18M64 121l17-10 14 12"/></g>'+
-  '<g fill="url(#god-core)" stroke="#8b382d" stroke-width="2.5">'+
-  '<circle cx="91" cy="91" r="8"/><circle cx="125" cy="102" r="10"/><circle cx="73" cy="126" r="6.7"/>'+
-  '<circle cx="113" cy="141" r="7"/><circle cx="91" cy="155" r="4.8"/><circle cx="125" cy="160" r="5.2"/>'+
-  '</g>'+
-  // Glowing gold collar and waist wrapped in tattered ritual cloth
-  '<path d="M69 78Q84 74 100 80L112 88 105 91 91 85 76 90Z" fill="#fbd447" stroke="#b57a19" stroke-width="2"/>'+
-  '<path d="M59 166Q90 176 132 162L124 185 108 198 90 178 77 206 69 186 52 193Z" fill="#743d38" stroke="#3b2d36" stroke-width="3"/>'+
-  '<path d="M68 171l11 29 10-22 19 15 12-23" fill="none" stroke="#dc8b62" stroke-width="2.5"/>'+
-  '<path d="M60 188l-3 18h28l6-23 12 23h23l-5-21" fill="#eeeae1" stroke="#4f4545" stroke-width="3"/>'+
-  '</svg>';
+  return \`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 280"
+    aria-label="고대의 신" data-design="v2" data-art-tier="myth" data-base="oldgod"
+    data-costume="default" data-god-form="monumental" data-ear-shape="none">
+    <defs>
+      <linearGradient id="god-ivory" x1=".08" y1="0" x2=".92" y2="1">
+        <stop stop-color="#fffef9"/><stop offset=".25" stop-color="#f7f3e7"/>
+        <stop offset=".56" stop-color="#d9d4ca"/><stop offset=".78" stop-color="#b7aeb4"/>
+        <stop offset="1" stop-color="#79727e"/>
+      </linearGradient>
+      <linearGradient id="god-gold" x1="0" y1="0" x2=".95" y2=".85">
+        <stop stop-color="#fff9be"/><stop offset=".22" stop-color="#ffe96b"/>
+        <stop offset=".55" stop-color="#f6b82d"/><stop offset=".8" stop-color="#dd7a1d"/>
+        <stop offset="1" stop-color="#a94318"/>
+      </linearGradient>
+      <linearGradient id="god-flesh" x1="0" y1="0" x2="1" y2=".9">
+        <stop stop-color="#dba6a0"/><stop offset=".24" stop-color="#a45169"/>
+        <stop offset=".52" stop-color="#6e304b"/><stop offset=".8" stop-color="#462038"/>
+        <stop offset="1" stop-color="#210f29"/>
+      </linearGradient>
+      <linearGradient id="god-cloth" x1="0" y1="0" x2=".9" y2="1">
+        <stop stop-color="#a96558"/><stop offset=".45" stop-color="#713c3d"/>
+        <stop offset="1" stop-color="#301c33"/>
+      </linearGradient>
+      <radialGradient id="god-core" cx=".38" cy=".34" r=".68">
+        <stop stop-color="#fffbd9"/><stop offset=".22" stop-color="#ffe77e"/>
+        <stop offset=".49" stop-color="#ffab26"/><stop offset=".72" stop-color="#ff5a1f"/>
+        <stop offset=".9" stop-color="#cc2632"/><stop offset="1" stop-color="#62253f"/>
+      </radialGradient>
+      <radialGradient id="god-aura">
+        <stop stop-color="#ffe4a6" stop-opacity=".42"/>
+        <stop offset=".62" stop-color="#fba840" stop-opacity=".12"/>
+        <stop offset="1" stop-color="#e04d56" stop-opacity="0"/>
+      </radialGradient>
+      <filter id="god-glow" x="-70%" y="-70%" width="240%" height="240%">
+        <feGaussianBlur stdDeviation="4"/>
+      </filter>
+    </defs>
+    <!-- Aura + ceremonial solar halo, suspended ABOVE a smooth skull. -->
+    <ellipse cx="120" cy="98" rx="113" ry="145" fill="url(#god-aura)" opacity=".52"/>
+    <ellipse id="god-halo" cx="116" cy="19" rx="68" ry="11" fill="none"
+      stroke="#ffd55d" stroke-width="9" opacity=".85" filter="url(#god-glow)"/>
+    <ellipse cx="116" cy="19" rx="68" ry="11" fill="none" stroke="#fff6b4" stroke-width="4"/>
+    <ellipse cx="116" cy="19" rx="55" ry="7" fill="none" stroke="#ffe48a" stroke-width="1.6"/>
+    <g fill="#ffe59c" stroke="#fff4ca" stroke-width=".5" opacity=".92">
+      <path d="M34 18l4-8 4 8-4 8z M191 18l4-8 4 8-4 8z"/>
+      <path d="M109 8l7-7 7 7-7 6z"/>
+      <circle cx="48" cy="18" r="2"/><circle cx="184" cy="18" r="2"/>
+    </g>
+    <!-- Black-red organic arm and coiling muscle tendrils sit BEHIND torso. -->
+    <path d="M161 83Q204 64 213 115Q225 139 213 165Q227 188 234 210
+      Q236 235 221 240Q212 222 199 219Q223 257 207 268
+      Q191 264 183 239Q178 256 166 270L157 216 149 133Z"
+      fill="url(#god-flesh)" stroke="#30192e" stroke-width="4.5"/>
+    <path d="M174 96Q203 104 203 139Q189 160 209 176Q198 184 180 170
+      Q173 190 202 216Q186 228 169 210L166 133Z"
+      fill="#e89b94" stroke="#6c3544" stroke-width="2.8" opacity=".8"/>
+    <path d="M196 127Q220 153 211 185Q200 197 188 195Q205 178 196 169
+      Q183 155 196 127Z" fill="#532337" stroke="#be7170" stroke-width="2"/>
+    <path d="M194 176Q211 166 219 179Q222 196 209 205Q191 199 193 185Z"
+      fill="#0b0a20" stroke="#d99090" stroke-width="5"/>
+    <ellipse cx="209" cy="187" rx="9" ry="12" fill="#160c1d" stroke="#963b55" stroke-width="2"/>
+    <g fill="none" stroke-linecap="round">
+      <path d="M189 105Q205 120 190 143Q185 165 202 167" stroke="#f3b2a7" stroke-width="4"/>
+      <path d="M210 204Q232 215 225 247" stroke="#9d5363" stroke-width="7"/>
+      <path d="M173 196Q189 228 181 261" stroke="#d18176" stroke-width="6"/>
+      <path d="M210 150Q231 145 236 161" stroke="#6d3450" stroke-width="5"/>
+      <path d="M169 111Q193 121 183 149" stroke="#4d243e" stroke-width="4"/>
+    </g>
+    <!-- Legs and heavy ivory boots, much wider than ordinary towers. -->
+    <path d="M79 204Q92 198 112 208L108 262Q96 272 78 262L74 223Z"
+      fill="url(#god-ivory)" stroke="#4b404b" stroke-width="4"/>
+    <path d="M129 206Q149 198 161 212L170 262Q158 273 138 264L127 229Z"
+      fill="url(#god-ivory)" stroke="#4b404b" stroke-width="4"/>
+    <path d="M77 255Q94 262 108 254L108 269Q93 278 67 272L65 266Z"
+      fill="#f2eee0" stroke="#49434d" stroke-width="3"/>
+    <path d="M138 256Q153 262 170 252L181 270Q157 279 139 272Z"
+      fill="#e7e2da" stroke="#49434d" stroke-width="3"/>
+    <g fill="none" stroke="#c99845" stroke-width="3">
+      <path d="M77 244Q94 250 109 245M70 265Q91 269 108 264"/>
+      <path d="M136 245Q155 252 167 243M143 263Q163 267 177 263"/>
+    </g>
+    <!-- Sacred muscular ivory chest with asymmetrical ceremonial armor. -->
+    <path d="M58 90Q68 70 92 68L146 67Q165 71 178 91
+      L183 151Q182 181 174 209Q140 225 103 221Q65 217 55 192
+      L49 128Z" fill="url(#god-ivory)" stroke="#443c48" stroke-width="5"/>
+    <path d="M63 99Q80 83 108 91Q120 100 120 113Q106 123 79 122
+      L65 114Z" fill="#fffef6" stroke="#beb4ae" stroke-width="1.8"/>
+    <path d="M126 93Q150 84 166 100L174 123Q159 135 129 121Z"
+      fill="#e9dfd7" stroke="#ab9b9a" stroke-width="2"/>
+    <path d="M71 128Q93 131 119 135Q144 132 173 128
+      M72 158Q91 165 119 163Q144 162 175 157
+      M77 187Q100 194 129 190Q154 188 171 183"
+      fill="none" stroke="#baaca7" stroke-width="4" opacity=".78"/>
+    <path d="M120 83Q119 112 117 137Q121 159 120 192"
+      fill="none" stroke="#d3b56d" stroke-width="3.5" opacity=".8"/>
+    <g fill="none" stroke="#e7b74e" stroke-width="3.7" stroke-linecap="round">
+      <path d="M55 126Q59 157 74 179L95 182"/>
+      <path d="M169 103Q184 137 175 162L156 183"/>
+      <path d="M84 214L80 193 95 181 95 150"/>
+      <path d="M164 206L160 184 147 167 151 138"/>
+      <path d="M69 119Q86 110 103 118M133 120Q150 110 170 112"/>
+    </g>
+    <!-- Shoulder tusks grow outward from armor, never from the head. -->
+    <path d="M59 102Q31 94 24 66Q20 93 32 117Q44 131 64 122Z"
+      fill="#f9f7ee" stroke="#4c454f" stroke-width="3.4"/>
+    <path d="M171 101Q194 93 198 67Q205 88 197 110Q189 127 173 122Z"
+      fill="#f9f7ee" stroke="#4c454f" stroke-width="3.4"/>
+    <!-- Solar left shoulder plate. -->
+    <path d="M61 105Q40 85 20 107Q9 125 21 157L53 163 67 121Z"
+      fill="url(#god-ivory)" stroke="#514449" stroke-width="4"/>
+    <ellipse cx="36" cy="126" rx="17" ry="25" fill="#fffdf2"
+      stroke="#ffdf46" stroke-width="6"/>
+    <ellipse cx="36" cy="126" rx="12" ry="20" fill="#fdfbf5" stroke="#c7a26b" stroke-width="1.7"/>
+    <!-- Monumental solar gauntlet, bigger than the opposite arm. -->
+    <path d="M24 156Q44 153 58 164L57 224Q55 241 50 255Q47 272 29 276
+      Q7 273 8 250L11 195Q11 169 24 156Z"
+      fill="url(#god-gold)" stroke="#bf6c16" stroke-width="4.5"/>
+    <path d="M16 180Q31 171 54 182L51 198Q31 194 12 201"
+      fill="#fff29f" opacity=".65"/>
+    <g fill="none" stroke="#ffe997" stroke-width="3" opacity=".9">
+      <path d="M17 201Q32 196 53 209"/>
+      <path d="M13 220Q28 215 52 224"/>
+      <path d="M11 247Q28 237 50 243"/>
+      <path d="M22 267Q27 255 27 244"/>
+      <path d="M39 269Q40 255 43 250"/>
+    </g>
+    <path d="M17 167Q26 153 52 164" fill="none" stroke="#ffed90" stroke-width="6"/>
+    <g fill="#fff8c7" opacity=".9">
+      <circle cx="22" cy="187" r="2.4"/><circle cx="44" cy="214" r="2.1"/>
+      <path d="M20 239l4-8 4 8-4 7z"/>
+    </g>
+    <!-- Corrupted shoulder plating, ribs and blood vessels crossing the chest. -->
+    <path d="M151 80Q180 83 190 115Q180 129 166 134L151 116Z"
+      fill="#9a5a66" stroke="#5c3446" stroke-width="3"/>
+    <path d="M176 125Q187 146 174 166L167 196Q186 177 188 160L182 139Z"
+      fill="url(#god-flesh)" stroke="#5c2d41" stroke-width="2.5"/>
+    <g fill="none" stroke="#b56c69" stroke-width="3" opacity=".9">
+      <path d="M163 98L149 116 165 138 146 161 155 182 139 198"/>
+      <path d="M177 112L167 135 175 152 162 171"/>
+      <path d="M142 100Q133 116 149 130L138 142Q133 162 143 174"/>
+      <path d="M110 109Q99 124 103 138L88 150 95 175"/>
+    </g>
+    <g fill="none" stroke="#ffb755" stroke-width="1.6" opacity=".95">
+      <path d="M166 94l-25 17-6 22-21 11-5 35"/>
+      <path d="M175 143l-20 14 3 26-20 16"/>
+      <path d="M106 102l13 25-15 19 14 26-17 18"/>
+    </g>
+    <!-- Six red/amber living cores, faceted outer rings and highlights. -->
+    <g fill="#552239" stroke="#b3693d" stroke-width="3">
+      <circle cx="116" cy="107" r="15"/><circle cx="171" cy="127" r="17"/>
+      <circle cx="91" cy="163" r="12"/><circle cx="155" cy="173" r="11"/>
+      <circle cx="126" cy="195" r="10"/><circle cx="166" cy="205" r="8"/>
+    </g>
+    <g fill="url(#god-core)" stroke="#ffb04c" stroke-width="2.6">
+      <circle cx="116" cy="107" r="10.8"/><circle cx="171" cy="127" r="12.5"/>
+      <circle cx="91" cy="163" r="8"/><circle cx="155" cy="173" r="7"/>
+      <circle cx="126" cy="195" r="6.4"/><circle cx="166" cy="205" r="4.5"/>
+    </g>
+    <g fill="#fffbd6" opacity=".95">
+      <circle cx="112" cy="103" r="3.5"/><circle cx="167" cy="123" r="4"/>
+      <circle cx="88" cy="159" r="2.5"/><circle cx="152" cy="170" r="2"/>
+    </g>
+    <!-- Ragged ritual waistcloth, engraved clasp and layered cloth threads. -->
+    <path d="M77 214Q115 228 171 210L169 230 146 240 129 261 115 241
+      101 278 86 249 68 263 64 233Z"
+      fill="url(#god-cloth)" stroke="#3d2736" stroke-width="4"/>
+    <path d="M77 222Q103 239 127 226L147 217M86 239l15 31 18-41
+      M126 232l18 20 18-27" fill="none" stroke="#d7946a" stroke-width="2.5"/>
+    <path d="M77 218Q115 233 169 218" fill="none" stroke="#ecc879" stroke-width="4"/>
+    <path d="M112 222l8-7 8 7-8 9z" fill="#fff1a5" stroke="#b67c33" stroke-width="2"/>
+    <g fill="#f7d696" opacity=".8"><circle cx="81" cy="226" r="1.6"/>
+      <circle cx="157" cy="228" r="1.6"/><circle cx="95" cy="236" r="1.6"/></g>
+    <!-- NO cat ears. A smooth round head with gold forehead sigil instead. -->
+    <path data-anatomy="smooth-head" d="M84 49Q86 34 103 31Q119 27 137 32Q154 37 157 53
+      Q162 73 152 91Q143 104 120 105Q96 104 86 89Q78 75 84 49Z"
+      fill="url(#god-ivory)" stroke="#403a47" stroke-width="4.6"/>
+    <path d="M95 42Q118 34 145 42" fill="none" stroke="#fffdf5" stroke-width="4" opacity=".8"/>
+    <path d="M105 34L120 30 133 35 129 49 119 54 110 47Z"
+      fill="#e4c782" stroke="#875833" stroke-width="2.6"/>
+    <path d="M120 36l5 8-5 6-5-6z" fill="url(#god-core)"/>
+    <g fill="#ff6228" stroke="#382331" stroke-width="3.2">
+      <ellipse cx="102" cy="66" rx="5.8" ry="7.6"/>
+      <ellipse cx="139" cy="66" rx="5.8" ry="7.6"/>
+    </g>
+    <g fill="#fff1b5"><circle cx="100" cy="63.5" r="1.9"/><circle cx="137" cy="63.5" r="1.9"/></g>
+    <path d="M109 87Q120 74 131 87L124 86 118 94 112 89"
+      fill="#f8f3e8" stroke="#4d444e" stroke-width="3.6" stroke-linejoin="round"/>
+    <path d="M94 84l6 3M140 86l6-3" stroke="#8f797b" stroke-width="1.8" opacity=".9"/>
+    <!-- Final enchanted gold collar and symmetrical decorative throat ribs. -->
+    <path d="M91 98Q105 108 120 111Q137 107 153 98L155 107
+      Q135 121 120 122Q105 121 89 106Z"
+      fill="#e9bd4d" stroke="#a87531" stroke-width="2.6"/>
+    <path d="M100 108L120 115 143 107" fill="none" stroke="#fff2af" stroke-width="2"/>
+  </svg>\`;
 }
 export function redesignedPortrait(id,skin='default'){
   if(id==='oldgod')return oldGodPortrait();
