@@ -30,6 +30,7 @@ export async function claimProfile(db,user,code,reward){
     p.claimedRooms=p.claimedRooms||[];
     if(p.claimedRooms.includes(code))return p;
     if(p.claimedRooms.length>=1024)throw Error('정산 기록 한도입니다. 관리자에게 문의하세요.');
+    if(reward.achievementRun)Core.recordAchievementRun(p,reward.achievementRun);
     Core.applyReward(p,reward);
     p.claimedRooms.push(code);
     return p;
@@ -80,15 +81,20 @@ export async function importV098Profile(db,user,local){
   });
 }
 
-export async function claimSoloProfile(db,user,runId,reward){
+export async function claimSoloProfile(db,user,runId,reward,run=null){
   if(typeof runId!=='string'||!/^[-a-f0-9]{36}$/.test(runId))throw Error('잘못된 솔로 플레이 기록입니다.');
   return updateProfile(db,user,p=>{
     // Stale room pointers from pre-v0.9.8 solo rooms must never block solo rewards.
     p.claimedSoloRuns=Array.isArray(p.claimedSoloRuns)?p.claimedSoloRuns:[];
     if(p.claimedSoloRuns.includes(runId))return p; // D1 CAS: duplicate retries cannot duplicate rewards.
+    if(run)Core.recordAchievementRun(p,run);
     Core.applyReward(p,reward);
     p.claimedSoloRuns.push(runId);
     if(p.claimedSoloRuns.length>256)p.claimedSoloRuns.splice(0,p.claimedSoloRuns.length-256);
     return p;
   });
+}
+
+export async function claimAchievementProfile(db,user,id){
+  return updateProfile(db,user,p=>Core.claimAchievementReward(p,id));
 }
