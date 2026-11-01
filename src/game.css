@@ -798,3 +798,114 @@ body{background:#15203d;color:var(--text)}button{border:2px solid #101a35;border
   .temple-enemy-grid svg{height:65px}
 }
 @media(prefers-reduced-motion:reduce){.temple-god-preview:before{animation:none}}
+
+
+/* v0.11.1 — Temple event viewport fix, monumental Ancient God, cinematic identity. */
+/* Unlike the home lobby, the Temple is taller than a viewport. Scroll its
+   content GRID CELL — never scroll the whole shell behind the team dock. */
+.shell:has(.temple-page) .content{
+  min-height:0;min-width:0;overflow-x:hidden;overflow-y:auto;
+  overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;
+  scrollbar-width:thin;scrollbar-color:#b7805e #25243f;
+  scrollbar-gutter:stable;padding-bottom:36px
+}
+.shell:has(.temple-page) .content::-webkit-scrollbar{width:10px}
+.shell:has(.temple-page) .content::-webkit-scrollbar-thumb{background:#b7805e;border-radius:10px}
+.shell:has(.temple-page) .content::-webkit-scrollbar-track{background:#25243f}
+.temple-page{min-height:0;padding-bottom:44px}
+.temple-panels{align-items:start;grid-template-columns:minmax(270px,.92fr) minmax(0,1.25fr)}
+.temple-hero{
+  background:radial-gradient(circle at 72% 12%,#e6a2542b,transparent 36%),
+    linear-gradient(130deg,#211626,#4b263a 55%,#1d172b);
+  border-color:#d9a361;box-shadow:inset 0 1px #fff3cc2b,0 12px 34px #0e0a2080
+}
+.temple-art{height:clamp(235px,24vw,365px);position:relative;border:2px solid #e3ac69;
+  background:#1e1429;box-shadow:inset 0 0 30px #1e1128,0 8px 22px #0c091c88}
+.temple-art svg{display:block;width:100%;height:100%;object-fit:cover;object-position:center center}
+.temple-art:after{content:'';position:absolute;pointer-events:none;inset:0;
+  background:linear-gradient(90deg,#1b102951,transparent 25%,transparent 73%,#1b102951),
+    linear-gradient(0deg,#1b10297a,transparent 24%)}
+.temple-god-preview{height:365px;
+  background:radial-gradient(ellipse at 49% 33%,#d3a45735,transparent 55%),
+   radial-gradient(ellipse at 54% 73%,#a3405540,transparent 48%),
+   linear-gradient(160deg,#342238,#101222)}
+.temple-god-preview::before{width:210px;height:210px;opacity:.8}
+.temple-god-preview svg{height:98%;width:auto;max-width:none;
+  filter:drop-shadow(0 14px 15px #090818cc) drop-shadow(0 0 9px #ffb76044)}
+/* The same character model is also larger in collection and inspector. */
+.tower-card:has(svg[data-base="oldgod"]) svg{height:178px;max-width:none;transform:translateY(-10px) scale(1.12);transform-origin:center 78%}
+.detail-art:has(svg[data-base="oldgod"]){height:310px;overflow:visible}
+.detail-art svg[data-base="oldgod"]{height:326px;max-width:100%;filter:drop-shadow(0 14px 18px #0f0b2788)}
+.achievement-tower svg[data-base="oldgod"]{height:128px;max-width:none}
+.loadout-slot svg[data-base="oldgod"]{transform:scale(1.18);transform-origin:50% 77%}
+/* Left navigation event is visually unique, without downloadable assets. */
+.nav-item.temple-nav{
+  position:relative;isolation:isolate;overflow:hidden;min-height:72px;display:flex;align-items:center;
+  color:#ffe4ab;background:radial-gradient(circle at 18% 35%,#ffbd6a3d,transparent 41%),
+    linear-gradient(128deg,#6d2b3a,#36203e 63%,#59333c);
+  border:2px solid #d2a05c;border-radius:13px;
+  box-shadow:inset 0 2px #ffe7aa44,inset 0 -8px 18px #170e2433,
+    0 6px 16px #110b2980,0 0 12px #b9644436;
+  text-shadow:0 1px 2px #0d071c;
+  transition:transform .18s ease,box-shadow .2s ease,filter .2s ease
+}
+.nav-item.temple-nav:before{display:block;content:'';position:absolute;z-index:0;
+  inset:0;background:linear-gradient(115deg,transparent 10%,#fff3bb00 33%,#fff3bb55 48%,#fff3bb00 64%,transparent 90%);
+  transform:translateX(-135%);animation:templeNavShine 7s ease-in-out infinite;pointer-events:none}
+.nav-item.temple-nav:after{content:'✦';position:absolute;right:10px;top:7px;
+  font-size:10px;color:#fff4bd;opacity:.85;text-shadow:0 0 9px #ffcf62}
+.nav-item.temple-nav .temple-nav-icon{position:relative;z-index:1;color:#ffdc76;
+  font-size:30px;line-height:1;filter:drop-shadow(0 0 7px #ffb44f)}
+.nav-item.temple-nav .temple-nav-text{position:relative;z-index:1;font:750 14px/1.3 var(--display);
+  text-align:left;letter-spacing:-.2px;color:#ffdfac}
+.nav-item.temple-nav:hover:not(:disabled),.nav-item.temple-nav.active{
+  background:radial-gradient(circle at 22% 35%,#ffc56d52,transparent 42%),
+    linear-gradient(135deg,#9e4550,#522a46 60%,#7d4137);
+  border-color:#ffe18a;box-shadow:inset 0 2px #fff2ba66,0 7px 22px #10091f,
+  0 0 22px #ec9a5770;filter:brightness(1.08)
+}
+.nav-item.temple-nav:focus-visible,.temple-start:focus-visible,.temple-coop:focus-visible{
+  outline:3px solid #ffed9c;outline-offset:3px
+}
+@keyframes templeNavShine{
+  0%,52%{transform:translateX(-135%)}70%,100%{transform:translateX(135%)}
+}
+/* Event actions deserve a clear sense of scale and tactile feedback. */
+.temple-start,.temple-coop{
+  position:relative;min-height:58px;font:850 16px/1.35 var(--display);letter-spacing:.3px;
+  border-radius:13px;transition:transform .16s ease,box-shadow .16s ease,filter .16s ease
+}
+.temple-start{color:#35212c;border:2px solid #ffe6ae;
+  background:linear-gradient(180deg,#fff6cd,#f8d16e 45%,#d88c3e);
+  box-shadow:inset 0 2px #fffbeeaa,0 7px 18px #bd6c3473,0 0 12px #ffc25c32}
+.temple-coop{color:#fff1dd;border:2px solid #d9a3ff;
+  background:linear-gradient(130deg,#814b77,#563764 60%,#3b284d);
+  box-shadow:inset 0 2px #fbd7ff44,0 8px 20px #2e173b9c}
+.temple-start:hover:not(:disabled),.temple-coop:hover:not(:disabled){
+  transform:translateY(-3px);filter:brightness(1.1);
+  box-shadow:0 10px 24px #ffbd5b44
+}
+@media(max-width:850px){
+ .nav-item.temple-nav{min-height:70px;justify-content:center;padding:9px 2px}
+ .nav-item.temple-nav .temple-nav-text{display:none}
+ .nav-item.temple-nav .temple-nav-icon{font-size:28px}
+}
+@media(min-width:621px) and (max-width:850px){
+ .shell:has(.temple-page){height:100dvh;min-height:700px;grid-template-rows:72px minmax(0,1fr) 130px}
+}
+@media(max-width:760px){
+ .temple-panels{grid-template-columns:1fr}
+ .temple-god-preview{height:310px}
+ .temple-art{height:260px}
+}
+@media(max-width:620px){
+ .shell:has(.temple-page){height:auto;min-height:100dvh;grid-template-rows:70px auto 125px}
+ .shell:has(.temple-page) .content{overflow:visible;padding-bottom:25px;scrollbar-gutter:auto}
+ .temple-god-preview{height:280px}
+ .temple-art{height:210px}
+ .temple-page{padding-bottom:20px}
+}
+@media(prefers-reduced-motion:reduce){
+ .nav-item.temple-nav:before{animation:none}
+ .nav-item.temple-nav,.temple-start,.temple-coop{transition:none}
+}
