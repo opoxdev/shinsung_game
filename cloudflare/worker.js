@@ -1,5 +1,5 @@
 import {authenticate} from './auth.js';
-import {getProfile,updateProfile,claimProfile,claimSoloProfile,importV098Profile} from './profile.js';
+import {getProfile,updateProfile,claimProfile,claimSoloProfile,importV098Profile,claimAchievementProfile} from './profile.js';
 import {GameRoom} from './room.js';
 import {Core} from '../dist/cloudflare/core.js';
 import {isAdmin,adminAction,assertActiveProfile} from './admin.js';
@@ -51,6 +51,7 @@ export async function applyAction(env,action,p,user){
   if(action==='profile')return (await getProfile(db,user)).value;
   if(action==='listRooms')return listRooms(env);
   if(action==='diagnostic')return {name:(await getProfile(db,user)).value.name,serverTime:new Date().toISOString(),services:['Firebase Auth','Cloudflare Worker','D1','Durable Objects']};
+  if(action==='claimAchievement')return claimAchievementProfile(db,user,p.id);
   if(action==='profileAction'){
     return updateProfile(db,user,profile=>{
       if(profile.activeRoom)throw Error('게임방에서 나간 뒤 컬렉션을 변경하세요.');
@@ -68,7 +69,14 @@ export async function applyAction(env,action,p,user){
     // not client-submitted coins/XP, without creating a Durable Object.
     const match={config:cfg,players:{[user.uid]:{field:0}},
       wave:p.wave,status:p.win?'victory':'defeat'};
-    return claimSoloProfile(db,user,p.runId,Core.rewardFor(match,user.uid));
+    // Local battle metrics are bounded; the server still computes rewards and
+    // achievement eligibility from canonical rules, never user-given coins/XP.
+    const input=p.achievementRun||{};
+    const stat=n=>Number.isSafeInteger(n)&&n>=0&&n<=50000?n:0;
+    const run={type:'solo',difficulty:cfg.difficulty,map:cfg.map,modes:cfg.modes,
+      win:p.win,kills:stat(input.kills),places:stat(input.places),
+      upgrades:stat(input.upgrades),flawless:p.win&&input.flawless===true};
+    return claimSoloProfile(db,user,p.runId,Core.rewardFor(match,user.uid),run);
   }
   if(action==='importV098')return importV098Profile(db,user,p.profile);
   if(action==='createRoom'){
