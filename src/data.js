@@ -35,6 +35,7 @@ export const TOWERS = {
   workshop: { name: '버섯 정원', role: '지원 · 버프', rarity: 'epic', cost: 610, price: 1500, color: '#ff88a8', damage: 0, interval: 1, range: 210, kind: 'buff', power:.2, cap: 3, upgrades: [450,900,1800], desc: '빛나는 포자로 아군 공격력을 24% 강화하는 작은 버섯집. 여러 정원의 효과는 중첩되지 않는다.' },
   rail: { name: '별술사', role: '별빛 · 장거리', rarity: 'legendary', cost: 850, price: 5000, color: '#a6d8ff', damage: 170, interval: 2.8, range: 420, kind: 'ranged', cap: 3, upgrades: [1300,2600,5200], desc: '커다란 모자 아래 반짝이는 두 눈. 멀리 있는 적에게 장갑을 꿰뚫는 별빛을 떨어뜨린다.', pierce: true },
   oldgod: { name:'고대의 신',role:'신벌 · 종말의 심판',rarity:'mythic',cost:8500,price:null,color:'#ffd45d',damage:1950,interval:3.5,range:560,splash:170,kind:'judgement',pierce:true,bossBonus:2.2,cap:1,upgrades:[10500,19500,33000],desc:'파멸의 신전 30웨이브 최초 클리어 보상. 후광을 두른 거대한 백색 신체와 황금의 팔, 붉은 오염된 육체가 공명한다. 신벌의 빛으로 광역을 초토화하며 보스에게 추가 피해를 준다.' },
+  voidwalker: {name:'심연의 방랑자',role:'중반 · 암흑 파동',rarity:'mythic',cost:1350,price:null,color:'#c373ff',damage:205,interval:1.45,range:295,splash:96,kind:'splash',cap:3,upgrades:[],desc:'익스트림 이상 난이도에서 암흑 에너지 추가모드 클리어 시 영구 해금. 은빛 머리카락과 자주색 두건을 두른 방랑자가 암흑 파동으로 적 무리를 공격한다.'},
   sonic: { name: '소닉', role: '중반 · 초고속 광역', rarity: 'mythic', cost: 720, price: null, color: '#f784cb', damage: 26, interval: .22, range: 240, splash: 45, kind: 'splash', cap: 2, upgrades: [1900,3800,7000], desc: '익스트림 이상 + 슈퍼소닉 모드 클리어 보상. 음파로 적의 대열을 분쇄한다.' },
   archer: {name:'궁수', role:'후반 · 장거리 정밀', rarity:'common',cost:780,price:400,color:'#a4e56d',damage:74,interval:1.75,range:345,kind:'ranged',cap:12,upgrades:[200,440,850],desc:'가죽 팔토시와 나무 활을 사용하는 궁수. 외형은 소박하지만 사거리와 후반 가격이 높은 사수다.'},
   chef: {name:'투척병',role:'광역 · 폭발',rarity:'common',cost:270,price:600,color:'#ffb6bc',damage:17,interval:1.5,range:175,splash:58,kind:'splash',cap:10,upgrades:[270,540,1100],desc:'작은 폭약 주머니와 수류탄을 든 투척수. 군용 특수장비 없이 광역 공격을 담당한다.'},
@@ -160,7 +161,8 @@ export const MODES = {
   elite: { name: '엘리트', reward: 1.5, hp: 1.5, speed: 1.5, desc: '적 체력·속도 ×1.5' },
   sonic: { name: '소닉', reward: 1.1, hp: 1, speed: 1.5, desc: '적 이동속도 ×1.5' },
   shortage: { name: '군사부족', reward: 2, hp: 1, speed: 1, cap: 5, desc: '전체 타워 최대 5개' },
-  supersonic: { name: '슈퍼소닉', reward: 2, hp: 1, speed: 2.5, desc: '적 속도 ×2.5 · 특수 타워 도전' }
+  supersonic: { name: '슈퍼소닉', reward: 2, hp: 1, speed: 2.5, desc: '적 속도 ×2.5 · 특수 타워 도전' },
+  darkenergy: { name: '암흑 에너지', reward: 1.7, hp: 1, speed: 1, desc: '적 처치 시 최대 체력을 같은 필드의 살아 있는 모든 적에게 분배 · 최소 1 · 초과 체력 허용' }
 };
 export const MAPS = [
   { id:'temple_ruin',name:'파멸의 신전',tag:'TEMPLE OF RUIN',biome:'temple',eventOnly:'temple_of_ruin',color:'#e8b45f',ground:'#352c40',roadColor:'#b79a73',desc:'붉은 균열과 금빛 제단이 공존하는 신전. 서로 이웃한 긴 통로가 광역·장거리 타워에 유리하다.',path:[[0,100],[1650,100],[1650,245],[190,245],[190,390],[1650,390],[1650,535],[190,535],[190,680],[1650,680],[1650,825],[190,825],[190,970],[1800,970]] },
