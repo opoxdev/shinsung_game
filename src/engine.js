@@ -1,6 +1,9 @@
 import { WORLD, MAPS, TOWERS, ENEMIES, MODES, DIFFICULTIES, PACKS, SKIN_STYLES, CRATES, BOSS_ABILITIES, COMBAT_SCALE, EVENTS, campaignOf, starterProfile, skinCandidates, availableCrateStyles } from './data.js';
 import { evolutionAt } from './evolutions.js';
 export const STEP = .05;
+// Damage-based combat cash: 85% of the former full-kill bounty when the
+// original health bar is completely depleted. Earlier cash enables reinvestment.
+const DAMAGE_CASH_FACTOR = .85;
 export function bounty(hp) {
   if (!Number.isFinite(hp) || hp <= 0) return 0;
   if (hp <= 10) return Math.max(1, Math.round(hp / 2));
@@ -151,7 +154,21 @@ function damage(s,e,n,t,ignoreArmor=false) {
   const absorbed=Math.min(e.shield||0,value);
   if(absorbed>0)e.shield-=absorbed;
   const hpLoss=Math.min(e.hp,Math.max(0,value-absorbed));
-  if(hpLoss>0)e.hp-=hpLoss;
+  if(hpLoss>0){
+    e.hp-=hpLoss;
+    // Pay for real health removed, never the attack's overkill or shield damage.
+    // The per-enemy budget prevents healing/regen from minting infinite money.
+    // Dark Energy donations can add a bounded amount of payable extra health.
+    const maxPayable=Math.max(0,e.maxHp+(e.bonusDamageBudget||0));
+    const eligible=Math.min(hpLoss,Math.max(0,maxPayable-(e.paidDamage||0)));
+    if(eligible>0&&e.maxHp>0){
+      e.paidDamage=(e.paidDamage||0)+eligible;
+      const rate=e.damageCashRate??(e.damageCashRate=bounty(e.maxHp*COMBAT_SCALE)*DAMAGE_CASH_FACTOR/e.maxHp);
+      const team=Object.values(s.players).filter(p=>p.field===e.field);
+      const share=eligible*rate/(team.length||1);
+      for(const p of team)p.money+=share;
+    }
+  }
   // HP is correctly capped at zero, but floating damage numbers must show the
   // complete effective hit (after armor/mark), NEVER the target's remaining HP.
   // For example 10 damage against 1 HP displays 10, not 1.
@@ -167,10 +184,8 @@ function damage(s,e,n,t,ignoreArmor=false) {
   }else if(displayedDamage>0)event(s,{kind:'damage',x:e.x,y:e.y,field:e.field,type:e.type,amount:displayedDamage,shield:absorbed>0});
   if(e.hp>0)return;
   e.hp=0;
-  const team=Object.values(s.players).filter(p=>p.field===e.field);
-  // The visible HP scale changed, but combat earnings must not shrink.
-  const reward=bounty(e.maxHp*COMBAT_SCALE)/(team.length||1);
-  team.forEach(p=>p.money+=reward);s.kills++;
+  // All combat cash is earned on damage above, not on the kill itself.
+  s.kills++;
   event(s,{kind:'kill',x:e.x,y:e.y,field:e.field,type:e.type,color:ENEMIES[e.type].color,split:!!ENEMIES[e.type].onDeath,size:ENEMIES[e.type].size||12});
   if(s.config.modes.includes('darkenergy')){
     // Share the deceased enemy's ORIGINAL max HP among surviving enemies in
@@ -178,7 +193,12 @@ function damage(s,e,n,t,ignoreArmor=false) {
     const recipients=s.enemies.filter(other=>other!==e&&other.field===e.field&&other.hp>0);
     if(recipients.length){
       const amount=Math.max(1,e.maxHp/recipients.length);
-      for(const other of recipients)other.hp+=amount;
+      for(const other of recipients){
+        other.hp+=amount;
+        // The minimum-1 rule can create additional HP; only the original
+        // donor's divided max HP extends the earnable damage budget.
+        other.bonusDamageBudget=(other.bonusDamageBudget||0)+Math.min(amount,e.maxHp/recipients.length);
+      }
       const stride=Math.ceil(recipients.length/14);
       const targets=recipients.filter((_,index)=>index%stride===0).slice(0,14)
         .map(other=>({x:other.x,y:other.y}));
