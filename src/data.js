@@ -1,5 +1,5 @@
 import { EVOLUTIONS } from './evolutions.js';
-export const VERSION = '0.10.0';
+export const VERSION = '0.11.0';
 // All combat health and damage numbers use a 1/6 display scale. Economy, ranges,
 // movement and relative time-to-kill are deliberately unchanged.
 export const COMBAT_SCALE = 6;
@@ -17,6 +17,7 @@ export const TOWERS = {
   summoner: { name: '고블린 소환사', role: '소환', rarity: 'epic', cost: 500, price: 2200, color: '#a4e68b', damage: 65, interval: 4, range: 260, kind: 'summon', cap: 4, upgrades: [550,1200,2400], desc: '고블린을 소환해 적을 추격한다. 소환수는 목표에 도달하면 공격하고 사라진다.' },
   workshop: { name: '버섯 정원', role: '지원 · 버프', rarity: 'epic', cost: 610, price: 1500, color: '#ff88a8', damage: 0, interval: 1, range: 210, kind: 'buff', cap: 3, upgrades: [450,900,1800], desc: '빛나는 포자로 아군 공격력을 20% 강화하는 작은 버섯집. 여러 정원의 효과는 중첩되지 않는다.' },
   rail: { name: '별술사', role: '별빛 · 장거리', rarity: 'legendary', cost: 850, price: 5000, color: '#a6d8ff', damage: 170, interval: 2.8, range: 420, kind: 'ranged', cap: 3, upgrades: [1300,2600,5200], desc: '커다란 모자 아래 반짝이는 두 눈. 멀리 있는 적에게 장갑을 꿰뚫는 별빛을 떨어뜨린다.', pierce: true },
+  oldgod: { name:'고대의 신',role:'신벌 · 종말의 심판',rarity:'mythic',cost:8500,price:null,color:'#ffd45d',damage:1950,interval:3.5,range:560,splash:170,kind:'judgement',pierce:true,bossBonus:2.2,cap:1,upgrades:[10500,19500,33000],desc:'파멸의 신전 30웨이브 최초 클리어 보상. 후광을 두른 거대한 백색 신체와 황금의 팔, 붉은 오염된 육체가 공명한다. 신벌의 빛으로 광역을 초토화하며 보스에게 추가 피해를 준다.' },
   sonic: { name: '소닉', role: '중반 · 초고속 광역', rarity: 'mythic', cost: 720, price: null, color: '#f784cb', damage: 26, interval: .22, range: 240, splash: 45, kind: 'splash', cap: 2, upgrades: [1900,3800,7000], desc: '익스트림 이상 + 슈퍼소닉 모드 클리어 보상. 음파로 적의 대열을 분쇄한다.' },
   archer: {name:'궁수', role:'후반 · 장거리 정밀', rarity:'common',cost:780,price:400,color:'#a4e56d',damage:74,interval:1.75,range:345,kind:'ranged',cap:12,upgrades:[200,440,850],desc:'가죽 팔토시와 나무 활을 사용하는 궁수. 외형은 소박하지만 사거리와 후반 가격이 높은 사수다.'},
   chef: {name:'투척병',role:'광역 · 폭발',rarity:'common',cost:270,price:600,color:'#ffb6bc',damage:17,interval:1.5,range:175,splash:58,kind:'splash',cap:10,upgrades:[270,540,1100],desc:'작은 폭약 주머니와 수류탄을 든 투척수. 군용 특수장비 없이 광역 공격을 담당한다.'},
@@ -52,6 +53,14 @@ for(const [id,def] of Object.entries(TOWERS)) {
   for(const step of EVOLUTIONS[id])if(step.dot)step.dot/=COMBAT_SCALE;
 }
 export const ENEMIES = {
+  temple_acolyte: {name:'신전 추종자',hp:2100,speed:68,color:'#bfa58a',leak:2,size:13,eventOnly:'temple_of_ruin'},
+  temple_knight: {name:'타락한 성전병',hp:9500,speed:42,color:'#b6aa9d',armor:.26,shield:650,leak:7,size:20,eventOnly:'temple_of_ruin'},
+  temple_spore: {name:'제단 감염체',hp:6000,speed:58,color:'#c36c87',onDeath:[['temple_acolyte',2]],leak:5,size:19,eventOnly:'temple_of_ruin'},
+  temple_priest: {name:'붉은 주술 사제',hp:14500,speed:53,color:'#e16780',heal:170,healRange:150,leak:10,size:21,eventOnly:'temple_of_ruin'},
+  temple_guardian: {name:'고대 수호체',hp:85000,speed:35,color:'#e6b66a',armor:.38,shield:18500,leak:30,size:37,eventOnly:'temple_of_ruin'},
+  temple_colossus: {name:'파멸의 거수',hp:175000,speed:30,color:'#a36c81',armor:.35,regen:360,leak:48,size:43,eventOnly:'temple_of_ruin'},
+  temple_oracle: {name:'심연의 신관',hp:42000,speed:77,color:'#a886f1',shield:11000,heal:230,healRange:175,leak:22,size:27,eventOnly:'temple_of_ruin'},
+  temple_deity: {name:'신전의 파멸신',hp:1800000,speed:25,color:'#ffb34a',armor:.42,shield:350000,regen:1800,leak:100,size:61,eventOnly:'temple_of_ruin'},
   zombie: { name: '좀비', hp: 18, speed: 48, color: '#8eae7d', leak: 1 },
   runner: { name: '빠른 좀비', hp: 28, speed: 90, color: '#d5bd64', leak: 1 },
   heavy: { name: '강한 좀비', hp: 150, speed: 38, color: '#a08772', leak: 3 },
@@ -93,6 +102,9 @@ for(const def of Object.values(ENEMIES)){
 }
 // Distinct boss mechanics, readable telegraphs and limited-frequency effects.
 export const BOSS_ABILITIES={
+  temple_guardian:{name:'성역의 방벽',kind:'shield',cooldown:15,power:.25},
+  temple_colossus:{name:'파멸의 전율',kind:'jam',cooldown:20,power:2.4,radius:195},
+  temple_deity:{name:'심판의 태양',kind:'jam',cooldown:17,power:3.3,radius:245},
  boss:{name:'분노의 돌진',kind:'rush',cooldown:12,power:1.5,duration:3},
  fastboss:{name:'전력 질주',kind:'rush',cooldown:10,power:1.85,duration:2.4},
  tank:{name:'강철 방벽',kind:'shield',cooldown:15,power:.18},
@@ -123,6 +135,7 @@ export const MODES = {
   supersonic: { name: '슈퍼소닉', reward: 2, hp: 1, speed: 2.5, desc: '적 속도 ×2.5 · 특수 타워 도전' }
 };
 export const MAPS = [
+  { id:'temple_ruin',name:'파멸의 신전',tag:'TEMPLE OF RUIN',biome:'temple',eventOnly:'temple_of_ruin',color:'#e8b45f',ground:'#352c40',roadColor:'#b79a73',desc:'붉은 균열과 금빛 제단이 공존하는 신전. 서로 이웃한 긴 통로가 광역·장거리 타워에 유리하다.',path:[[0,155],[1640,155],[1640,350],[260,350],[260,545],[1580,545],[1580,755],[260,755],[260,965],[1800,965]] },
   { id: 'plains', name: '평야', tag: 'GREEN MEADOWS', biome: 'plains', color: '#93ed76', ground: '#68b965', roadColor: '#e7c694', desc: '완만한 S자 오솔길과 넓은 배치 공간. 기본기를 익히기 좋은 평야.', path: [[0,560],[430,560],[630,180],[1100,180],[1320,820],[1800,820]] },
   { id: 'mountains', name: '어두운 산맥', tag: 'SHADOW PEAKS', biome: 'mountains', color: '#b49bfc', ground: '#444362', roadColor: '#87809d', desc: '봉우리를 오르내리는 사선 고갯길. 굽이마다 교차 사격을 준비하라.', path: [[0,820],[220,820],[520,590],[260,310],[650,140],[1040,420],[800,740],[1260,920],[1550,620],[1800,620]] },
   { id: 'crystal', name: '수정 동굴', tag: 'CRYSTAL CAVERNS', biome: 'crystal', color: '#8be9ff', ground: '#45396d', roadColor: '#a48dc8', desc: '북쪽 입구에서 동굴 중심부로 감기는 나선 통로. 안쪽 수정핵을 지켜라.', path: [[900,0],[900,160],[1480,160],[1480,850],[300,850],[300,330],[1160,330],[1160,620],[700,620]] },
@@ -163,6 +176,17 @@ export const DIFFICULTIES = [
   {id:'hell',name:'지옥',color:'#f47f9b',reward:1800,startMoney:1400,hp:1.5,waves:compileWaves(WAVE_SCRIPTS.hell,58,.68,210)},
   {id:'ruin',name:'파멸',color:'#b491ea',reward:3000,startMoney:1800,hp:1.8,waves:compileWaves(WAVE_SCRIPTS.ruin,60,.58,270)}
 ];
+// Independent event, deliberately NOT a difficulty, mode, or regular map.
+export const EVENTS={
+  temple_of_ruin:{
+    id:'temple_of_ruin',name:'파멸의 신전',map:'temple_ruin',startMoney:4200,hp:1,
+    reward:2300,firstClearTower:'oldgod',
+    description:'봉인된 제단에서 파멸의 군세가 깨어난다. 길고 접힌 신전 회랑을 이용해 최후의 30웨이브를 버텨라.',
+    waves:compileWaves(`temple_acolyte:16|temple_acolyte:24,temple_knight:3|temple_acolyte:26,temple_spore:6|temple_knight:9,temple_acolyte:18|temple_spore:10,temple_priest:2,temple_acolyte:18|temple_knight:13,temple_spore:12|temple_priest:6,temple_acolyte:28|temple_knight:16,temple_spore:15,temple_priest:3|temple_oracle:2,temple_acolyte:35|temple_guardian:1,temple_knight:12,temple_priest:4|temple_acolyte:40,temple_oracle:4|temple_spore:20,temple_knight:22|temple_priest:8,temple_oracle:7|temple_guardian:2,temple_spore:20|temple_knight:26,temple_oracle:9,temple_priest:9|temple_colossus:1,temple_acolyte:42|temple_oracle:13,temple_knight:29|temple_guardian:3,temple_priest:12,temple_spore:20|temple_colossus:2,temple_oracle:10|temple_colossus:2,temple_guardian:3,temple_priest:14|temple_knight:36,temple_oracle:20|temple_guardian:4,temple_spore:32,temple_priest:15|temple_colossus:3,temple_knight:31|temple_guardian:5,temple_oracle:23|temple_colossus:4,temple_priest:18,temple_knight:30|temple_colossus:4,temple_guardian:5,temple_oracle:20|temple_spore:50,temple_priest:22,temple_guardian:6|temple_colossus:5,temple_oracle:26,temple_guardian:7|temple_colossus:6,temple_guardian:8,temple_priest:24|temple_deity:1,temple_colossus:2,temple_oracle:12`,61,.74,380)
+  }
+};
+export const eventOf=config=>config?.eventId?EVENTS[config.eventId]:null;
+export const campaignOf=config=>eventOf(config)||DIFFICULTIES.find(d=>d.id===config?.difficulty);
 // Cosmetic rarity is independent from tower rarity and gameplay strength.
 // Probabilities belong to each crate, NOT to a global style pool.
 export const SKIN_RARITIES={
