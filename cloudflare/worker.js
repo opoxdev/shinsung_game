@@ -61,7 +61,7 @@ export async function applyAction(env,action,p,user){
   if(action==='soloReward'){
     const cfg=Core.validateConfig(p.config);
     if(cfg.type!=='solo')throw Error('솔로 전투 보상만 정산할 수 있습니다.');
-    const diff=Core.DIFFICULTIES.find(d=>d.id===cfg.difficulty);
+    const diff=Core.campaignOf(cfg);
     if(!Number.isSafeInteger(p.wave)||p.wave<1||p.wave>diff.waves.length||typeof p.win!=='boolean')
       throw Error('웨이브 결과가 올바르지 않습니다.');
     if(p.win&&p.wave!==diff.waves.length)throw Error('마지막 웨이브를 클리어해야 승리 보상을 받을 수 있습니다.');
@@ -133,7 +133,7 @@ export async function applyAction(env,action,p,user){
 export default {
   async fetch(request,env){
     const url=new URL(request.url);
-    if(url.pathname==='/health')return response({ok:true,service:'shinsung-cloudflare',version:'0.10.0'});
+    if(url.pathname==='/health')return response({ok:true,service:'shinsung-cloudflare',version:'0.11.0'});
     // Browsing rooms is public; mutating a lobby still requires Firebase auth.
     if(url.pathname==='/rooms'&&request.method==='GET'){
       const mode=url.searchParams.get('mode');
