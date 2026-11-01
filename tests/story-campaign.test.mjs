@@ -111,5 +111,11 @@ test('every speaking role across all 36 scenes displays its exact canonical game
       }
     }
   }
-  assert.equal(uniqueSpeakers.size,10);
+  assert.equal(uniqueSpeakers.size,9,'there are nine speaking towers; starseed is a story subject, not a speaker');
+  assert.equal(Object.keys(STORY_CHARACTERS).length,10,'metadata covers the nine speakers plus starseed');
+  for(const id of Object.keys(STORY_CHARACTERS)){
+    assert.ok(TOWERS[id]);
+    assert.equal(STORY_CHARACTERS[id].name,TOWERS[id].name);
+    assert.match(character(id),new RegExp('data-base="'+id+'"'));
+  }
 });
