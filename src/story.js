@@ -1,24 +1,26 @@
 // Lightweight client-only narrative. Never part of the authoritative match state,
 // D1 profile, Durable Object snapshots or WebSocket payloads.
-import {DIFFICULTIES} from './data.js';
+import {DIFFICULTIES,TOWERS} from './data.js';
+import {character} from './art.js';
 
-const characters={
-  scout:{name:'리아',role:'정찰대장',tone:'jade',sigil:'✦'},
-  blade:{name:'카엘',role:'검의 수호자',tone:'amber',sigil:'⚔'},
-  summoner:{name:'세라',role:'소환술사',tone:'violet',sigil:'✧'},
-  icewitch:{name:'이솔',role:'빙결술사',tone:'ice',sigil:'❄'},
-  clockmaker:{name:'노아',role:'시간공학자',tone:'gold',sigil:'⌛'},
-  knight:{name:'레온',role:'마지막 기사',tone:'rose',sigil:'♜'},
-  drone:{name:'에코',role:'탐사 드론',tone:'cyan',sigil:'◈'},
-  aurora:{name:'아라',role:'별빛의 증인',tone:'aqua',sigil:'✳'},
-  starseed:{name:'별씨앗',role:'기억의 핵',tone:'mint',sigil:'✺'},
-  phoenix:{name:'피아',role:'불꽃의 수호자',tone:'flame',sigil:'♨'}
+// Every speaker is a real tower in the game, using the same existing SVG
+// portrait as the collection, tower inspector, and in-battle sprites.
+const speakerTones={
+  scout:'jade',blade:'amber',summoner:'violet',icewitch:'ice',
+  clockmaker:'gold',knight:'rose',drone:'cyan',
+  aurora:'aqua',starseed:'mint',phoenix:'flame'
 };
+const characters=Object.fromEntries(Object.entries(speakerTones).map(([id,tone])=>{
+  const tower=TOWERS[id];
+  if(!tower)throw Error('Story speaker is not an existing tower: '+id);
+  return [id,{name:tower.name,role:tower.role,tone,towerId:id}];
+}));
+
 const book={
   easy:{
     number:'01',title:'작은 별의 첫걸음',subtitle:'사라진 빛의 씨앗',genre:'모험 · 희망',theme:'jade',
     synopsis:'잠든 평야에서 사라진 별씨앗을 찾아 떠나는 첫 번째 수호 작전. 이 작은 불씨가 모든 이야기의 시작이 된다.',
-    ending:'풀잎 사이에서 새 빛이 깨어났다. 리아는 그 빛을 지키겠다는 첫 약속을 적었다.',
+    ending:'풀잎 사이에서 새 빛이 깨어났다. 새총잡이는 그 빛을 지키겠다는 첫 약속을 적었다.',
     failure:'빛은 아직 꺼지지 않았다. 마지막 씨앗을 찾기 위해 다시 길을 나서면 된다.',
     scenes:[
       [1,'빛을 잃은 초원',[['scout','모두 들려? 풀밭에서 별이 떨어지는 소리가 났어.'],['summoner','저건 오래된 수호의 씨앗이야. 놈들이 먼저 찾으면 평야가 잠들어.'],['blade','그렇다면 길을 지키자. 씨앗이 깨어날 때까지.']]],
@@ -36,23 +38,23 @@ const book={
     scenes:[
       [1,'20년 늦은 구조 요청',[['scout','방금 신호탑에서 메시지가 왔어. 발신 날짜가… 20년 전이야.'],['icewitch','눈보라에 묻힌 성채가 아직 살아 있다는 뜻일지도.'],['blade','살아 있는 누군가를 위해 출발한다.']]],
       [4,'벽 너머의 목소리',[['icewitch','성벽 속에 온기가 남아 있어. 불을 끈 게 아니라 감춰 둔 거야.'],['scout','누가 적을 속이려고 했을까?'],['blade','편지의 발신자를 찾으면 알 수 있겠지.']]],
-      [7,'눈 속의 이름',[['scout','성문에 이름이 새겨졌어. “마지막 파수꾼 레온.”'],['blade','레온… 그 이름은 기록에서 지워졌는데.'],['icewitch','이름을 기억하는 것만으로도 누군가는 살아남아.']]],
+      [7,'눈 속의 이름',[['scout','성문에 이름이 새겨졌어. “마지막 파수꾼 달빛 기사.”'],['blade','달빛 기사… 그 이름은 기록에서 지워졌는데.'],['icewitch','이름을 기억하는 것만으로도 누군가는 살아남아.']]],
       [10,'잠들지 않은 등불',[['icewitch','등불이 아직 따뜻해. 누군가 매일 여길 지켜 온 거야.'],['scout','그렇다면 우리가 교대할 차례네.'],['blade','등불이 꺼지지 않도록 방어선을 좁혀!']]],
       [13,'편지의 뒷장',[['scout','편지 뒤에 지도가 있어. 마지막 길은 기지 바로 앞이야.'],['icewitch','눈보라는 적이 아니라 방패였어. 우리가 그 방패를 잇자.'],['blade','뒤를 돌아보지 마. 새벽은 반드시 온다.']]],
       [16,'이어 쓰는 기록',[['icewitch','파수꾼은 혼자가 아니었어. 지금의 우리처럼.'],['scout','편지에 답장을 남길까? “수신 완료, 여긴 무사합니다.”'],['blade','좋아. 그리고 살아 돌아가 전하자.']]]
     ]},
   hard:{
     number:'03',title:'강철 심장의 반란',subtitle:'침묵한 공장의 진실',genre:'SF · 추적',theme:'gold',
-    synopsis:'정지된 제철 도시가 스스로 병력을 생산하기 시작했다. 노아는 기계에 남은 자신의 오래된 설계를 발견하고 책임을 지려 한다.',
-    ending:'거대한 톱니바퀴가 멈췄다. 노아는 설계도 맨 끝에 “사람을 지키는 기계”라는 문장을 다시 썼다.',
+    synopsis:'정지된 제철 도시가 스스로 병력을 생산하기 시작했다. 시계 장인는 기계에 남은 자신의 오래된 설계를 발견하고 책임을 지려 한다.',
+    ending:'거대한 톱니바퀴가 멈췄다. 시계 장인는 설계도 맨 끝에 “사람을 지키는 기계”라는 문장을 다시 썼다.',
     failure:'공장은 아직 움직인다. 그러나 그 중심부의 암호는 해독됐다. 다음 시도에는 길이 보인다.',
     scenes:[
       [1,'공장의 심장 박동',[['drone','경고. 폐쇄된 공장 지하에서 전력 신호 감지.'],['clockmaker','그 리듬… 내가 만든 첫 번째 심장 장치와 같아.'],['scout','그럼 어떻게 멈추는지도 알겠네?']]],
       [4,'녹슨 명령',[['clockmaker','내 설계는 도시를 지키기 위한 거였어. 공격 명령을 내린 적은 없어.'],['drone','외부에서 명령 체계가 덮어쓰여졌습니다.'],['blade','기계를 미워할 시간에 명령의 주인을 찾자.']]],
       [8,'기계의 눈',[['drone','적이 배치를 학습하고 있습니다. 이전의 사격 지점 노출.'],['scout','녀석들이 우리 움직임을 읽는다고?'],['clockmaker','그럼 규칙을 바꿔. 예측할 수 없는 우리가 될 테니까.']]],
       [12,'깨진 설계도',[['clockmaker','내가 고칠 수 있다고 믿었는데… 고장이 아니었어. 의지가 생긴 거야.'],['blade','그렇다면 선택할 기회를 줘야겠군.'],['drone','방어선으로 대형 개체 접근. 선택까지 남은 시간 부족.']]],
-      [18,'거대한 톱니',[['scout','공장 천장이 열렸어! 저건 병기가 아니라 도시 전체야!'],['clockmaker','주 동력축만 끊으면 붕괴 없이 멈출 수 있어.'],['blade','모두 노아의 신호에 맞춰. 여기서 끝내자.']]],
-      [22,'마지막 설계자',[['clockmaker','들리니, 강철 심장아? 이제 누구도 공격하지 않아도 돼.'],['drone','중앙 제어권 복구 가능성 확인.'],['scout','노아, 우린 네가 만든 진짜 미래를 보고 싶어.']]]
+      [18,'거대한 톱니',[['scout','공장 천장이 열렸어! 저건 병기가 아니라 도시 전체야!'],['clockmaker','주 동력축만 끊으면 붕괴 없이 멈출 수 있어.'],['blade','모두 시계 장인의 신호에 맞춰. 여기서 끝내자.']]],
+      [22,'마지막 설계자',[['clockmaker','들리니, 강철 심장아? 이제 누구도 공격하지 않아도 돼.'],['drone','중앙 제어권 복구 가능성 확인.'],['scout','시계 장인, 우린 네가 만든 진짜 미래를 보고 싶어.']]]
     ]},
   extreme:{
     number:'04',title:'불꽃 아래 흐르는 강',subtitle:'붉은 협곡의 대탈출',genre:'재난 · 결단',theme:'flame',
@@ -62,27 +64,27 @@ const book={
     scenes:[
       [1,'마지막 다리',[['phoenix','불길이 번지고 있어. 피난 행렬이 이 다리로 몰려와!'],['scout','사람들이 지나갈 시간을 벌어야 해.'],['blade','우리가 마지막 방벽이다. 뒤로는 한 걸음도 물러서지 마.']]],
       [5,'열기의 경고',[['phoenix','적이 몰려오면 불꽃이 더 거세질 거야. 조심해!'],['summoner','불을 끄는 게 아니야. 탈출길을 지키는 거지.'],['scout','좋아, 그 길만큼은 끝까지 열어 두자.']]],
-      [9,'갈라진 땅',[['scout','지진이다! 다리 아래가 통째로 움직였어!'],['phoenix','내 불꽃으로 무너지는 기둥을 붙잡아 볼게.'],['blade','피아를 엄호해. 지금은 그녀가 우리의 시간이다.']]],
+      [9,'갈라진 땅',[['scout','지진이다! 다리 아래가 통째로 움직였어!'],['phoenix','내 불꽃으로 무너지는 기둥을 붙잡아 볼게.'],['blade','불사조 조련사를 엄호해. 지금은 그녀가 우리의 시간이다.']]],
       [14,'꺼진 봉화',[['summoner','저편의 봉화가 꺼졌어. 피난민들이 길을 잃었어.'],['scout','내가 신호를 보내겠어. 빛 하나면 충분해!'],['phoenix','아니, 하나로는 부족해. 우리 모두 불꽃이 되어 줘.']]],
       [21,'붉은 하늘',[['blade','협곡이 적의 그림자로 가득 찼군.'],['phoenix','두렵지만 난 아직 뜨거워. 끝까지 날 수 있어!'],['summoner','용기는 두려움이 없는 게 아니라, 함께 앞으로 가는 거야.']]],
       [28,'강이 되는 불',[['scout','마지막 피난 행렬이 보여! 조금만 더!'],['phoenix','이 불꽃을 다리로 바꿀게. 내 뒤에 서 있어!'],['blade','여기가 끝이 아니다. 모두가 건너는 순간이 새로운 시작이다.']]]
     ]},
   hell:{
     number:'05',title:'잿빛 왕관의 주인',subtitle:'되살아난 맹세',genre:'다크 판타지 · 구원',theme:'rose',
-    synopsis:'무덤 아래에서 왕관을 쓴 옛 군주가 군대를 일으킨다. 레온은 그가 한때 자신을 지켜 준 왕이었다는 비밀을 숨기고 있다.',
-    ending:'왕관은 땅에 내려놓아졌다. 레온은 왕의 이름을 저주가 아닌 기도로 기억하기로 했다.',
-    failure:'왕관의 맹세는 아직 풀리지 않았다. 레온은 다음 새벽에도 검을 들 것이다.',
+    synopsis:'무덤 아래에서 왕관을 쓴 옛 군주가 군대를 일으킨다. 달빛 기사은 그가 한때 자신을 지켜 준 왕이었다는 비밀을 숨기고 있다.',
+    ending:'왕관은 땅에 내려놓아졌다. 달빛 기사은 왕의 이름을 저주가 아닌 기도로 기억하기로 했다.',
+    failure:'왕관의 맹세는 아직 풀리지 않았다. 달빛 기사은 다음 새벽에도 검을 들 것이다.',
     scenes:[
       [1,'침묵의 왕관',[['knight','저 깃발… 내가 섬겼던 왕국의 문장이야.'],['icewitch','무덤 속에서 군대가 돌아오고 있어.'],['blade','과거를 마주해야 한다면 우리도 함께하겠다.']]],
       [6,'돌아온 목소리',[['knight','왕은 백성을 지키겠다고 맹세했어. 그런데 그 맹세가 사슬이 됐군.'],['summoner','지키겠다는 마음이 모두를 가둘 수도 있구나.'],['icewitch','사슬을 풀려면 누군가 진실을 말해야 해.']]],
-      [12,'검의 기억',[['blade','레온, 네 검이 떨리고 있어.'],['knight','나는 그분의 손으로 기사 작위를 받았다. 그 손을 막아야 한다니…'],['blade','막는 것 또한 충성일 수 있어. 백성을 위한 충성.']]],
+      [12,'검의 기억',[['blade','달빛 기사, 네 검이 떨리고 있어.'],['knight','나는 그분의 손으로 기사 작위를 받았다. 그 손을 막아야 한다니…'],['blade','막는 것 또한 충성일 수 있어. 백성을 위한 충성.']]],
       [18,'왕좌 없는 왕',[['icewitch','보여. 왕좌는 오래전에 사라졌는데 왕은 아직 그 자리에 있어.'],['summoner','누군가 “이제 쉬어도 된다”고 말해 줘야겠어.'],['knight','그 말을 전할 자격이 내게 있을까.']]],
-      [27,'마지막 충성',[['knight','주군이시여. 당신이 지키려던 사람들은 아직 살아 있습니다.'],['blade','레온, 계속 말해! 우리는 시간을 벌겠어.'],['icewitch','보호의 마법이 금이 가기 시작했어. 이제 얼마 안 남았어.']]],
+      [27,'마지막 충성',[['knight','주군이시여. 당신이 지키려던 사람들은 아직 살아 있습니다.'],['blade','달빛 기사, 계속 말해! 우리는 시간을 벌겠어.'],['icewitch','보호의 마법이 금이 가기 시작했어. 이제 얼마 안 남았어.']]],
       [34,'왕관을 내려놓을 때',[['knight','저의 마지막 명령을 들어 주십시오. 이제 잠드십시오.'],['summoner','그의 손에서 빛이 나고 있어… 저건 저주가 아니야.'],['blade','끝내자. 누구도 이 밤에 갇히지 않도록.']]]
     ]},
   ruin:{
     number:'06',title:'세계의 마지막 별',subtitle:'시간의 끝에서 보내는 신호',genre:'종말 · 시간의 역설',theme:'violet',
-    synopsis:'마지막 별이 사라지면 세계의 시간도 멈춘다. 아라는 미래에서 온 신호를 받고, 노아는 그 신호가 스스로 보낸 것임을 깨닫는다.',
+    synopsis:'마지막 별이 사라지면 세계의 시간도 멈춘다. 오로라 정령는 미래에서 온 신호를 받고, 시계 장인는 그 신호가 스스로 보낸 것임을 깨닫는다.',
     ending:'마지막 별은 사라지지 않았다. 그것은 서로를 지킨 이들의 이름이 되어 하늘에 남았다.',
     failure:'시간의 끝은 아직 정해지지 않았다. 다른 선택을 할 수 있다는 것만으로 별은 빛난다.',
     scenes:[
@@ -132,9 +134,10 @@ export function storyGuideMarkup(difficulty,maxWave=0,{full=false}={}){
 export function dialogueMarkup(difficulty,sceneIndex,lineIndex){
   const b=book[difficulty],scene=b?.scenes[sceneIndex],item=scene?.[2]?.[lineIndex];
   if(!scene||!item)return '';
-  const [id,line]=item,c=characters[id]||{name:id,role:'동료',tone:'jade',sigil:'✦'};
+  const [id,line]=item,c=characters[id];
+  if(!c)return '';
   return '<div class="story-dialogue story-theme-'+b.theme+'" role="group" aria-label="스토리 대화">'+
-    '<div class="story-speaker story-tone-'+c.tone+'" aria-hidden="true">'+c.sigil+'</div>'+
+    '<div class="story-speaker story-tone-'+c.tone+'" aria-hidden="true">'+character(c.towerId)+'</div>'+
     '<div class="story-dialogue-body"><div class="story-dialogue-top"><span>STORY · WAVE '+scene[0]+'</span><b>'+safe(scene[1])+'</b></div>'+
     '<div class="story-speaker-name">'+safe(c.name)+' <small>'+safe(c.role)+'</small></div>'+
     '<p>'+safe(line)+'</p><div class="story-line-track">'+scene[2].map((_,i)=>'<i class="'+(i<=lineIndex?'filled':'')+'"></i>').join('')+'</div></div>'+
