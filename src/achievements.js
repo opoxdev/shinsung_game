@@ -1,6 +1,6 @@
 // Shared browser + Cloudflare achievement rules. No timers, fetches, or
 // background writes. D1 stores only compact counters and claimed IDs.
-import {TOWERS,MODES,DIFFICULTIES} from './data.js';
+import {TOWERS,MODES,DIFFICULTIES,MAPS} from './data.js';
 
 export const ACHIEVEMENT_CATEGORIES=Object.freeze([
   {id:'journey',name:'여정',icon:'✦',description:'난이도를 정복하고 새로운 세계를 개척하세요'},
@@ -55,7 +55,7 @@ export function achievementProgress(p,a){
   const s=stats(p);
   if(a.reward.tower&&p.owned?.includes(a.reward.tower))return a.goal; // legacy Sonic/Aurora
   switch(a.metric){
-    case 'uniqueMaps':return Object.values(s.maps||{}).filter(x=>x>0).length;
+    case 'uniqueMaps':return MAPS.filter(m=>!m.eventOnly&&(s.maps?.[m.id]||0)>0).length;
     case 'ownedTowers':return p.owned?.filter(id=>Object.hasOwn(TOWERS,id)).length||0;
     case 'ownedSkins':return Object.keys(p.skins||{}).filter(id=>p.skins[id]===true).length;
     case 'ownedPacks':return p.packs?.length||0;
