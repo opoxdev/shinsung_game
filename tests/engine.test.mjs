@@ -7,7 +7,7 @@ const player=(id='a')=>({id,profile:{...starterProfile(),owned:Object.keys(TOWER
 const match=(extra={},ids=['a'])=>createMatch(config(extra),ids.map(player));
 test('starting cash, legal placement and rejection have exact economy',()=>{const s=match();assert.equal(s.players.a.money,500);assert.equal(command(s,'a',{kind:'place',type:'scout',x:300,y:560}).ok,false);assert.equal(s.players.a.money,500);assert.equal(command(s,'a',{kind:'place',type:'scout',x:240,y:400}).ok,true);assert.equal(s.players.a.money,350);assert.equal(command(s,'a',{kind:'place',type:'scout',x:240,y:400}).ok,false);assert.equal(s.towers.length,1);assert.equal(command(s,'a',{kind:'place',type:'scout',x:NaN,y:10}).ok,false);});
 test('starting cash rises with campaign difficulty for solo, co-op, and PvP alike',()=>{
-  const expected={easy:500,normal:650,hard:850,extreme:1100,hell:1400,ruin:1800};
+  const expected={easy:500,normal:850,hard:2200,extreme:4500,hell:9000,ruin:16000};
   assert.deepEqual(Object.fromEntries(DIFFICULTIES.map(d=>[d.id,d.startMoney])),expected);
   for(const [difficulty,money] of Object.entries(expected)){
     for(const type of ['solo','coop','pvp']){
