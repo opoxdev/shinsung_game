@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {STORIES,STORY_CHARACTERS,sceneForWave,storyMilestones,storyProgress,
   storyPreviewMarkup,storyGuideMarkup,dialogueMarkup,storySceneIndex} from '../src/story.js';
-import {DIFFICULTIES} from '../src/data.js';
+import {DIFFICULTIES,TOWERS} from '../src/data.js';
+import {character} from '../src/art.js';
 
 test('six difficulties have independent stories, endings and six authored wave conversations',()=>{
   assert.equal(Object.keys(STORIES).length,DIFFICULTIES.length);
@@ -26,6 +27,9 @@ test('six difficulties have independent stories, endings and six authored wave c
       assert.ok(new Set(lines.map(([id])=>id)).size>=2);
       for(const [id,dialogue] of lines){
         assert.ok(STORY_CHARACTERS[id],'unknown cast member '+id);
+        assert.ok(TOWERS[id],'speaker must be an existing owned/purchasable tower: '+id);
+        assert.equal(STORY_CHARACTERS[id].name,TOWERS[id].name);
+        assert.equal(STORY_CHARACTERS[id].role,TOWERS[id].role);
         assert.ok(dialogue.length>=12);
       }
     }
@@ -70,6 +74,11 @@ test('wave dialogue renders with speaker identity, progression and manual contro
     assert.match(html,/data-action="storyNext"/);
     assert.match(html,/data-action="storyDismiss"/);
     assert.match(html,/story-speaker-name/);
+    const first=STORIES[diff.id].scenes[0][2][0][0];
+    assert.ok(html.includes(character(first)),'dialogue must reuse identical in-game tower character SVG');
+    assert.match(html,/data-design="v2"/,'must use the existing tower art renderer');
+    assert.match(html,new RegExp('data-base="'+first+'"'));
+    assert.doesNotMatch(html,/story-speaker[^>]*>[^<]*[✦⚔✧❄⌛♜◈✳✺♨]/,'do not use placeholder glyphs');
     assert.match(html,/story-line-track/);
     assert.equal((html.match(/<i class="/g)||[]).length,3);
     assert.equal(dialogueMarkup(diff.id,0,10),'');
@@ -82,4 +91,25 @@ test('story reads do not alter combat data or wave balance',()=>{
   dialogueMarkup(diff.id,0,0);
   storyGuideMarkup(diff.id,10);
   assert.equal(JSON.stringify(diff.waves[0]),snapshot);
+});
+
+test('every speaking role across all 36 scenes displays its exact canonical game tower and portrait',()=>{
+  const uniqueSpeakers=new Set();
+  for(const diff of DIFFICULTIES){
+    const scenes=STORIES[diff.id].scenes;
+    for(let i=0;i<scenes.length;i++){
+      for(let j=0;j<scenes[i][2].length;j++){
+        const [id]=scenes[i][2][j];
+        uniqueSpeakers.add(id);
+        assert.ok(TOWERS[id],'nonexistent in-game character: '+id);
+        assert.equal(STORY_CHARACTERS[id].name,TOWERS[id].name);
+        const rendered=dialogueMarkup(diff.id,i,j);
+        assert.ok(rendered.includes(character(id)),diff.id+' '+i+':'+j+' must use exact game artwork');
+        assert.match(rendered,new RegExp('data-base="'+id+'"'));
+        assert.ok(rendered.includes(TOWERS[id].name));
+        assert.doesNotMatch(rendered,/fonts\.googleapis\.com|https:\/\//,'portrait does not require a third-party image request');
+      }
+    }
+  }
+  assert.equal(uniqueSpeakers.size,10);
 });
