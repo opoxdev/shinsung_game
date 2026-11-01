@@ -139,6 +139,60 @@ export function monsterPortrait(type){
   <path d="M45 52h17m16 0h17" stroke="${eyes}" stroke-width="8"/>${extra}${shield}</svg>`;
 }
 
+
+// Cinematic event-only banner, NOT the regular grassy landscape preview.
+// Fully authored vector geometry, cached by normal browser SVG rendering.
+export function templeRuinPreview(){
+  const spires=Array.from({length:13},(_,i)=>{
+    const x=35+i*93,top=142+(i%4)*17,ht=165+(i%3)*25;
+    return '<g transform="translate('+x+' '+top+')">'+
+      '<path d="M-21 0L-15 -16 -9 0 -9 '+ht+' 9 '+ht+' 9 0 16 -16 22 0Z" fill="#211829" stroke="#87604e" stroke-width="2"/>'+
+      '<path d="M-24 0H24L18 13H-18Z" fill="#a37b5c"/>'+
+      '<path d="M-15 '+(ht-18)+'H15V'+ht+'H-15Z" fill="#6f5050"/>'+
+      '<path d="M-3 20H3V'+(ht-27)+'H-3Z" fill="#d7aa67" opacity=".45"/></g>';
+  }).join('');
+  const embers=Array.from({length:58},(_,i)=>{
+    const x=(i*239+37)%1200,y=(i*113+29)%350,rad=i%5===0?2.4:1.3;
+    return '<circle cx="'+x+'" cy="'+y+'" r="'+rad+'" fill="'+(i%3?'#ffd792':'#ff6b55')+'" opacity="'+(.3+(i%5)*.13)+'"/>';
+  }).join('');
+  const scene='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 360" preserveAspectRatio="xMidYMid slice" aria-label="파멸의 신전: 금빛 태양 신전과 붉은 균열, 긴 제단의 회랑" class="temple-cinematic" role="img">'+
+    '<defs>'+
+      '<linearGradient id="temple-sky" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#0d0b20"/><stop offset=".55" stop-color="#542638"/><stop offset="1" stop-color="#ac4e40"/></linearGradient>'+
+      '<radialGradient id="temple-sun"><stop stop-color="#ffdb7a" stop-opacity=".7"/><stop offset=".38" stop-color="#f46b48" stop-opacity=".26"/><stop offset="1" stop-color="#f46b48" stop-opacity="0"/></radialGradient>'+
+      '<linearGradient id="temple-road" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#c9a277"/><stop offset=".5" stop-color="#76596a"/><stop offset="1" stop-color="#2e283e"/></linearGradient>'+
+      '<linearGradient id="temple-lava" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#f7b55d"/><stop offset=".44" stop-color="#fb6746"/><stop offset="1" stop-color="#d72c53"/></linearGradient>'+
+    '</defs>'+
+    '<path d="M0 0H1200V360H0Z" fill="url(#temple-sky)"/>'+
+    '<circle cx="600" cy="122" r="230" fill="url(#temple-sun)"/>'+
+    '<circle cx="601" cy="139" r="99" fill="none" stroke="#ffc57e" stroke-width="3" opacity=".8"/>'+
+    '<circle cx="601" cy="139" r="116" fill="none" stroke="#c8545d" stroke-width="5" opacity=".65"/>'+
+    '<circle cx="601" cy="139" r="79" fill="#1d1529" stroke="#ffd184" stroke-width="4"/>'+
+    '<path d="M602 47L617 96 650 109 623 131 636 174 602 151 566 174 576 131 550 109 584 96Z" fill="#b9634d" stroke="#ffe093" stroke-width="2.5"/>'+
+    '<path d="M0 244L96 127 178 193 273 104 360 232 450 152 550 257 645 189 760 248 862 97 985 208 1090 142 1200 233V360H0Z" fill="#1f192e"/>'+
+    '<path d="M0 268L84 215 171 268 293 188 389 267 489 218 606 270 700 225 849 262 955 180 1084 266 1200 202V360H0Z" fill="#332238"/>'+
+    // Three-part central temple gate + stepped monumental podium.
+    '<path d="M440 246V130L470 109V95L601 40 731 95V109L760 130V246Z" fill="#292032" stroke="#9f755d" stroke-width="3"/>'+
+    '<path d="M481 239V136L600 80 720 136V239Z" fill="#49303c" stroke="#d5a06d" stroke-width="3"/>'+
+    '<path d="M524 243V151Q602 96 678 151V243Z" fill="#171628" stroke="#ffb876" stroke-width="4"/>'+
+    '<path d="M570 244V183Q600 153 631 183V244Z" fill="#bc563d" stroke="#ffd184" stroke-width="2"/>'+
+    '<path d="M587 242V183Q600 170 615 183V242Z" fill="#f3a85e" opacity=".5"/>'+
+    '<path d="M426 241H774V254H426Z M407 254H793V269H407Z" fill="#d2a56b" opacity=".65"/>'+
+    '<path d="M458 129H743" fill="none" stroke="#e3ba76" stroke-width="5"/>'+
+    '<g stroke="#f6c783" stroke-width="3"><path d="M490 137V232 M711 137V232 M506 129L600 84 698 129" fill="none"/></g>'+
+    spires+
+    // Foreground monumental walkway + curling runic seams.
+    '<path d="M0 275L400 256 800 256 1200 275V360H0Z" fill="url(#temple-road)" stroke="#a47c60" stroke-width="4"/>'+
+    '<path d="M0 350L290 309 430 335 583 298 730 336 920 305 1200 347" fill="none" stroke="#140e27" stroke-width="36"/>'+
+    '<path d="M0 350L290 309 430 335 583 298 730 336 920 305 1200 347" fill="none" stroke="url(#temple-lava)" stroke-width="8"/>'+
+    '<path d="M0 304L270 292 398 302 555 284 737 304 942 289 1200 306" fill="none" stroke="#e2af68" stroke-width="3" stroke-dasharray="14 10" opacity=".7"/>'+
+    '<g fill="none" stroke="#e9bc77" stroke-width="3" opacity=".55"><circle cx="600" cy="319" r="39"/><circle cx="600" cy="319" r="26"/><path d="M562 318H638M600 283V355"/></g>'+
+    '<path d="M0 360L140 319 190 342 292 319 336 360 M1040 360L1010 314 932 330 892 360" fill="none" stroke="#fb7059" stroke-width="4"/>'+
+    embers+
+    '<path d="M0 0H1200V360H0Z" fill="none" stroke="#d6a264" stroke-width="11" opacity=".4"/>'+
+  '</svg>';
+  return scene;
+}
+
 export function landscape(map){
   if(landscapeCache.has(map.id))return landscapeCache.get(map.id);
   const palettes={plains:['#65baf4','#bdedff','#6ec963','#2e9260','#a9eb71'],mountains:['#303466','#8d7bb7','#524a77','#292b51','#9380b6'],crystal:['#252253','#6a58b8','#54448b','#302955','#a183f6'],volcano:['#5a2349','#f57d67','#6e4254','#362a42','#bb5861'],snow:['#69bde7','#e9faff','#b4e3f3','#6399bc','#edfaff']};
