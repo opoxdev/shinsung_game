@@ -4,6 +4,11 @@
 const v=(name,cost,damageMult,rateMult,rangeMult,look,desc,traits={})=>
   ({name,cost,damageMult,rateMult,rangeMult,look,desc,...traits});
 export const EVOLUTIONS = {
+  oldgod:[
+    v('찬란한 후광',10500,1.65,1.08,1.1,'halo','거신의 빛이 더 넓은 전장을 비추고 신벌 폭발이 커진다.',{kind:'judgement',splash:195,bossBonus:2.3}),
+    v('붉은 오염의 심장',19500,2.8,1.18,1.2,'aura','가슴의 붉은 핵이 맥동하며 거대한 신벌 파동을 일으킨다.',{kind:'judgement',splash:235,bossBonus:2.6}),
+    v('종말을 초월한 신',33000,4.6,1.35,1.34,'crown','황금빛 천벌이 신전의 거신까지 무너뜨린다.',{kind:'judgement',splash:285,bossBonus:3.1})],
+
   scout:[
     v('기본 탄약 개량',180,1.5,1.05,1.05,'bandanna','탄약과 장전을 개량해 더욱 강하게 사격한다.'),
     v('고속 급탄 장치',380,2.05,1.35,1.14,'goggles','급탄 장치 개량으로 빠르게 연속 사격한다.'),
