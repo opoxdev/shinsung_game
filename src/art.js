@@ -1,4 +1,5 @@
 import { ENEMIES, TOWERS } from './data.js';
+import { meatMonsterPortrait } from './meat-art.js';
 import { evolutionAt } from './evolutions.js';
 import { redesignedPortrait } from './visual-design.js';
 // v0.9.1: everyday common/rare equipment evolves through class-specific tools.
@@ -123,6 +124,8 @@ export function character(id,skin='default',level=0){
 
 export function monsterPortrait(type){
   const d=ENEMIES[type];if(!d)return '';
+  const authoredMeat=meatMonsterPortrait(type);
+  if(authoredMeat)return authoredMeat;
   const robotic=['mk1','mk2','chain','mecha','sentinel','overload'].includes(type);
   const armored=(d.armor||0)>.1||d.shield>0;
   const giant=d.size>=25;
