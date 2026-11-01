@@ -134,3 +134,14 @@ test('Temple event is separate in UI and visible to player without additional se
   const terrain=readFileSync(new URL('../src/terrain.js',import.meta.url),'utf8');
   assert.match(terrain,/map\.biome==='temple'/);
 });
+
+test('exclusive Temple clears do not count as normal map or difficulty achievements',async()=>{
+  const {achievementView,recordAchievementRun}=await import('../src/achievements.js');
+  const profile=starterProfile();
+  recordAchievementRun(profile,{type:'solo',difficulty:event.id,map:event.map,modes:[],win:true,
+    kills:40,places:5,upgrades:2,flawless:true});
+  const view=achievementView(profile);
+  assert.equal(view.find(a=>a.id==='explorer_3').progress,0);
+  assert.equal(view.find(a=>a.id==='clear_normal').progress,0);
+  assert.equal(view.find(a=>a.id==='first_clear').progress,1);
+});
