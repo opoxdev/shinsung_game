@@ -3,6 +3,7 @@ import { TOWERS } from './data.js';
 // Everyday/common and craft/rare portraits use modest civilian jobs.
 // Epic/legendary/mythic gain progressively unique silhouettes; no military-uniform template.
 const DESIGNS={
+  oldgod:{main:'#fff7e9',dark:'#683647',trim:'#ffd764',helmet:'halo',weapon:'judgement',rig:'titan'},
   scout:{"main":"#628ec4","dark":"#334e71","trim":"#f3d184","helmet":"none","weapon":"slingshot","rig":"casual"},
   archer:{"main":"#53a18a","dark":"#2e5b53","trim":"#d7e6a5","helmet":"none","weapon":"bow","rig":"casual"},
   chef:{"main":"#dc835b","dark":"#644760","trim":"#ffdc9a","helmet":"none","weapon":"grenade","rig":"casual"},
