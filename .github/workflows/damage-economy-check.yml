@@ -1,0 +1,19 @@
+name: Combat Damage + Difficulty Economy Tests
+on:
+  push:
+    branches: [fix/round-damage-and-generous-hard-start-20261102]
+  workflow_dispatch:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm test
+      - run: npm install --no-save playwright
+      - run: npx playwright install --with-deps chromium
+      - run: node scripts/browser-smoke.mjs
+      - run: node scripts/offline-browser-smoke.mjs
+      - run: node scripts/achievement-browser-smoke.mjs
