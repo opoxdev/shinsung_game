@@ -10,6 +10,16 @@ export const formatDamage=value=>{
   const n=Number(value);
   return Number.isFinite(n)?Math.round(Math.max(0,n)).toLocaleString('ko-KR'):'0';
 };
+// Tower stat UI must never display fractional text. Preserve precise combat
+// values in the engine; show fractional seconds as integer milliseconds instead
+// of rounding fast towers to a misleading "0초".
+export const formatWholeStat=value=>formatDamage(value);
+export const formatAttackInterval=seconds=>{
+  const value=Number(seconds);
+  if(!Number.isFinite(value))return '0ms';
+  const millis=Math.round(Math.max(0,value)*1000);
+  return millis>0&&millis%1000===0?formatWholeStat(millis/1000)+'초':formatWholeStat(millis)+'ms';
+};
 export const WORLD = { width: 1800, height: 1100, road: 76 };
 export const RARITIES = {
   common: { name: '일반', color: '#a8b8b0' }, rare: { name: '희귀', color: '#65c8f3' },
