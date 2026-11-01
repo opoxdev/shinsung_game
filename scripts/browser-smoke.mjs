@@ -14,6 +14,11 @@ try{
   await page.click('[data-action="events"]');
   assert.equal(await page.locator('.achievement-card').count(),35,'all categorized achievements are visible');
   assert.equal(await page.locator('.achievement-tabs button').count(),7);
+  const archiveScroll=await page.locator('.content').evaluate(el=>({height:el.clientHeight,scroll:el.scrollHeight}));
+  assert.ok(archiveScroll.scroll>archiveScroll.height,'the long archive must have its own scroll area');
+  await page.locator('.content').evaluate(el=>{el.scrollTop=240;});
+  assert.ok((await page.locator('.content').evaluate(el=>el.scrollTop))>0,'achievements can actually scroll');
+
   assert.ok(await page.locator('.achievement-card[data-state="ready"]').count()===0);
   await page.click('[data-action="achievementFilter"][data-id="collection"]');
   assert.ok(await page.locator('.achievement-card').count()>=4);
