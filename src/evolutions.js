@@ -4,6 +4,11 @@
 const v=(name,cost,damageMult,rateMult,rangeMult,look,desc,traits={})=>
   ({name,cost,damageMult,rateMult,rangeMult,look,desc,...traits});
 export const EVOLUTIONS = {
+  voidwalker:[
+    v('그림자 주먹',750,1.45,1.08,1.08,'orb','암흑 파동의 위력과 범위를 확장한다.',{splash:114}),
+    v('심연의 맥동',1600,2.15,1.2,1.16,'aura','검은 에너지의 맥동으로 넓은 지역을 타격한다.',{splash:137}),
+    v('공허의 주술',3400,3.25,1.38,1.27,'crystal','보랏빛 불꽃이 겹치는 암흑 파동을 만든다.',{splash:165}),
+    v('무한한 어둠',7200,4.65,1.6,1.4,'halo','심연의 모든 힘을 끌어내 거대한 폭발을 일으킨다.',{splash:195})],
   oldgod:[
     v('찬란한 후광',10500,1.65,1.08,1.1,'halo','거신의 빛이 더 넓은 전장을 비추고 신벌 폭발이 커진다.',{kind:'judgement',splash:195,bossBonus:2.3}),
     v('붉은 오염의 심장',19500,2.8,1.18,1.2,'aura','가슴의 붉은 핵이 맥동하며 거대한 신벌 파동을 일으킨다.',{kind:'judgement',splash:235,bossBonus:2.6}),
