@@ -33,8 +33,25 @@ try{
   await page.click('[data-action="coop"]');
   assert.equal(await page.locator('.mm-room-grid').getAttribute('data-mode'),'coop');
   await page.click('[data-action="close"]');
+  await page.click('[data-action="temple"]');
+  assert.match(await page.locator('.temple-hero h1').textContent(),/파멸의 신전/);
+  assert.equal(await page.locator('.temple-enemy-grid>div').count(),8,'only eight exclusive temple monsters appear');
+  assert.equal(await page.locator('.temple-god-preview svg[data-base="oldgod"]').count(),1);
+  await page.click('[data-action="templeCoop"]');
+  assert.equal(await page.locator('.mm-room-grid').getAttribute('data-event-id'),'temple_of_ruin');
+  assert.equal(await page.locator('.mm-room-grid').getAttribute('data-mode'),'coop');
+  assert.equal(await page.locator('#lobby-difficulty').count(),0,'event coop does not offer regular difficulty');
+  await page.click('[data-action="close"]');
+  await page.click('[data-action="templeSolo"]');
+  await page.waitForSelector('#battlefield',{timeout:10000});
+  assert.match(await page.locator('.wave-panel').textContent(),/파멸의 신전/);
+  assert.match(await page.locator('#wave-label').textContent(),/30/);
+  assert.match(await page.locator('#wave-intel').textContent(),/신전 추종자/);
+  await page.click('.battle-brand');
+  await page.click('[data-action="leave"]');
+  assert.equal(await page.locator('.temple-page').count(),0);
   await page.click('[data-action="nav"][data-id="towers"]');
-  assert.equal(await page.locator('.tower-card').count(),30);
+  assert.equal(await page.locator('.tower-card').count(),31);
   await page.click('[data-action="nav"][data-id="shop"]');
   assert.ok(await page.locator('.shop-tabs').count());
   await page.click('[data-action="nav"][data-id="home"]');
@@ -91,5 +108,5 @@ try{
   assert.equal(await page.locator('.story-chapter-step.unlocked').count(),1,'chapter remains unlocked on return to lobby');
   await page.click('[data-action="close"]');
   assert.deepEqual(errors,[],'Uncaught browser errors: '+errors.join('; '));
-  console.log('Browser smoke passed: 35 achievement cards, categories, UI filters, tower portraits, dialogue, PvP/co-op, shop and wave clock.');
+  console.log('Browser smoke passed: 30-wave Temple solo/coop, Old God portrait, exclusive enemies, achievements, story, PvP/co-op and wave clock.');
 }finally{await browser.close();}
