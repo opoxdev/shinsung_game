@@ -5,7 +5,16 @@ const noise=n=>{const v=Math.sin(n*127.1+311.7)*43758.5453;return v-Math.floor(v
 const poly=(g,p,c)=>{g.beginPath();p.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));g.closePath();g.fillStyle=c;g.fill();};
 const oval=(g,x,y,rx,ry,c)=>{g.fillStyle=c;g.beginPath();g.ellipse(x,y,rx,ry,0,0,7);g.fill();};
 function prop(g,x,y,s,biome){g.save();g.translate(x,y);g.scale(s,s);oval(g,8,18,37,13,'#19274244');
-  if(biome==='crystal'){poly(g,[[-22,5],[-13,-48],[5,-68],[25,-4],[8,24]],'#b08aff');poly(g,[[5,-68],[8,24],[25,-4]],'#6ee4f2');poly(g,[[-13,-48],[5,-68],[8,24]],'#dfbfff');poly(g,[[15,14],[35,-27],[45,-30],[43,18],[28,28]],'#7cc9ef');}
+  if(biome==='temple'){
+    poly(g,[[-31,17],[-31,-8],[-13,-14],[16,-14],[32,-7],[32,18]],'#63536b');
+    g.fillStyle='#c5a577';g.fillRect(-29,-19,58,9);
+    g.fillStyle='#e8c48b';g.fillRect(-20,-65,40,10);
+    g.fillStyle='#9f8491';g.fillRect(-15,-58,30,41);
+    g.strokeStyle='#e8bf78';g.lineWidth=3;g.strokeRect(-17,-58,34,42);
+    g.fillStyle='#dc536c';g.beginPath();g.arc(0,-69,6,0,7);g.fill();
+    g.fillStyle='#402d4b';g.fillRect(-29,6,58,12);
+  }
+  else if(biome==='crystal'){poly(g,[[-22,5],[-13,-48],[5,-68],[25,-4],[8,24]],'#b08aff');poly(g,[[5,-68],[8,24],[25,-4]],'#6ee4f2');poly(g,[[-13,-48],[5,-68],[8,24]],'#dfbfff');poly(g,[[15,14],[35,-27],[45,-30],[43,18],[28,28]],'#7cc9ef');}
   else if(biome==='volcano'||biome==='rock'){const dark=biome==='volcano';poly(g,[[-35,9],[-25,-22],[5,-37],[33,-14],[39,13],[2,28]],dark?'#654459':'#a1aeb3');poly(g,[[-25,-22],[5,-37],[33,-14],[2,-3]],dark?'#bc756f':'#d5d8d3');poly(g,[[2,-3],[33,-14],[39,13],[2,28]],dark?'#413447':'#798b99');}
   else{const snow=biome==='snow',dark=biome==='mountains';g.fillStyle='#81535c';g.fillRect(-7,-2,14,29);poly(g,[[0,-84],[-33,-32],[-20,-32],[-47,8],[0,24],[46,8],[21,-31],[34,-31]],snow?'#edfaff':dark?'#6f6897':'#3ca575');poly(g,[[0,-84],[0,24],[46,8],[21,-31],[34,-31]],snow?'#b4ddea':dark?'#4f507c':'#287d62');poly(g,[[0,-84],[-33,-32],[0,-44]],snow?'#fff':dark?'#8c80b6':'#64ca8e');}g.restore();}
 export function makeTerrain(map){
