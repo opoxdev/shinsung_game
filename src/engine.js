@@ -1,4 +1,4 @@
-import { WORLD, MAPS, TOWERS, ENEMIES, MODES, DIFFICULTIES, PACKS, SKIN_STYLES, CRATES, BOSS_ABILITIES, COMBAT_SCALE, starterProfile, skinCandidates, availableCrateStyles } from './data.js';
+import { WORLD, MAPS, TOWERS, ENEMIES, MODES, DIFFICULTIES, PACKS, SKIN_STYLES, CRATES, BOSS_ABILITIES, COMBAT_SCALE, EVENTS, campaignOf, starterProfile, skinCandidates, availableCrateStyles } from './data.js';
 import { evolutionAt } from './evolutions.js';
 export const STEP = .05;
 export function bounty(hp) {
@@ -30,16 +30,22 @@ export function modifiers(config) {
   return (config.modes||[]).reduce((a,id)=>{const m=MODES[id];a.hp*=m.hp;a.speed*=m.speed;a.reward*=m.reward;a.cap=Math.min(a.cap,m.cap||20);return a;},{hp:1,speed:1,reward:1,cap:20});
 }
 export function validateConfig(config) {
-  if(!config || !MAPS.some(m=>m.id===config.map) || !DIFFICULTIES.some(d=>d.id===config.difficulty)) throw Error('맵 또는 난이도가 올바르지 않습니다.');
-  if(!['solo','coop','pvp'].includes(config.type)) throw Error('잘못된 게임 유형입니다.');
-  if(!Array.isArray(config.modes)||config.modes.length>5||new Set(config.modes).size!==config.modes.length||config.modes.some(id=>!Object.hasOwn(MODES,id))) throw Error('잘못된 모드 구성입니다.');
-  return { map:config.map,difficulty:config.difficulty,type:config.type,modes:[...config.modes] };
+  if(!config||!['solo','coop','pvp'].includes(config.type))throw Error('잘못된 게임 유형입니다.');
+  if(config.eventId!==undefined&&config.eventId!==null){
+    const e=Object.hasOwn(EVENTS,config.eventId)?EVENTS[config.eventId]:null;
+    if(!e||config.type==='pvp'||config.map!==e.map||!Array.isArray(config.modes)||config.modes.length
+      ||config.difficulty!=='normal')throw Error('이벤트는 전용 맵에서 솔로·협동전으로만 진행합니다.');
+    return {type:config.type,eventId:e.id,map:e.map,difficulty:'normal',modes:[]};
+  }
+  if(!Array.isArray(config.modes)||config.modes.length>5||new Set(config.modes).size!==config.modes.length||config.modes.some(id=>!Object.hasOwn(MODES,id)))throw Error('잘못된 모드 구성입니다.');
+  if(!DIFFICULTIES.some(d=>d.id===config.difficulty)||!MAPS.some(m=>m.id===config.map&&!m.eventOnly))throw Error('맵 또는 난이도가 올바르지 않습니다.');
+  return {map:config.map,difficulty:config.difficulty,type:config.type,modes:[...config.modes]};
 }
 export function createMatch(config, players) {
   config=validateConfig(config);
   if(!Array.isArray(players)||players.length<1||players.length>4||new Set(players.map(p=>p.id)).size!==players.length) throw Error('참가 인원이 올바르지 않습니다.');
   if(config.type==='pvp'&&players.length!==2||config.type==='solo'&&players.length!==1) throw Error('PvP는 2명, 솔로는 1명이 필요합니다.');
-  const startMoney=DIFFICULTIES.find(d=>d.id===config.difficulty).startMoney;
+  const startMoney=campaignOf(config).startMoney;
   const s={version:1,config,players:{},fields:config.type==='pvp'?[100,100]:[100],towers:[],enemies:[],units:[],queue:[],events:[],wave:0,time:0,waveTime:0,spawnClock:0,nextId:1,status:'playing',votes:[],kills:0,winner:null};
   players.forEach((p,i)=>{
     const profile=p.profile||starterProfile();
@@ -66,7 +72,7 @@ export function canPlace(s,field,x,y) {
 export function requiredVotes(s) {const n=Object.keys(s.players).length;return n===1?1:Math.max(2,Math.floor(n/2)+1);}
 function event(s,e) {s.events.push({...e,id:s.nextId++,time:s.time});if(s.events.length>140)s.events.shift();}
 function spawn(s,type,field,source='wave') {
-  const d=ENEMIES[type],mods=modifiers(s.config),diff=DIFFICULTIES.find(d=>d.id===s.config.difficulty);
+  const d=ENEMIES[type],mods=modifiers(s.config),diff=campaignOf(s.config);
   const hp=d.hp*mods.hp*diff.hp;
   const shield=(d.shield||0)*mods.hp*diff.hp;
   const unit={id:s.nextId++,type,field,hp,maxHp:hp,shield,maxShield:shield,
@@ -75,7 +81,7 @@ function spawn(s,type,field,source='wave') {
   s.enemies.push(unit);return unit;
 }
 function nextWave(s) {
-  const d=DIFFICULTIES.find(d=>d.id===s.config.difficulty);
+  const d=campaignOf(s.config);
   if(s.wave>=d.waves.length)return;
   s.wave++;s.waveTime=0;s.votes=[];
   const w=d.waves[s.wave-1];
@@ -115,7 +121,7 @@ export function command(s,playerId,c) {
     else {if(!['first','strong','near'].includes(c.target))return fail('잘못된 타겟입니다.');t.target=c.target;}
   } else if(c.kind==='skip') {
     if(s.waveTime<8)return fail('웨이브 시작 8초 후 스킵할 수 있습니다.');
-    if(s.wave>=DIFFICULTIES.find(d=>d.id===s.config.difficulty).waves.length)return fail('마지막 웨이브입니다.');
+    if(s.wave>=campaignOf(s.config).waves.length)return fail('마지막 웨이브입니다.');
     if(s.queue.length>=900)return fail('대기 중인 적이 너무 많습니다. 현재 적을 먼저 처치하세요.');
     if(!s.votes.includes(playerId))s.votes.push(playerId);
     if(s.votes.length>=requiredVotes(s))nextWave(s);
@@ -271,6 +277,13 @@ export function tick(s,dt=STEP) {
     if(stats.kind==='summon'){
       const count=stats.summons||1;
       for(let i=0;i<count&&s.units.length<80;i++)s.units.push({id:s.nextId++,x:t.x+i*12,y:t.y-i*6,field:t.field,target:e.id,damage:stats.damage*power,type:t.type,life:stats.unitLife||8,speed:stats.unitSpeed||210,level:t.level});
+    }else if(stats.kind==='judgement'){
+      const hits=s.enemies.filter(a=>a.field===t.field&&a.hp>0&&dist(a,e)<=stats.splash);
+      for(const target of hits){
+        const boss=!!BOSS_ABILITIES[target.type]||ENEMIES[target.type].size>=35;
+        applyHit(s,target,stats.damage*power*(boss?(stats.bossBonus||1):1),t,stats);
+      }
+      event(s,{kind:'divine',from:t.id,x:t.x,y:t.y,tx:e.x,ty:e.y,field:t.field,type:t.type,level:t.level});
     }else if(stats.kind==='splash'){
       const hits=s.enemies.filter(a=>a.field===t.field&&a.hp>0&&dist(a,e)<=stats.splash);
       for(const a of hits)applyHit(s,a,stats.damage*power,t,stats);
@@ -318,7 +331,7 @@ export function tick(s,dt=STEP) {
   s.enemies=s.enemies.filter(e=>e.hp>0);
   const dead=s.fields.findIndex(h=>h<=0);
   if(dead>=0){s.status=s.config.type==='pvp'?'complete':'defeat';s.winner=s.config.type==='pvp'?1-dead:null;return;}
-  const d=DIFFICULTIES.find(d=>d.id===s.config.difficulty);
+  const d=campaignOf(s.config);
   const clear=s.fields.map((_,i)=>!s.enemies.some(e=>e.field===i)&&!s.queue.some(e=>e.field===i));
   if(s.wave===d.waves.length) {
     if(clear.every(Boolean)){s.status='victory';s.winner=s.config.type==='pvp'?(s.fields[0]===s.fields[1]?null:s.fields[0]>s.fields[1]?0:1):0;}
@@ -331,7 +344,7 @@ export function advance(s,seconds) {let n=Math.min(1200,Math.floor(seconds/STEP+
 // Compact end-of-match metrics; no extra live network traffic.
 export function achievementRun(s,id){
   const p=s.players?.[id];if(!p)return null;
-  return {type:s.config.type,difficulty:s.config.difficulty,map:s.config.map,
+  return {type:s.config.type,difficulty:s.config.eventId||s.config.difficulty,map:s.config.map,
     modes:[...s.config.modes],win:s.config.type==='pvp'?s.winner===p.field:s.status==='victory',
     kills:s.kills||0,places:p.ach?.places||0,upgrades:p.ach?.upgrades||0,
     flawless:s.status==='victory'&&s.fields[p.field]===100};
@@ -339,7 +352,7 @@ export function achievementRun(s,id){
 export function rewardFor(s,id) {
   const p=s.players[id];if(!p||s.status==='playing')return {coins:0,xp:0,sonic:false,aurora:false,win:false,clearBonus:0};
   const win=s.config.type==='pvp'?s.winner===p.field:s.status==='victory';
-  const d=DIFFICULTIES.find(d=>d.id===s.config.difficulty);
+  const d=campaignOf(s.config);
   // PvP cannot be used to trade losses for unlimited account currency.
   if(s.config.type==='pvp')return {coins:0,xp:0,sonic:false,aurora:false,win,clearBonus:0};
   const maxWave=d.waves.length;
@@ -352,12 +365,12 @@ export function rewardFor(s,id) {
   const coins=win?totalCoins:Math.floor((totalCoins-clearBonus)*.5*progress);
   const xp=win?totalXp:Math.floor((totalXp-clearXp)*.5*progress);
   return {coins,xp,clearBonus:win?clearBonus:0,
-    sonic:win&&DIFFICULTIES.indexOf(d)>=3&&s.config.modes.includes('supersonic'),
-    aurora:win&&d.id==='ruin'&&s.config.modes.includes('elite'),win};
+    sonic:!s.config.eventId&&win&&DIFFICULTIES.indexOf(d)>=3&&s.config.modes.includes('supersonic'),
+    aurora:!s.config.eventId&&win&&d.id==='ruin'&&s.config.modes.includes('elite'),oldgod:!!s.config.eventId&&win,win};
 }
 export function applyReward(profile,reward) {
   profile.coins+=reward.coins;profile.xp+=reward.xp;if(reward.win)profile.wins++;
-  if(reward.sonic&&!profile.owned.includes('sonic'))profile.owned.push('sonic');if(reward.aurora&&!profile.owned.includes('aurora'))profile.owned.push('aurora');return profile;
+  if(reward.sonic&&!profile.owned.includes('sonic'))profile.owned.push('sonic');if(reward.aurora&&!profile.owned.includes('aurora'))profile.owned.push('aurora');if(reward.oldgod&&!profile.owned.includes('oldgod'))profile.owned.push('oldgod');return profile;
 }
 export function profileAction(profile,a) {
   if(!a||typeof a!=='object')throw Error('잘못된 요청입니다.');
