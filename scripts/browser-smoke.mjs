@@ -37,6 +37,22 @@ try{
   assert.match(await page.locator('.temple-hero h1').textContent(),/파멸의 신전/);
   assert.equal(await page.locator('.temple-enemy-grid>div').count(),8,'only eight exclusive temple monsters appear');
   assert.equal(await page.locator('.temple-god-preview svg[data-base="oldgod"]').count(),1);
+  assert.equal(await page.locator('.temple-art svg.temple-cinematic').count(),1,'full width dedicated temple preview');
+  assert.equal(await page.locator('.temple-nav.active').count(),1,'distinct event navigation button');
+  const templeScroll=await page.locator('.content').evaluate(el=>({
+    total:el.scrollHeight,visible:el.clientHeight,overflow:getComputedStyle(el).overflowY
+  }));
+  assert.ok(templeScroll.total>templeScroll.visible+100,'Temple content must exceed viewport and scroll');
+  assert.equal(templeScroll.overflow,'auto','Temple content must own scroll container');
+  await page.locator('.content').evaluate(el=>{el.scrollTop=el.scrollHeight;});
+  assert.ok((await page.locator('.content').evaluate(el=>el.scrollTop))>150,
+    'Temple event panels and play buttons are reachable, not hidden under team dock');
+  assert.ok(await page.locator('[data-action="templeSolo"]').isVisible());
+  assert.ok(await page.locator('[data-action="templeCoop"]').isVisible());
+  const godSize=await page.locator('.temple-god-preview svg').boundingBox();
+  assert.ok(godSize.height>=290,'Monumental god reward should visibly fill its 365px scene');
+  assert.equal(await page.locator('.temple-god-preview svg[data-ear-shape="none"]').count(),1);
+
   await page.click('[data-action="templeCoop"]');
   assert.equal(await page.locator('.mm-room-grid').getAttribute('data-event-id'),'temple_of_ruin');
   assert.equal(await page.locator('.mm-room-grid').getAttribute('data-mode'),'coop');
