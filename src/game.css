@@ -279,8 +279,9 @@ body{background:#15203d;color:var(--text)}button{border:2px solid #101a35;border
 .room-row code{color:#ffe5a2;font-size:13px;font-weight:800;letter-spacing:1px}
 .room-row>.primary{white-space:nowrap;padding:8px 15px;font-size:13px}
 .room-list-footnote{font-size:11px!important;line-height:1.65!important;color:#99bacf!important;margin:9px 0 14px!important}
-.enemy-tooltip{position:absolute;pointer-events:none;z-index:42;display:none;flex-direction:column;gap:6px;width:198px;padding:12px;border-radius:9px;border:1px solid #8bc6dc;background:linear-gradient(145deg,#263e61ef,#15253af2);box-shadow:0 8px 27px #050e24bd;backdrop-filter:blur(8px);color:#ecf8ff;font-size:12px}
+.enemy-tooltip{position:absolute;pointer-events:none;z-index:42;display:none;flex-direction:column;gap:6px;width:198px;padding:12px;border-radius:9px;border:1px solid #8bc6dc;background:linear-gradient(145deg,#263e61ef,#15253af2);box-shadow:0 8px 27px #050e24bd;backdrop-filter:none;color:#ecf8ff;font-size:12px}
 .enemy-tooltip.visible{display:flex}
+.enemy-tooltip{left:0;top:0;will-change:transform;contain:layout style}.enemy-hover-bar i{transform-origin:left center;transition:none}.enemy-tooltip [hidden]{display:none!important}
 .enemy-tooltip strong{font-size:16px;line-height:1.2;color:#fff8d0}
 .enemy-tooltip b{font-size:12px;color:#e1f6ff;font-variant-numeric:tabular-nums}
 .enemy-tooltip span{font-size:11px;color:#b4d2e5}
