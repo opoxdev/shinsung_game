@@ -2,15 +2,15 @@ import {ACHIEVEMENT_CATEGORIES,achievementView,achievementSummary} from './achie
 import {TOWERS,RARITIES} from './data.js';
 import {character} from './art.js';
 
-const fmt=n=>Number(n||0).toLocaleString('ko-KR');
+const fmtAch=n=>Number(n||0).toLocaleString('ko-KR');
 const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const rewardText=a=>a.reward.tower?'신화 타워 · '+TOWERS[a.reward.tower].name:
-  [a.reward.coins?'◈ '+fmt(a.reward.coins):'',a.reward.xp?'+'+fmt(a.reward.xp)+' XP':''].filter(Boolean).join(' · ');
+  [a.reward.coins?'◈ '+fmtAch(a.reward.coins):'',a.reward.xp?'+'+fmtAch(a.reward.xp)+' XP':''].filter(Boolean).join(' · ');
 function questCard(a){
   const color=RARITIES[a.grade]?.color||'#9ce8ce';
   const ready=a.status==='ready',done=a.status==='claimed';
   const pct=Math.round(a.progress/a.goal*100);
-  const progress=a.goal>=1000?fmt(a.progress)+' / '+fmt(a.goal):a.progress+' / '+a.goal;
+  const progress=a.goal>=1000?fmtAch(a.progress)+' / '+fmtAch(a.goal):a.progress+' / '+a.goal;
   const award=a.reward.tower?'<div class="achievement-tower">'+character(a.reward.tower)+'</div>':'<span class="achievement-emblem" aria-hidden="true">'+
     (ACHIEVEMENT_CATEGORIES.find(c=>c.id===a.category)?.icon||'✦')+'</span>';
   return '<article class="achievement-card '+a.status+'" style="--achievement-color:'+color+'">'+
