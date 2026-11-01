@@ -94,6 +94,12 @@ test('Ancient God is permanently unlocked once; combat has divine judgement mech
   const portrait=character('oldgod');
   for(const word of ['god-halo','god-core','god-flesh','고대의 신'])assert.match(portrait,new RegExp(word));
   assert.match(portrait,/data-base="oldgod"/);
+  assert.match(portrait,/data-anatomy="smooth-head"/,'smooth god skull, no triangular ears');
+  assert.match(portrait,/data-ear-shape="none"/);
+  assert.match(portrait,/viewBox="0 0 240 280"/,'higher-detail monumental portrait');
+  assert.doesNotMatch(portrait,/feline|cat ears|data-ear-shape="cat"/i);
+  assert.ok(portrait.length>15000,'substantially more sculpted detail than the old placeholder');
+
   const p=starterProfile();
   const s=createMatch(solo,[{id:'local',profile:p}]);
   s.wave=30;s.status='victory';
@@ -144,4 +150,20 @@ test('exclusive Temple clears do not count as normal map or difficulty achieveme
   assert.equal(view.find(a=>a.id==='explorer_3').progress,0);
   assert.equal(view.find(a=>a.id==='clear_normal').progress,0);
   assert.equal(view.find(a=>a.id==='first_clear').progress,1);
+});
+
+test('Temple cinematic art and visual proportions are dedicated, not borrowed from the plains',async()=>{
+  const {templeRuinPreview,landscape}=await import('../src/art.js');
+  const svg=templeRuinPreview();
+  assert.match(svg,/class="temple-cinematic"/);
+  assert.match(svg,/viewBox="0 0 1200 360"/);
+  assert.match(svg,/temple-lava|temple-sun|temple-road/);
+  assert.doesNotMatch(svg,/id="sky-temple_ruin"/);
+  assert.notEqual(svg,landscape(MAPS.find(m=>m.id===event.map)));
+  const render=readFileSync(new URL('../src/render.js',import.meta.url),'utf8');
+  assert.match(render,/oldgod'\?194:75/);
+  const css=readFileSync(new URL('../src/game.css',import.meta.url),'utf8');
+  assert.match(css,/\.shell:has\(\.temple-page\) \.content/);
+  assert.match(css,/\.nav-item\.temple-nav/);
+  assert.match(css,/\.temple-god-preview svg/);
 });
