@@ -11,7 +11,7 @@ function enemy(s,type,hp,rest={}){return {id:s.nextId++,type,field:0,hp,maxHp:hp
 function tower(s,type,x=240,y=100){const t={id:s.nextId++,owner:'hero',field:0,type,x,y,cd:0,level:0,shots:0,target:'first'};s.towers.push(t);return t;}
 
 test('expanded roster, collectibles, PvP packs and unique character artwork',()=>{
-  assert.equal(Object.keys(TOWERS).length,31);
+  assert.equal(Object.keys(TOWERS).length,32);
   assert.ok(Object.keys(ENEMIES).length>=33);
   assert.ok(Object.keys(PACKS).length>=5);
   assert.deepEqual(Object.keys(RARITIES),['common','rare','epic','legendary','mythic']);
