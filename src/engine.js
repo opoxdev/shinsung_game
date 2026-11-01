@@ -391,11 +391,11 @@ export function achievementRun(s,id){
     flawless:s.status==='victory'&&s.fields[p.field]===100};
 }
 export function rewardFor(s,id) {
-  const p=s.players[id];if(!p||s.status==='playing')return {coins:0,xp:0,sonic:false,aurora:false,voidwalker:false,win:false,clearBonus:0};
+  const p=s.players[id];if(!p||s.status==='playing')return {coins:0,xp:0,sonic:false,aurora:false,voidwalker:false,meatlordPack:false,win:false,clearBonus:0};
   const win=s.config.type==='pvp'?s.winner===p.field:s.status==='victory';
   const d=campaignOf(s.config);
   // PvP cannot be used to trade losses for unlimited account currency.
-  if(s.config.type==='pvp')return {coins:0,xp:0,sonic:false,aurora:false,voidwalker:false,win,clearBonus:0};
+  if(s.config.type==='pvp')return {coins:0,xp:0,sonic:false,aurora:false,voidwalker:false,meatlordPack:false,win,clearBonus:0};
   const maxWave=d.waves.length;
   const progress=Math.max(0,Math.min(1,s.wave/maxWave));
   const totalCoins=Math.floor(d.reward*modifiers(s.config).reward);
@@ -409,11 +409,15 @@ export function rewardFor(s,id) {
     sonic:!s.config.eventId&&win&&DIFFICULTIES.indexOf(d)>=3&&s.config.modes.includes('supersonic'),
     aurora:!s.config.eventId&&win&&d.id==='ruin'&&s.config.modes.includes('elite'),
     voidwalker:!s.config.eventId&&win&&DIFFICULTIES.indexOf(d)>=3&&s.config.modes.includes('darkenergy'),
+    meatlordPack:!s.config.eventId&&win&&DIFFICULTIES.indexOf(d)>=3&&s.config.modes.includes('tank'),
     oldgod:!!s.config.eventId&&win,win};
 }
 export function applyReward(profile,reward) {
   profile.coins+=reward.coins;profile.xp+=reward.xp;if(reward.win)profile.wins++;
-  if(reward.sonic&&!profile.owned.includes('sonic'))profile.owned.push('sonic');if(reward.aurora&&!profile.owned.includes('aurora'))profile.owned.push('aurora');if(reward.oldgod&&!profile.owned.includes('oldgod'))profile.owned.push('oldgod');if(reward.voidwalker&&!profile.owned.includes('voidwalker'))profile.owned.push('voidwalker');return profile;
+  if(reward.sonic&&!profile.owned.includes('sonic'))profile.owned.push('sonic');if(reward.aurora&&!profile.owned.includes('aurora'))profile.owned.push('aurora');if(reward.oldgod&&!profile.owned.includes('oldgod'))profile.owned.push('oldgod');if(reward.voidwalker&&!profile.owned.includes('voidwalker'))profile.owned.push('voidwalker');
+  // Challenge pack is granted once, to both local and server-backed profiles.
+  if(reward.meatlordPack){profile.packs=Array.isArray(profile.packs)?profile.packs:['basic'];if(!profile.packs.includes('meatlord'))profile.packs.push('meatlord');}
+  return profile;
 }
 export function profileAction(profile,a) {
   if(!a||typeof a!=='object')throw Error('잘못된 요청입니다.');
@@ -438,7 +442,7 @@ export function profileAction(profile,a) {
     if(profile.coins<t.price)throw Error('코인이 부족합니다.');profile.coins-=t.price;profile.owned.push(a.id);
   } else if(a.kind==='buyPack') {
     const p=Object.hasOwn(PACKS,a.id)?PACKS[a.id]:null;
-    if(!p)throw Error('잘못된 팩입니다.');if(profile.packs.includes(a.id))throw Error('이미 보유한 팩입니다.');
+    if(!p)throw Error('잘못된 팩입니다.');if(p.price===null)throw Error('탱크 추가모드를 익스트림 이상에서 클리어해야 획득합니다.');if(profile.packs.includes(a.id))throw Error('이미 보유한 팩입니다.');
     if(profile.coins<p.price)throw Error('코인이 부족합니다.');profile.coins-=p.price;profile.packs.push(a.id);
   } else if(a.kind==='pack') {if(!profile.packs.includes(a.id))throw Error('보유한 팩을 선택하세요.');profile.pack=a.id;}
   else if(a.kind==='skin') {
