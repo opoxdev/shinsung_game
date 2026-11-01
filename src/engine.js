@@ -172,6 +172,19 @@ function damage(s,e,n,t,ignoreArmor=false) {
   const reward=bounty(e.maxHp*COMBAT_SCALE)/(team.length||1);
   team.forEach(p=>p.money+=reward);s.kills++;
   event(s,{kind:'kill',x:e.x,y:e.y,field:e.field,type:e.type,color:ENEMIES[e.type].color,split:!!ENEMIES[e.type].onDeath,size:ENEMIES[e.type].size||12});
+  if(s.config.modes.includes('darkenergy')){
+    // Share the deceased enemy's ORIGINAL max HP among surviving enemies in
+    // the same field. Only killed enemies trigger this, never leaked enemies.
+    const recipients=s.enemies.filter(other=>other!==e&&other.field===e.field&&other.hp>0);
+    if(recipients.length){
+      const amount=Math.max(1,e.maxHp/recipients.length);
+      for(const other of recipients)other.hp+=amount;
+      const stride=Math.ceil(recipients.length/14);
+      const targets=recipients.filter((_,index)=>index%stride===0).slice(0,14)
+        .map(other=>({x:other.x,y:other.y}));
+      event(s,{kind:'dark-transfer',x:e.x,y:e.y,field:e.field,amount,count:recipients.length,targets});
+    }
+  }
   const offspring=ENEMIES[e.type].onDeath||[];
   for(const [type,count] of offspring)for(let i=0;i<count&&s.enemies.length<350;i++){
     const child=spawn(s,type,e.field,'split');
@@ -243,12 +256,12 @@ export function tick(s,dt=STEP) {
     const d=ENEMIES[e.type];
     if(e.dotUntil>s.time&&e.dotDps&&e.hp>0)damage(s,e,e.dotDps*dt,{type:e.dotFrom},true);
     if(e.hp<=0)continue;
-    if(d.regen)e.hp=Math.min(e.maxHp,e.hp+d.regen*dt);
+    if(d.regen&&e.hp<e.maxHp)e.hp=Math.min(e.maxHp,e.hp+d.regen*dt);
     if(d.heal){
       e.healClock=(e.healClock||0)+dt;
       if(e.healClock>=1){
         e.healClock-=1;
-        for(const ally of s.enemies)if(ally.field===e.field&&ally.hp>0&&dist(ally,e)<=(d.healRange||100))ally.hp=Math.min(ally.maxHp,ally.hp+d.heal);
+        for(const ally of s.enemies)if(ally.field===e.field&&ally.hp>0&&ally.hp<ally.maxHp&&dist(ally,e)<=(d.healRange||100))ally.hp=Math.min(ally.maxHp,ally.hp+d.heal);
         event(s,{kind:'heal',x:e.x,y:e.y,field:e.field,type:e.type});
       }
     }
@@ -358,11 +371,11 @@ export function achievementRun(s,id){
     flawless:s.status==='victory'&&s.fields[p.field]===100};
 }
 export function rewardFor(s,id) {
-  const p=s.players[id];if(!p||s.status==='playing')return {coins:0,xp:0,sonic:false,aurora:false,win:false,clearBonus:0};
+  const p=s.players[id];if(!p||s.status==='playing')return {coins:0,xp:0,sonic:false,aurora:false,voidwalker:false,win:false,clearBonus:0};
   const win=s.config.type==='pvp'?s.winner===p.field:s.status==='victory';
   const d=campaignOf(s.config);
   // PvP cannot be used to trade losses for unlimited account currency.
-  if(s.config.type==='pvp')return {coins:0,xp:0,sonic:false,aurora:false,win,clearBonus:0};
+  if(s.config.type==='pvp')return {coins:0,xp:0,sonic:false,aurora:false,voidwalker:false,win,clearBonus:0};
   const maxWave=d.waves.length;
   const progress=Math.max(0,Math.min(1,s.wave/maxWave));
   const totalCoins=Math.floor(d.reward*modifiers(s.config).reward);
@@ -374,11 +387,13 @@ export function rewardFor(s,id) {
   const xp=win?totalXp:Math.floor((totalXp-clearXp)*.5*progress);
   return {coins,xp,clearBonus:win?clearBonus:0,
     sonic:!s.config.eventId&&win&&DIFFICULTIES.indexOf(d)>=3&&s.config.modes.includes('supersonic'),
-    aurora:!s.config.eventId&&win&&d.id==='ruin'&&s.config.modes.includes('elite'),oldgod:!!s.config.eventId&&win,win};
+    aurora:!s.config.eventId&&win&&d.id==='ruin'&&s.config.modes.includes('elite'),
+    voidwalker:!s.config.eventId&&win&&DIFFICULTIES.indexOf(d)>=3&&s.config.modes.includes('darkenergy'),
+    oldgod:!!s.config.eventId&&win,win};
 }
 export function applyReward(profile,reward) {
   profile.coins+=reward.coins;profile.xp+=reward.xp;if(reward.win)profile.wins++;
-  if(reward.sonic&&!profile.owned.includes('sonic'))profile.owned.push('sonic');if(reward.aurora&&!profile.owned.includes('aurora'))profile.owned.push('aurora');if(reward.oldgod&&!profile.owned.includes('oldgod'))profile.owned.push('oldgod');return profile;
+  if(reward.sonic&&!profile.owned.includes('sonic'))profile.owned.push('sonic');if(reward.aurora&&!profile.owned.includes('aurora'))profile.owned.push('aurora');if(reward.oldgod&&!profile.owned.includes('oldgod'))profile.owned.push('oldgod');if(reward.voidwalker&&!profile.owned.includes('voidwalker'))profile.owned.push('voidwalker');return profile;
 }
 export function profileAction(profile,a) {
   if(!a||typeof a!=='object')throw Error('잘못된 요청입니다.');
