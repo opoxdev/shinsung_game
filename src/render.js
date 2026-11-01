@@ -3,6 +3,7 @@ import { pointOnPath, pathDistance, towerStats, canPlace } from './engine.js';
 import { character } from './art.js';
 import { makeTerrain } from './terrain.js';
 import { drawEnemy, drawEnemyOverlay } from './enemy-art.js';
+import { drawTowerAttackEffect, drawTowerPresence, isTowerAttackEffect } from './combat-fx.js';
 import { TERRAIN_MARGIN, constrainCamera } from './presentation.js';
 export const portrait=character;
 export { landscape } from './art.js';
@@ -98,9 +99,14 @@ export class Renderer {
         g.imageSmoothingEnabled=true;
         for(const e of state.enemies)if(e.field===f&&this.visible(e.x+offset,e.y))drawEnemyOverlay(g,e,state.time);
         for(const u of state.units)if(u.field===f&&this.visible(u.x+offset,u.y))this.summon(g,u,now);
-        let damageLabels=0;
-        for(const e of state.events){if(e.kind==='damage'&&e.field===f&&(this.reducedEffects||damageLabels++>=24))continue;const age=state.time-e.time;if(e.field!==f||age<0||age>.45||!this.visible(e.x+offset,e.y,180))continue;g.globalAlpha=1-age/.45;g.strokeStyle=TOWERS[e.type]?.color||ENEMIES[e.type]?.color||'#ffd88c';g.lineWidth=e.type==='rail'?5:3;g.shadowColor=g.strokeStyle;g.shadowBlur=0;
-          if(e.kind==='divine'){
+        let damageLabels=0,attackVisuals=0;
+        for(const e of state.events){if(e.kind==='damage'&&e.field===f&&(this.reducedEffects||damageLabels++>=24))continue;const age=state.time-e.time;if(e.field!==f||age<0||age>.45||!this.visible(e.x+offset,e.y,180))continue;
+          if(isTowerAttackEffect(e)&&++attackVisuals>(this.reducedEffects?32:90))continue;
+          g.globalAlpha=1-age/.45;g.strokeStyle=TOWERS[e.type]?.color||ENEMIES[e.type]?.color||'#ffd88c';g.lineWidth=e.type==='rail'?5:3;g.shadowColor=g.strokeStyle;g.shadowBlur=0;
+          if(isTowerAttackEffect(e)){
+            const rarity=TOWERS[e.type]?.rarity;
+            drawTowerAttackEffect(g,e,age,this.reducedEffects?0:rarity==='mythic'?2:1);
+          }else if(e.kind==='divine'){
             const p=age/.45,rad=20+p*160;g.save();g.shadowColor='#ffce42';g.shadowBlur=23;
             g.strokeStyle='#fff2b4';g.lineWidth=16*(1-p)+2;g.beginPath();g.moveTo(e.tx-18,e.ty-270);g.lineTo(e.tx,e.ty);g.stroke();
             g.strokeStyle='#fa5771';g.lineWidth=9*(1-p)+2;g.beginPath();g.moveTo(e.tx+25,e.ty-230);g.lineTo(e.tx+6,e.ty);g.stroke();
@@ -187,6 +193,7 @@ export class Renderer {
     if(lobby){const grad=g.createLinearGradient(0,0,0,this.height);grad.addColorStop(0,'#101b1230');grad.addColorStop(.45,'#101b1200');grad.addColorStop(1,'#18234780');g.fillStyle=grad;g.fillRect(0,0,this.width,this.height);}
   }
   tower(g,t,time,clock=time){const d=TOWERS[t.type],c=d.color,lev=t.level||0,stats=towerStats(t);g.save();g.translate(t.x,t.y);g.fillStyle='#18294b55';g.beginPath();g.ellipse(4,6,25,13,0,0,7);g.fill();g.strokeStyle=RARITIES[d.rarity].color;g.lineWidth=2;g.beginPath();g.ellipse(0,3,25,12,0,0,7);g.stroke();
+    drawTowerPresence(g,t,time,stats,this.reducedEffects?0:1);
     if(['buff','summon','chain'].includes(stats.kind)||t.type==='sonic'){g.strokeStyle=c+'99';g.beginPath();g.ellipse(0,3,29+Math.sin(time*3)*5,14,0,0,7);g.stroke();}
     if(t.type==='oldgod'){
       const phase=time*1.2;g.save();g.shadowColor='#ffcf61';g.shadowBlur=15;g.lineWidth=3;
