@@ -126,6 +126,23 @@ export class Renderer {
             g.beginPath();g.arc(e.x,e.y,r,0,Math.PI*2);g.stroke();
             g.font='bold 17px sans-serif';g.fillStyle=g.strokeStyle;
             g.fillText(e.name||'BOSS SKILL',e.x-60,e.y-42-age*25);
+          }else if(e.kind==='dark-transfer'){
+            // Bounded purple strands travel from the fallen enemy to survivors.
+            const phase=Math.min(1,age/.45),progress=Math.min(1,phase*1.65);
+            g.save();g.strokeStyle='#bb6cff';g.shadowColor='#a249f1';g.shadowBlur=10;
+            g.lineWidth=3.5*(1-phase)+1;
+            for(const target of e.targets||[]){
+              const x=e.x+(target.x-e.x)*progress,y=e.y+(target.y-e.y)*progress;
+              g.beginPath();g.moveTo(e.x,e.y-7);
+              g.quadraticCurveTo((e.x+target.x)/2,(e.y+target.y)/2-32,x,y);g.stroke();
+              g.beginPath();g.fillStyle='#e7b5ff';g.arc(x,y,3.5+4*(1-phase),0,7);g.fill();
+            }
+            g.strokeStyle='#e4a2ff';g.lineWidth=4*(1-phase);
+            g.beginPath();g.arc(e.x,e.y,9+phase*90,0,7);g.stroke();
+            g.shadowBlur=0;
+            g.fillStyle='#f0cfff';g.font='bold 18px sans-serif';
+            g.fillText('+'+formatCombatNumber(e.amount)+' HP',e.x-12,e.y-26-age*52);
+            g.restore();
           }else if(e.kind==='mark'||e.kind==='charged'){
             const isMark=e.kind==='mark';
             g.strokeStyle=isMark?'#d6a4ff':'#ffe695';
