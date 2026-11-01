@@ -1,10 +1,12 @@
 import { ENEMIES } from './data.js';
+import { MEAT_MONSTERS, drawMeatPlate } from './meat-art.js';
 
 // Static, outlined character plates are baked once per species, not per enemy/frame.
 const enemyPlates=new Map();
 export function enemyStyle(type){
   const d=ENEMIES[type];
   if(d.eventOnly)return 'temple';
+  if(MEAT_MONSTERS.includes(type))return 'flesh';
   if(['mk1','mk2','chain','mecha','sentinel','overload'].includes(type))return 'machine';
   if(['ghost','phantom','harpy'].includes(type))return 'spectral';
   if(d.heal||['warlock','medic'].includes(type))return 'caster';
@@ -18,6 +20,11 @@ export function enemyPlate(type){
   const c=typeof OffscreenCanvas==='function'?new OffscreenCanvas(288,352):document.createElement('canvas');c.width=288;c.height=352;
   const g=c.getContext('2d');g.scale(2,2);g.translate(72,124);
   g.lineJoin='round';g.lineCap='round';g.lineWidth=2.5;g.strokeStyle='#172237';
+  // Use unique, hand-drawn silhouettes; do not apply the generic zombie template.
+  if(drawMeatPlate(g,type)){
+    const plate=typeof c.transferToImageBitmap==='function'?c.transferToImageBitmap():c;
+    enemyPlates.set(type,plate);return plate;
+  }
   const polygon=(points,color)=>{g.fillStyle=color;g.beginPath();points.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));g.closePath();g.fill();g.stroke();};
   const box=(x,y,w,h,r,color)=>{g.fillStyle=color;g.beginPath();g.roundRect(x,y,w,h,r);g.fill();g.stroke();};
   const line=(points,color='#d8e8df',width=2)=>{g.strokeStyle=color;g.lineWidth=width;g.beginPath();points.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));g.stroke();g.strokeStyle='#172237';g.lineWidth=2.5;};
