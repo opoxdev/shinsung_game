@@ -6,6 +6,25 @@ const option=(item,current)=>'<option value="'+escapeHTML(item.id)+'"'+(item.id=
 // Inspired by clear arcade match-selection panels: only user-created rooms
 // appear, and a PvP page never contains cooperative rooms (or vice versa).
 export function matchmakingMarkup(type,config,{loggedIn=false,activeRoom=null,enabled=false}={}){
+  if(type==='coop'&&config.eventId==='temple_of_ruin'){
+    const event=EVENTS.temple_of_ruin;
+    const auth=loggedIn?'<span class="mm-status online">● 계정 연결됨</span>':
+      '<button class="mm-signin" data-action="lobbyLogin">로그인 / 회원가입</button>';
+    return '<div class="matchmaking-page temple-mm" data-type="coop" data-event-id="'+event.id+'">'+
+      '<span class="mm-overline">☼ TEMPLE OF RUIN · EXCLUSIVE CO-OP</span>'+
+      '<h2>파멸의 신전 · 협동 공략</h2><p class="mm-intro">이벤트 전용 맵 · 30웨이브 · 고유 몬스터 8종 · 최초 클리어 시 신화 「고대의 신」 지급</p>'+
+      '<div class="mm-account">'+auth+'</div>'+
+      '<div class="mm-section-label">고정 이벤트 규칙 · 일반 난이도 및 추가 모드 없음</div>'+
+      '<div class="temple-mm-meta"><span>☼ 파멸의 신전</span><span>30 WAVES</span><span>2~4명 협동</span><span>시작 자금 ₩ 4,200</span></div>'+
+      '<div class="mm-actions"><button class="mm-create" data-action="createRoom">'+(loggedIn?'＋ 이벤트 공개 방 만들기':'로그인 후 방 만들기')+'</button>'+
+      '<button class="mm-join-code" data-action="joinPrompt">⌗ 코드로 참가</button></div>'+
+      (activeRoom?'<button class="mm-resume" data-action="resumeRoom">진행 중인 방 재접속</button>':'')+
+      '<div class="mm-list-head"><div><span class="mm-section-label">파멸의 신전 전용 공개 대기실</span>'+
+      '<h3>참가 가능한 방 <span id="room-count">—</span></h3></div><button class="mm-refresh" data-action="refreshRooms">↻ 새로고침</button></div>'+
+      '<div class="public-room-list mm-room-grid" id="public-room-list" data-mode="coop" data-event-id="'+event.id+'">'+
+      '<div class="mm-state"><b>신전 공략 방을 확인하는 중…</b></div></div>'+
+      '<button class="mm-practice" data-action="temple">← 이벤트 상세로 돌아가기</button></div>';
+  }
   const pvp=type==='pvp',capacity=pvp?2:4;
   const modeName=pvp?'대전 · PvP':'협동전 · MULTIPLAYER';
   const text=pvp?'서로 다른 필드를 방어하며 상대에게 몬스터를 보냅니다. 2명이 모이면 대전할 수 있습니다.':'같은 전장을 2~4명의 플레이어가 함께 방어합니다. 최소 2명부터 시작할 수 있습니다.';
