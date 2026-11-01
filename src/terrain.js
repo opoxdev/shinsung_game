@@ -77,7 +77,7 @@ export function makeTerrain(map){
       g.shadowColor='#ff845b';g.shadowBlur=12;oval(g,x,y-height*.6,5,12,'#fb8d58');
       g.shadowBlur=0;
     }
-    for(let k=0;k<12;k++}{const x=120+(k%6)*270,y=95+Math.floor(k/6)*780;
+    for(let k=0;k<12;k++){const x=120+(k%6)*270,y=95+Math.floor(k/6)*780;
       if(pathDistance(map.path,x,y)<122)continue;g.fillStyle='#55425a';g.fillRect(x-42,y-32,84,65);
       g.fillStyle='#947b77';g.fillRect(x-35,y-42,70,20);g.fillStyle='#ffc16f';
       g.beginPath();g.arc(x,y-44,7,0,7);g.fill();g.strokeStyle='#e7bd70';g.strokeRect(x-34,y-28,68,50);}
