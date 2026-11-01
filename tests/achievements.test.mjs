@@ -121,7 +121,7 @@ test('map exploration, elite, supersonic and flawless clears increment independe
   }
   assert.equal(achievementProgress(p,ACHIEVEMENTS.find(a=>a.id==='explorer_3')),3);
   assert.equal(achievementProgress(p,ACHIEVEMENTS.find(a=>a.id==='sonic_trial')),1);
-  assert.equal(achievementProgress(p,ACHIEVEMENTS.find(a=>a.id==='flawless')),1);
+  assert.equal(achievementProgress(p,ACHIEVEMENTS.find(a=>a.id==='flawless')),3);
   assert.equal(achievementView(p).find(a=>a.id==='elite_mode').status,'ready');
   assert.equal(achievementView(p).find(a=>a.id==='aurora_trial').status,'locked');
   const s=achievementSummary(p);assert.ok(s.ready>=4);
