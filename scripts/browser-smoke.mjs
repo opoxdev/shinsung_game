@@ -11,6 +11,16 @@ try{
   page.on('pageerror',e=>errors.push(e.message));
   await page.goto('file://'+path.join(root,'dist/index.html'),{waitUntil:'domcontentloaded'});
   await page.waitForSelector('[data-action="start"]',{timeout:10000});
+  await page.click('[data-action="events"]');
+  assert.equal(await page.locator('.achievement-card').count(),35,'all categorized achievements are visible');
+  assert.equal(await page.locator('.achievement-tabs button').count(),7);
+  assert.ok(await page.locator('.achievement-card[data-state="ready"]').count()===0);
+  await page.click('[data-action="achievementFilter"][data-id="collection"]');
+  assert.ok(await page.locator('.achievement-card').count()>=4);
+  await page.click('[data-action="achievementFilter"][data-id="ready"]');
+  assert.match(await page.locator('.achievement-empty').textContent(),/수령 가능한 보상/);
+  await page.click('[data-action="achievementFilter"][data-id="all"]');
+  await page.click('[data-action="nav"][data-id="home"]');
   await page.click('[data-action="pvp"]');
   assert.equal(await page.locator('.mm-room-grid').getAttribute('data-mode'),'pvp');
   await page.waitForSelector('.mm-error',{timeout:8000});
@@ -76,5 +86,5 @@ try{
   assert.equal(await page.locator('.story-chapter-step.unlocked').count(),1,'chapter remains unlocked on return to lobby');
   await page.click('[data-action="close"]');
   assert.deepEqual(errors,[],'Uncaught browser errors: '+errors.join('; '));
-  console.log('Browser smoke passed: real tower portraits, dialogue swaps, mobile UI, journal, PvP/co-op, shop and wave clock.');
+  console.log('Browser smoke passed: 35 achievement cards, categories, UI filters, tower portraits, dialogue, PvP/co-op, shop and wave clock.');
 }finally{await browser.close();}
