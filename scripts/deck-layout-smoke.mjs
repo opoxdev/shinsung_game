@@ -53,7 +53,7 @@ try{
     });
     assert.ok(dims.doc<=height+2,JSON.stringify({width,height,dims})+' document must not develop an extra bottom band');
     assert.ok(Math.abs(dims.shell-height)<=2,'shell exactly occupies viewport without overflow');
-    assert.ok(Math.abs(dims.dockBottom-height)<=3,'team dock remains at viewport bottom');
+    assert.ok(Math.abs(dims.dockBottom-height)<=7,'team dock remains at viewport bottom (allow 5px shell border): '+JSON.stringify({width,height,dims}));
     assert.ok(dims.sidebarScrollHeight>dims.sidebarHeight,'many nav tabs should overflow only in sidebar');
     assert.equal(dims.sidebarOverflow,'auto','sidebar is its own scroll area');
     await page.locator('.sidebar').evaluate(el=>{el.scrollTop=el.scrollHeight;});
