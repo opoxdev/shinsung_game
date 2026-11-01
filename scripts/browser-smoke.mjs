@@ -34,9 +34,14 @@ try{
   await page.waitForSelector('#battlefield',{timeout:10000});
   await page.waitForSelector('.story-dialogue',{timeout:10000});
   assert.match(await page.locator('.story-dialogue').textContent(),/빛을 잃은 초원/);
-  assert.match(await page.locator('.story-dialogue').textContent(),/리아/);
+  assert.match(await page.locator('.story-dialogue').textContent(),/새총잡이/);
+  assert.equal(await page.locator('.story-dialogue .story-speaker svg[data-design="v2"][data-base="scout"]').count(),1,
+    'first speaker uses the actual in-game scout tower character');
+  assert.ok((await page.locator('.story-dialogue .story-speaker svg').boundingBox()).height>50,'portrait must be visibly sized');
   await page.click('[data-action="storyNext"]');
-  assert.match(await page.locator('.story-dialogue').textContent(),/세라/);
+  assert.match(await page.locator('.story-dialogue').textContent(),/고블린 소환사/);
+  assert.equal(await page.locator('.story-dialogue .story-speaker svg[data-base="summoner"]').count(),1,
+    'portrait switches to the real summoner tower along with the dialogue');
   await page.click('[data-action="storyDismiss"]');
   assert.equal(await page.locator('.story-overlay:visible').count(),0);
   await page.click('[data-action="storyReplay"]');
@@ -57,6 +62,10 @@ try{
   const waveScale=await page.locator('#wave-progress-fill').evaluate(el=>getComputedStyle(el).transform);
   assert.notEqual(waveScale,'matrix(1, 0, 0, 1, 0, 0)','wave progress should reflect elapsed wave time');
   await page.setViewportSize({width:390,height:760});
+  await page.click('[data-action="storyReplay"]');
+  assert.equal(await page.locator('.story-dialogue .story-speaker svg[data-base="scout"]').count(),1);
+  const portraitBounds=await page.locator('.story-dialogue .story-speaker svg').boundingBox();
+  assert.ok(portraitBounds.width>=45&&portraitBounds.height>=65,'mobile tower portrait remains readable');
   const storyBounds=await page.locator('#story-overlay').boundingBox();
   assert.ok(storyBounds&&storyBounds.x>=0&&storyBounds.x+storyBounds.width<=390,'story overlay fits on mobile');
   assert.equal(await page.locator('.battle-mobile-menu:visible').count(),1,'mobile battle menu must remain accessible');
@@ -67,5 +76,5 @@ try{
   assert.equal(await page.locator('.story-chapter-step.unlocked').count(),1,'chapter remains unlocked on return to lobby');
   await page.click('[data-action="close"]');
   assert.deepEqual(errors,[],'Uncaught browser errors: '+errors.join('; '));
-  console.log('Browser smoke passed: six-story lobby, journal, dialogue controls, mobile overlay, PvP/co-op, shop and wave clock.');
+  console.log('Browser smoke passed: real tower portraits, dialogue swaps, mobile UI, journal, PvP/co-op, shop and wave clock.');
 }finally{await browser.close();}
