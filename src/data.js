@@ -135,7 +135,7 @@ export const MODES = {
   supersonic: { name: '슈퍼소닉', reward: 2, hp: 1, speed: 2.5, desc: '적 속도 ×2.5 · 특수 타워 도전' }
 };
 export const MAPS = [
-  { id:'temple_ruin',name:'파멸의 신전',tag:'TEMPLE OF RUIN',biome:'temple',eventOnly:'temple_of_ruin',color:'#e8b45f',ground:'#352c40',roadColor:'#b79a73',desc:'붉은 균열과 금빛 제단이 공존하는 신전. 서로 이웃한 긴 통로가 광역·장거리 타워에 유리하다.',path:[[0,155],[1640,155],[1640,350],[260,350],[260,545],[1580,545],[1580,755],[260,755],[260,965],[1800,965]] },
+  { id:'temple_ruin',name:'파멸의 신전',tag:'TEMPLE OF RUIN',biome:'temple',eventOnly:'temple_of_ruin',color:'#e8b45f',ground:'#352c40',roadColor:'#b79a73',desc:'붉은 균열과 금빛 제단이 공존하는 신전. 서로 이웃한 긴 통로가 광역·장거리 타워에 유리하다.',path:[[0,100],[1650,100],[1650,245],[190,245],[190,390],[1650,390],[1650,535],[190,535],[190,680],[1650,680],[1650,825],[190,825],[190,970],[1800,970]] },
   { id: 'plains', name: '평야', tag: 'GREEN MEADOWS', biome: 'plains', color: '#93ed76', ground: '#68b965', roadColor: '#e7c694', desc: '완만한 S자 오솔길과 넓은 배치 공간. 기본기를 익히기 좋은 평야.', path: [[0,560],[430,560],[630,180],[1100,180],[1320,820],[1800,820]] },
   { id: 'mountains', name: '어두운 산맥', tag: 'SHADOW PEAKS', biome: 'mountains', color: '#b49bfc', ground: '#444362', roadColor: '#87809d', desc: '봉우리를 오르내리는 사선 고갯길. 굽이마다 교차 사격을 준비하라.', path: [[0,820],[220,820],[520,590],[260,310],[650,140],[1040,420],[800,740],[1260,920],[1550,620],[1800,620]] },
   { id: 'crystal', name: '수정 동굴', tag: 'CRYSTAL CAVERNS', biome: 'crystal', color: '#8be9ff', ground: '#45396d', roadColor: '#a48dc8', desc: '북쪽 입구에서 동굴 중심부로 감기는 나선 통로. 안쪽 수정핵을 지켜라.', path: [[900,0],[900,160],[1480,160],[1480,850],[300,850],[300,330],[1160,330],[1160,620],[700,620]] },
