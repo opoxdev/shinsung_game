@@ -386,7 +386,7 @@ function relicPortrait(id,c,skin){
 // White feline-horned titan, gold halo/arm, orange-red chest cores,
 // dark organic right side and ragged blood-red waistcloth.
 function oldGodPortrait(){
-  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 210" data-design="v2" data-base="oldgod" data-costume="default" aria-label="고대의 신">'+
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 210" data-design="v2" data-art-tier="myth" data-base="oldgod" data-costume="default" aria-label="고대의 신">'+
   '<defs>'+
   '<linearGradient id="god-gold" x2=".85" y2="1"><stop stop-color="#fff8aa"/><stop offset=".25" stop-color="#ffdd39"/><stop offset=".75" stop-color="#ffad09"/><stop offset="1" stop-color="#d75d09"/></linearGradient>'+
   '<linearGradient id="god-ivory" x2="1" y2="1"><stop stop-color="#fffef4"/><stop offset=".55" stop-color="#e1d8c5"/><stop offset="1" stop-color="#adb2ae"/></linearGradient>'+
@@ -395,7 +395,7 @@ function oldGodPortrait(){
   '<filter id="god-glow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="4"/></filter></defs>'+
   '<ellipse cx="91" cy="201" rx="77" ry="8" fill="#160e23" opacity=".45"/>'+
   // Celestial halo behind the head
-  '<ellipse cx="91" cy="15" rx="43" ry="8" fill="none" stroke="#ffdd5e" stroke-width="6" opacity=".75" filter="url(#god-glow)"/>'+
+  '<ellipse id="god-halo" cx="91" cy="15" rx="43" ry="8" fill="none" stroke="#ffdd5e" stroke-width="6" opacity=".75" filter="url(#god-glow)"/>'+
   '<ellipse cx="91" cy="15" rx="42" ry="8" fill="none" stroke="#fff7aa" stroke-width="3"/>'+
   // Dark organic side, curling appendages and open abyss-mouth
   '<path d="M126 62 Q169 38 162 94 Q151 119 176 149 Q167 168 150 150 Q175 191 160 200 Q140 192 128 170 L123 87Z" fill="url(#god-flesh)" stroke="#392538" stroke-width="4"/>'+
