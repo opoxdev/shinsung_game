@@ -28,6 +28,7 @@ export function drawMelee(g,e,age){
   g.quadraticCurveTo(reach*.6,-halfWidth*.71,reach+6,-halfWidth*.12);
   g.stroke();g.restore();
 }
+export const formatCombatNumber=n=>Number.isFinite(n)?Math.round(Math.max(0,n)).toLocaleString('ko-KR'):'0';
 const sprites=new Map();
 function sprite(id,skin,level=0){const key=id+'|'+skin+'|'+level;if(!sprites.has(key)){const img=new Image();img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(character(id,skin,level));sprites.set(key,img);}return sprites.get(key);}
 // World-space hit testing uses the same offset as the renderer's PvP fields.
@@ -86,7 +87,7 @@ export class Renderer {
             g.restore();
           }else if(e.kind==='damage'){
             const amount=e.amount||0;
-            const label=amount<1?Number(amount.toFixed(2)).toString():amount<10?Number(amount.toFixed(1)).toString():Math.round(amount).toLocaleString('ko-KR');
+            const label=formatCombatNumber(amount);
             const rise=age*90,spread=((e.id%5)-2)*6;
             g.save();g.textAlign='center';g.textBaseline='middle';g.font='900 24px system-ui,sans-serif';
             g.shadowBlur=5;g.shadowColor='#142944';
