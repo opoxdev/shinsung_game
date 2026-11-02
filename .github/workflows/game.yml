@@ -82,6 +82,13 @@ jobs:
           else
             echo "Waiting for the v0.3 source ZIP in uploads/"
           fi
+      - name: Run real browser startup smoke test
+        run: |
+          if [ -f scripts/runtime-start-smoke.mjs ]; then
+            npm install --no-save --ignore-scripts playwright
+            npx playwright install --with-deps chromium
+            node scripts/runtime-start-smoke.mjs
+          fi
 
   pages:
     name: Optional GitHub Pages preview (not the official GAS host)
