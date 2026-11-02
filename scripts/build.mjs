@@ -16,7 +16,18 @@ function stripModules(source){
 }
 const sources=['evolutions','data','engine','achievements','visual-design','meat-art','art','presentation','terrain','enemy-art','combat-fx','render','online','matchmaking','admin-panel','achievement-page','online-prediction','story','client-profile','main'];
 const files=await Promise.all(sources.map(x=>read(`src/${x}.js`)));
-const stitched=files.map((s,i)=>`// --- ${sources[i]}.js ---\n${stripModules(s)}`).join('\n');
+// Modules newly authored as ESM may use private helpers named like existing
+// legacy globals. Scope their helpers while explicitly exposing public bindings
+// to the legacy no-dependency browser bundle.
+const scopedExports={
+  'meat-art':['MEAT_MONSTERS','meatMonsterPortrait','drawMeatPlate'],
+  'combat-fx':['towerEffectProfile','EFFECT_TYPES','isTowerAttackEffect','drawTowerAttackEffect','drawTowerPresence']
+};
+const stitched=files.map((s,i)=>{
+  const id=sources[i],body=stripModules(s),publicNames=scopedExports[id];
+  if(!publicNames)return `// --- ${id}.js ---\n${body}`;
+  return `// --- ${id}.js (isolated module helpers) ---\nconst {${publicNames.join(',')}}=(()=>{\n${body}\nreturn {${publicNames.join(',')}};\n})();`;
+}).join('\n');
 const js=`(()=>{\n'use strict';\n${stitched}\n})();`;
 const cssFiles=await Promise.all(['src/style.css','src/game.css'].map(read));
 const css=cssFiles.join('\n');
