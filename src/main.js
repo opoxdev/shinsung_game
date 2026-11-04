@@ -397,7 +397,7 @@ function startLocal(type='solo'){
   const players=[{id:'local',profile}];if(type==='pvp')players.push({id:'bot',profile:{...starterProfile('훈련 상대'),loadout:['scout','blade','soldier'],pack:'basic'}});
   state=createMatch(config,players);beginGame();
 }
-function beginGame(){motion=new MotionView();predictionState=null;predictionBase=null;resetStory();placementRevision++;placement=null;resultShown=false;paused=false;accumulator=0;botClock=0;claimAfter=0;previousWave=0;$('#modal-root').innerHTML='';gameUI();}
+function beginGame(){frameFailureCount=0;motion=new MotionView();predictionState=null;predictionBase=null;resetStory();placementRevision++;placement=null;resultShown=false;paused=false;accumulator=0;botClock=0;claimAfter=0;previousWave=0;$('#modal-root').innerHTML='';gameUI();}
 function gameUI(){
   const p=state.players[playerId];app.innerHTML=`<div class="battle"><canvas id="battlefield" aria-label="타워 디펜스 전장"></canvas><div class="enemy-tooltip" id="enemy-tooltip" role="status" aria-live="off"></div><div class="battle-top"><button class="battle-brand" data-action="battleMenu">S<span>신성 디펜스</span>☰</button><div class="battle-stats"><div><small>기지 내구도</small><b id="base-hp"></b><span class="base-meter"><i id="base-meter-fill"></i></span></div>${state.config.type==='pvp'?'<div><small>상대 내구도</small><b id="opponent-hp"></b></div>':''}<div><small>전투 자금</small><b class="gold" id="cash"></b></div><div><small>배치 타워</small><b id="tower-count"></b></div></div><div class="wave-panel"><small>${campaignOf(state.config).name} · ${isOnlineMatch?'SERVER':'LOCAL'}</small><b id="wave-label"></b><span id="wave-intel" class="wave-intel"></span><span id="wave-clock"></span><div class="wave-progress" aria-label="웨이브 진행률"><span id="wave-progress-fill"></span></div></div></div><div class="battle-hints"><button type="button" class="battle-mobile-menu" data-action="battleMenu" aria-label="전투 메뉴 열기">☰ 메뉴</button><span>WASD 이동</span><span>E 확대 · R 축소 · 휠 줌</span><span>U 강화</span><span>1–5 배치</span><span>Q 취소</span>${state.config.type==='pvp'?'<button data-action="field">필드 전환 ⇄</button>':''}${state.config.type==='pvp'||state.config.eventId?'':`<button type="button" class="story-hud-button" data-action="storyJournal">✧ 이야기 기록</button><button type="button" class="story-hud-button" id="story-replay" data-action="storyReplay" disabled>↺ 최근 대사</button><button type="button" class="story-hud-button" data-action="storyToggle" id="story-toggle" aria-pressed="${storyEnabled}">${storyEnabled?'대사 켜짐':'대사 꺼짐'}</button>`}<span id="connection-status"></span></div><div id="story-overlay" class="story-overlay" role="status" aria-live="polite" aria-atomic="true" hidden></div><div class="boss-strip" id="boss-strip" hidden><span id="boss-name"></span><b id="boss-hp"></b><i><em id="boss-meter"></em></i></div><div class="wave-notice" id="wave-notice"></div><aside id="tower-inspector" class="battle-inspector"></aside>${state.config.type==='pvp'?`<div class="monster-tray"><span>상대에게 보내기 / ${PACKS[p.pack].name}</span>${PACKS[p.pack].monsters.map(([id,cost])=>`<button data-action="send" data-id="${id}" id="send-${id}" style="--enemy:${ENEMIES[id].color}"><i>▣</i><b>${ENEMIES[id].name}</b><small>₩ ${cost}</small></button>`).join('')}</div>`:''}<div class="battle-bottom"><div class="battle-tools"><button data-action="effects" class="effects-toggle" title="피해 숫자를 숨겨 전장을 더 또렷하게 표시합니다">효과: 표준</button><button data-action="intel" title="현재·다음 웨이브 정보 펼치기">정보</button><button data-action="zoomOut" aria-label="축소">−</button><button data-action="zoomReset" aria-label="카메라 초기화">⌾</button><button data-action="zoomIn" aria-label="확대">＋</button><button data-action="cancelPlace" aria-label="배치 취소">취소</button></div><div class="loadout-slots">${loadout(true)}</div><button class="skip-button" data-action="skip" id="skip">웨이브 스킵</button></div><div class="placement-hint" id="placement-hint"></div></div>`;
   resetRenderer();renderer=new Renderer($('#battlefield'));renderer.camera.x=900+p.field*2100;renderer.camera.zoom=1.18;
@@ -659,7 +659,7 @@ const actions={
   temple(){page='temple';config.type='solo';shell();},
   templeSolo(){config=templeConfig('solo');try{startLocal('solo');}catch(e){toast(e.message);}},
   templeCoop(){config=templeConfig('coop');special('coop');},
-  nav(id){normalConfig();page=id;config.type='solo';shell();},setCollectionTab(id){if(!['towers','packs'].includes(id))return;collectionTab=id;collection();},previewPack(id){if(!Object.hasOwn(PACKS,id))return;selectedPack=id;collection();},visitPackShop(id){if(!Object.hasOwn(PACKS,id))return;shopTab='packs';page='shop';shell();},map(id){normalConfig();if(!MAPS.some(m=>m.id===id&&!m.eventOnly))return;config.map=id;home();},difficulty(id){normalConfig();config.difficulty=id;home();},mode(id){normalConfig();config.modes=config.modes.includes(id)?config.modes.filter(x=>x!==id):[...config.modes,id];home();},
+  nav(id){normalConfig();page=id;config.type='solo';shell();},setCollectionTab(id){if(!['towers','packs'].includes(id))return;collectionTab=id;collection();},previewPack(id){if(!Object.hasOwn(PACKS,id))return;selectedPack=id;collection();},visitPackShop(id){if(!Object.hasOwn(PACKS,id))return;shopTab='packs';page='shop';shell();},map(id){normalConfig();if(!MAPS.some(m=>m.id===id&&!m.eventOnly))return;config.map=id;home();},difficulty(id){normalConfig();config.difficulty=id;home();},mode(id){normalConfig();if(!Object.hasOwn(MODES,id))return;config.modes=config.modes.includes(id)?config.modes.filter(x=>x!==id):[...config.modes,id];home();},
   inspect(id){selectedTower=id;page='towers';collectionTab='towers';shell();},equip(id){mutate({kind:'equip',id});},shopTab(id){shopTab=id;shop();},buyTower(id){mutate({kind:'buyTower',id});},buyPack(id){mutate({kind:'buyPack',id});},pack(id){mutate({kind:'pack',id});},
   skin(id){
     const styles=['default',...Object.keys(SKIN_STYLES).filter(style=>SKIN_STYLES[style].targets.includes(id)||profile.skins?.[id+':'+style])];
@@ -817,10 +817,13 @@ document.addEventListener('submit',async e=>{e.preventDefault();const f=new Form
 document.addEventListener('keydown',e=>{if(['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName))return;const key=e.key.toLowerCase();if(state){if(e.code==='Space'||key==='e'||key==='r')e.preventDefault();if(key==='n'&&storyCurrent>=0&&!$('#modal-root').innerHTML&&!e.repeat){advanceStory();return;}if(renderer&&!$('#modal-root').innerHTML)renderer.keys.add(key);if(e.repeat)return;if(key==='escape'){if($('#modal-root').innerHTML)closeModal();else battleMenu();}else if(!$('#modal-root').innerHTML){if(key==='q')selectPlacement(null);if(key==='u'&&renderer?.selected)sendCommand({kind:'upgrade',id:renderer.selected});if('12345'.includes(key)){const id=state.players[playerId].loadout[Number(key)-1];if(id)selectPlacement(id);}if(e.code==='Space')sendCommand({kind:'skip'});}}});
 document.addEventListener('keyup',e=>renderer?.keys.delete(e.key.toLowerCase()));window.addEventListener('blur',()=>renderer?.keys.clear());
 document.addEventListener('visibilitychange',()=>{lastTime=0;renderer?.keys.clear();});
+let frameFailureCount=0;
 function frame(now){
+  // A display exception must never stop the simulation or the RAF chain.
+  try {
   // Cap expensive Canvas + SVG rendering; timing and network are independent.
   const interval=state?0:48;
-  if(now-lastPaintTime<interval){requestAnimationFrame(frame);return;}
+  if(now-lastPaintTime<interval)return;
   lastPaintTime=now;
   const dt=Math.min(.1,(now-(lastTime||now))/1000);lastTime=now;
   if(state){
@@ -846,7 +849,15 @@ function frame(now){
     if(renderer)renderer.frame(null,config.map,playerId,dt,now/1000,true);
     if(!document.hidden&&$('#public-room-list')&&now>=roomListNext&&!roomListBusy)void refreshRooms();
   }
-  requestAnimationFrame(frame);
+  }catch(error){
+    if(frameFailureCount++<2){
+      console.error('전투 프레임 오류 (시뮬레이션은 계속 진행됩니다):',error);
+      if(frameFailureCount===1)toast('화면 표시 오류 감지 · 간소 효과로 자동 전환합니다.');
+    }
+    if(renderer)renderer.reducedEffects=true;
+  }finally{
+    requestAnimationFrame(frame);
+  }
 }
 shell();requestAnimationFrame(frame);online.onError=e=>toast(e.message);
 online.init(async user=>{
