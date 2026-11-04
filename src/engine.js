@@ -43,7 +43,12 @@ export function validateConfig(config) {
       ||config.difficulty!=='normal')throw Error('이벤트는 전용 맵에서 솔로·협동전으로만 진행합니다.');
     return {type:config.type,eventId:e.id,map:e.map,difficulty:'normal',modes:[]};
   }
-  if(!Array.isArray(config.modes)||config.modes.length>5||new Set(config.modes).size!==config.modes.length||config.modes.some(id=>!Object.hasOwn(MODES,id)))throw Error('잘못된 모드 구성입니다.');
+  // All offered modes may be combined, including Dark Energy. Keep an
+  // absolute bound for malformed/untrusted requests and reject duplicates.
+  if(!Array.isArray(config.modes)||config.modes.length>Math.min(12,Object.keys(MODES).length)
+    ||new Set(config.modes).size!==config.modes.length
+    ||config.modes.some(id=>typeof id!=='string'||!Object.hasOwn(MODES,id)))
+    throw Error('잘못된 모드 구성입니다.');
   if(!DIFFICULTIES.some(d=>d.id===config.difficulty)||!MAPS.some(m=>m.id===config.map&&!m.eventOnly))throw Error('맵 또는 난이도가 올바르지 않습니다.');
   return {map:config.map,difficulty:config.difficulty,type:config.type,modes:[...config.modes]};
 }
