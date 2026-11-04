@@ -59,6 +59,9 @@ export const TOWERS = {
   scrap: {name:'포수',role:'후반 · 중장갑 폭격',rarity:'common',cost:1450,price:550,color:'#9fb9ae',damage:150,interval:2.4,range:220,splash:74,kind:'splash',cap:14,upgrades:[],desc:'커다란 낡은 포를 직접 끌고 다니는 포수. 비싼 후반형이지만 영웅처럼 장식되지는 않는다.'},
   lullaby: {name:'음향 조율사',role:'초반 · 공격속도 지원',rarity:'epic',cost:195,price:1100,color:'#a1b8ff',damage:0,interval:1,range:145,kind:'buff',haste:.1,cap:10,upgrades:[],desc:'진동 장치를 운용하는 조율사. 기계식 스피커와 공명판으로 주변 타워를 가속한다.'},
   papercrane: {name:'종이학 조련사',role:'초반 · 기동 소환',rarity:'legendary',cost:295,price:4900,color:'#ffdaaf',damage:22,interval:2.75,range:195,kind:'summon',summons:1,unitSpeed:320,unitLife:6,cap:14,upgrades:[],desc:'전설이지만 값싼 종이학으로 초반 빈 공간을 메운다. 짧은 수명이 약점인 기동 소환수.'},
+  pulsekeeper:{name:'공명 북술사',role:'중반 · 전방위 충격파',rarity:'epic',cost:750,price:2600,color:'#d49aff',damage:31,interval:2.3,range:145,kind:'pulse',slow:.83,slowTime:1.15,cap:10,upgrades:[],desc:'묵직한 공명의 북을 두드려 주변 모든 적을 동시에 타격한다. 근처 적이 많을수록 효율이 좋지만 사거리는 짧다.'},
+  duskarcher:{name:'황혼 사수',role:'중후반 · 관통·출혈',rarity:'rare',cost:940,price:1300,color:'#d19eff',damage:108,interval:1.75,range:325,kind:'ranged',pierce:true,dot:16,dotTime:2.5,cap:12,upgrades:[],desc:'어두운 숲을 지키는 달빛 사수. 장갑을 무시하는 은빛 화살과 지속 피해를 사용한다.'},
+  crystalspider:{name:'수정 거미술사',role:'후반 · 수정 거미 소환',rarity:'legendary',cost:1650,price:6700,color:'#84f8f2',damage:93,interval:3.35,range:285,kind:'summon',summons:2,unitSpeed:335,unitLife:7.5,cap:6,upgrades:[],desc:'수정 고치에서 작은 거미를 불러내 적을 추적한다. 다수의 소환수가 멀리 떨어진 위협을 처리한다.'},
   marker: {name:'관측원',role:'중후반 · 표식 지원',rarity:'rare',cost:680,price:1700,color:'#c7a4f2',damage:20,interval:1.75,range:260,kind:'mark',markAmp:1.22,markTime:3.5,cap:14,upgrades:[],desc:'망원경과 표식 깃발을 지닌 평범한 관측원. 적의 약점을 찾아 아군 집중 공격을 돕는다.'},
 };
 // Evolution costs are authoritative and belong to each installed tower instance.
@@ -169,7 +172,8 @@ export const MODES = {
   sonic: { name: '소닉', reward: 1.1, hp: 1, speed: 1.5, desc: '적 이동속도 ×1.5' },
   shortage: { name: '군사부족', reward: 2, hp: 1, speed: 1, cap: 5, desc: '전체 타워 최대 5개' },
   supersonic: { name: '슈퍼소닉', reward: 2, hp: 1, speed: 2.5, desc: '적 속도 ×2.5 · 특수 타워 도전' },
-  darkenergy: { name: '암흑 에너지', reward: 1.7, hp: 1, speed: 1, desc: '적 처치 시 최대 체력을 같은 필드의 살아 있는 모든 적에게 분배 · 최소 1 · 초과 체력 허용' }
+  darkenergy: { name: '암흑 에너지', reward: 1.7, hp: 1, speed: 1, desc: '적 처치 시 최대 체력을 같은 필드의 살아 있는 모든 적에게 분배 · 최소 1 · 초과 체력 허용' },
+  rift:{name:'균열 증원',reward:1.28,hp:1,speed:1,desc:'3웨이브마다 균열에서 고속 적이 추가 등장한다. 후반으로 갈수록 증원량 증가'}
 };
 export const MAPS = [
   { id:'temple_ruin',name:'파멸의 신전',tag:'TEMPLE OF RUIN',biome:'temple',eventOnly:'temple_of_ruin',color:'#e8b45f',ground:'#352c40',roadColor:'#b79a73',desc:'붉은 균열과 금빛 제단이 공존하는 신전. 서로 이웃한 긴 통로가 광역·장거리 타워에 유리하다.',path:[[0,100],[1650,100],[1650,245],[190,245],[190,390],[1650,390],[1650,535],[190,535],[190,680],[1650,680],[1650,825],[190,825],[190,970],[1800,970]] },
@@ -205,6 +209,12 @@ const compileWaves=(script,pace,spacing,bonus)=>{
       spacing:Math.max(.27,spacing-i*.006),groups};
   });
 };
+// The opening wave stays identical; later waves gain a smooth shared ramp.
+export function regularWavePressure(wave,total){
+  const fraction=Math.max(0,Math.min(1,(wave-1)/Math.max(1,total-1)));
+  const weight=fraction*fraction*(3-2*fraction);
+  return {hp:1+.3*weight,speed:1+.06*weight};
+}
 export const DIFFICULTIES = [
   {id:'easy',name:'쉬움',color:'#9ac985',reward:180,startMoney:500,hp:1,waves:compileWaves(WAVE_SCRIPTS.easy,45,1.18,75)},
   {id:'normal',name:'기본',color:'#6bc4e3',reward:350,startMoney:850,hp:1.05,waves:compileWaves(WAVE_SCRIPTS.normal,48,1.0,95)},
