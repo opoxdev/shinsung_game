@@ -50,7 +50,7 @@ test('common and rare are modest, profession-specific characters rather than eli
   assert.equal(TOWERS.lullaby.name,'음향 조율사');
 });
 test('every common and rare default head is rounded or soft-square and outfits use game-like color accents',()=>{
-  const ids=Object.keys(TOWERS).filter(id=>['common','rare'].includes(TOWERS[id].rarity));
+  const ids=Object.keys(TOWERS).filter(id=>['common','rare'].includes(TOWERS[id].rarity)&&id!=='duskarcher'); // New Dusk Archer has its own custom hooded silhouette.
   assert.equal(ids.length,11);
   const seen=new Set();
   for(const id of ids){
