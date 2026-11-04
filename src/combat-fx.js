@@ -17,14 +17,16 @@ const COLORS={
  phoenix:['#ff667c','#ffe599','phoenix'],aurora:['#58ffe1','#f4fffd','aurora'],
  starseed:['#ffafd7','#fff0fc','star'],hunter:['#a0b7ff','#ffffff','sniper'],
  scrap:['#ffac74','#fff0cb','blast'],lullaby:['#adb9ff','#f0f4ff','sound'],
- papercrane:['#ffe0ad','#ffffff','origami'],marker:['#c995ff','#fff9ff','target']
+ papercrane:['#ffe0ad','#ffffff','origami'],marker:['#c995ff','#fff9ff','target'],
+ pulsekeeper:['#c78cff','#f9e9ff','pulse'],duskarcher:['#d8a8ff','#fff7ff','arrow'],
+ crystalspider:['#67ffe5','#ffffff','crystal']
 };
 const PROFILES=Object.freeze(Object.fromEntries(Object.entries(COLORS).map(([id,[primary,core,shape]])=>
  [id,Object.freeze({primary,core,shape})])));
 export const towerEffectProfile=type=>PROFILES[type]||Object.freeze({primary:'#aee4ff',core:'#fff',shape:'bolt'});
 export const EFFECT_TYPES=Object.freeze(Object.keys(PROFILES));
 export const isTowerAttackEffect=e=>!!e&&(
- ['ranged','melee','splash','chain','summon','mark','judgement','divine','arc','income','buff','charged'].includes(e.kind)
+ ['ranged','melee','splash','pulse','chain','summon','mark','judgement','divine','arc','income','buff','charged'].includes(e.kind)
  &&!!PROFILES[e.type]);
 const TAU=Math.PI*2;
 const clamp=n=>Math.max(0,Math.min(1,n));
@@ -248,6 +250,13 @@ function portal(g,e,age,profile,quality){
   diamond(g,0,-27,18*q+4,profile.core,false);
   line(g,-22,-21,0,-37,profile.core,2);
   line(g,22,-21,0,-37,profile.primary,2);
+ }else if(e.type==='crystalspider'){
+  for(let i=0;i<8;i++){
+   const a=TAU*i/8+age*3;
+   line(g,Math.cos(a)*15,Math.sin(a)*6,Math.cos(a)*43,Math.sin(a)*21,profile.primary,3*q+1);
+   diamond(g,Math.cos(a)*43,Math.sin(a)*21,3+2*q,profile.core);
+  }
+  diamond(g,0,-26,22*q+7,profile.core,false);
  }else if(e.type==='spirit'){
   circle(g,0,-26,13+9*p,'#bcfaff',false,2);
   for(let i=0;i<4;i++){
@@ -316,6 +325,12 @@ export function drawTowerAttackEffect(g,e,age,quality=1){
  else if(e.kind==='arc'||e.kind==='chain')beam(g,e,age,profile,q);
  else if(e.kind==='melee')slash(g,e,age,profile,q);
  else if(e.kind==='splash')explosion(g,e,age,profile,q);
+ else if(e.kind==='pulse'){
+  const p=clamp(age/.44),radius=42+Math.min(220,e.range||155)*p;
+  circle(g,e.x,e.y,radius,profile.primary,false,8*(1-p)+1.5);
+  circle(g,e.x,e.y,Math.max(1,radius-19),profile.core,false,2);
+  if(q>0)star(g,e.x,e.y,24+radius*.55,8,profile.core,2.5*(1-p)+1,p*3);
+ }
  else if(e.kind==='ranged')projectile(g,e,age,profile,q);
  else if(e.kind==='summon')portal(g,e,age,profile,q);
  else if(e.kind==='mark')reticle(g,e,age,profile,q);
