@@ -15,13 +15,13 @@ try {
  await page.goto('file://'+path.join(root,'dist/index.html'),{waitUntil:'domcontentloaded'});
  await page.locator('[data-action="start"]').waitFor({timeout:15000});
  // Browser-level coverage for content, challenge combinations and render startup.
- await page.locator('[data-action="nav"][data-id="towers"]').click();
+ await page.locator('.sidebar [data-action="nav"][data-id="towers"]').click();
  for(const id of ['pulsekeeper','duskarcher','crystalspider']){
   const card=page.locator('.tower-card[data-id="'+id+'"]');
   assert.equal(await card.count(),1,'new tower missing from collection: '+id);
   assert.equal(await card.locator('svg[data-base="'+id+'"]').count(),1,'new tower portrait missing: '+id);
  }
- await page.locator('[data-action="nav"][data-id="home"]').click();
+ await page.locator('.sidebar [data-action="nav"][data-id="home"]').click();
  for(const id of ['darkenergy','tank','rift']){
   await page.locator('[data-action="mode"][data-id="'+id+'"]').click();
   assert.ok(await page.locator('[data-action="mode"][data-id="'+id+'"]').evaluate(el=>el.classList.contains('selected')),'challenge mode did not remain selected: '+id);
