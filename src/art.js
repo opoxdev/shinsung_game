@@ -10,6 +10,49 @@ function evolvedPortrait(svg,id,level){
   const stage=evolutionAt(id,level);
   if(!stage)return svg;
   const rarity=TOWERS[id]?.rarity;
+  // These summons no longer use generic crowns/wings on level-up. Their
+  // model gains matching gear from each redesigned evolution.
+  const equipment={
+    spirit:[
+      '<path d="M11 99l-8-18 23-4m120 26 24-25 10 19" stroke="#86ffff" stroke-width="5" fill="none"/><circle cx="20" cy="89" r="6" fill="#d4ffff"/>',
+      '<path d="M32 15L12 4 5 21 24 37ZM143 15l26-11 8 17-20 17Z" fill="#224b68" stroke="#9affff" stroke-width="4"/><ellipse cx="23" cy="20" rx="20" ry="5" fill="none" stroke="#8bf9ff" stroke-width="3"/>',
+      '<path d="M150 120l26-8-1 10-25 5m-113 0-29-9 0-10 28 12" fill="#3a587b" stroke="#e8ffff" stroke-width="4"/><path d="M84 102h25m-25 7h25" stroke="#94ffff" stroke-width="4"/>',
+      '<path d="M36 86L17 125l31 4m97-40 25 37-31 6" fill="#29557e" stroke="#89eeff" stroke-width="4"/><path d="M84 9L95-6 105 9" fill="#9ff8ff" stroke="#eefeff" stroke-width="4"/>',
+      '<ellipse cx="94" cy="21" rx="78" ry="20" fill="none" stroke="#8afaff" stroke-width="6" opacity=".9"/><path d="M27 12l12-16 14 17m78-1 14-16 12 18" fill="none" stroke="#b9ffff" stroke-width="4"/>'
+    ],
+    phoenix:[
+      '<path d="M19 174q-29-19-5-41m137 42q34-24 8-43" fill="none" stroke="#ffd46d" stroke-width="6"/>',
+      '<circle cx="25" cy="44" r="11" fill="#fff5a9"/><circle cx="158" cy="44" r="11" fill="#fff5a9"/><path d="M9 44l16-18 15 19M143 46l16-19 15 17" stroke="#ffac63" stroke-width="3" fill="none"/>',
+      '<path d="M9 93Q-13 35 23 16l27 82M174 90Q199 35 166 15l-33 83" fill="#ff9762" stroke="#ffe6a0" stroke-width="5"/>',
+      '<ellipse cx="94" cy="8" rx="48" ry="16" fill="none" stroke="#ffc96a" stroke-width="7"/><path d="M73 13L82-10 96 6l15-16 9 24Z" fill="#ffe193" stroke="#df795e" stroke-width="4"/>',
+      '<path d="M32 35Q16-8 48-19L65 15M143 30Q165-12 137-21l-17 34" stroke="#ffe99a" stroke-width="8" fill="none"/><circle cx="94" cy="6" r="15" fill="#fff1aa" stroke="#ff8d55" stroke-width="5"/>'
+    ],
+    summoner:[
+      '<path d="M126 128l23-19 22 24-21 21Z" fill="#7fb37b" stroke="#e8f5bc" stroke-width="4"/>',
+      '<path d="M12 95l24-15 34 14-21 15Z" fill="#a6d993" stroke="#355d4c" stroke-width="4"/><path d="M148 88l23-13 14 25-29 13Z" fill="#a6d993" stroke="#355d4c" stroke-width="4"/>',
+      '<path d="M8 172V12l29 10v33L8 45Z" fill="#608664" stroke="#e9ebb1" stroke-width="4"/><circle cx="24" cy="26" r="9" fill="#f7f2c5"/>',
+      '<path d="M63 44L81 13 95 35l19-23 14 31Z" fill="#b4d88d" stroke="#4b6c5c" stroke-width="4"/><ellipse cx="95" cy="21" rx="59" ry="10" fill="none" stroke="#b2f5a6" stroke-width="4"/>'
+    ],
+    papercrane:[
+      '<path d="M3 83L28 48 38 99Z" fill="#fff6e4" stroke="#c4b0ae" stroke-width="3"/>',
+      '<path d="M6 31L45 12 57 48 26 66ZM150 25l25 20-13 28-32-18Z" fill="#fffbee" stroke="#a7b9c3" stroke-width="4"/>',
+      '<path d="M21 114L2 67 56 90 82 57 70 131Z" fill="#f5f9ff" stroke="#b5c9d9" stroke-width="3"/>',
+      '<ellipse cx="94" cy="45" rx="76" ry="28" fill="none" stroke="#fcf2da" stroke-width="4" stroke-dasharray="9 8"/><path d="M35 5l13 26-25-6m112-13-10 23 24-7" stroke="#fffef1" stroke-width="4" fill="none"/>'
+    ],
+    crystalspider:[
+      '<path d="M11 94L-1 79-7 115m175-19 18-14 7 36" fill="none" stroke="#78ffe1" stroke-width="7"/>',
+      '<path d="M63 8L93-19 126 8 103 28Z" fill="#c1fff6" stroke="#34778e" stroke-width="4"/>',
+      '<path d="M9 47L-8 23l-10 19m180 6 19-27 12 17" fill="none" stroke="#b0fff3" stroke-width="6"/><path d="M64 128L94 100 128 126 96 158Z" fill="#68ecd7" stroke="#d7fff9" stroke-width="5"/>',
+      '<ellipse cx="92" cy="48" rx="66" ry="36" fill="none" stroke="#77fdea" stroke-width="5"/><path d="M48 51L69 17l24 32 24-32 23 37" fill="none" stroke="#c1fff5" stroke-width="5"/>'
+    ]
+  };
+  if(Object.hasOwn(equipment,id)){
+    const parts=equipment[id];
+    let kit='<g data-upgrade="summon-rework" data-stage="'+level+'" stroke-linejoin="round" stroke-linecap="round">';
+    for(let i=0;i<Math.min(level,parts.length);i++)kit+=parts[i];
+    kit+='<text x="92" y="193" text-anchor="middle" font-size="9" font-weight="900" fill="#fff0b6">RANK '+level+'</text></g>';
+    return svg.replace('</svg>',kit+'</svg>');
+  }
   if(rarity==='common'||rarity==='rare'){
     // Profession upgrades, not generic helmets/crowns/ballistic suits:
     // these small changes are read as skill and equipment, not new heroes.
