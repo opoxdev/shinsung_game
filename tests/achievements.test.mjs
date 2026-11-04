@@ -58,6 +58,9 @@ test('real game commands track placements and upgrades only on successful action
   const place=command(s,'local',{kind:'place',type:'scout',x:250,y:440,seq:1});
   assert.equal(place.ok,true);
   assert.equal(command(s,'local',{kind:'place',type:'invalid',x:280,y:440}).ok,false);
+  // Post-rebalance, the 500 starting wallet cannot afford both placement
+  // and evolution immediately; simulate earned wave income first.
+  s.players.local.money+=TOWERS.scout.upgrades[0];
   const upgrade=command(s,'local',{kind:'upgrade',id:s.towers[0].id,seq:2});
   assert.equal(upgrade.ok,true);
   const metrics=achievementRun(s,'local');
