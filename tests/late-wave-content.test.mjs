@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {TOWERS,MODES,DIFFICULTIES,regularWavePressure,starterProfile} from '../src/data.js';
+import {TOWERS,MODES,DIFFICULTIES,regularWavePressure,WAVE_ESCALATION,starterProfile} from '../src/data.js';
 import {createMatch,command,tick,validateConfig,towerStats,modifiers} from '../src/engine.js';
 import {EVOLUTIONS} from '../src/evolutions.js';
 import {character} from '../src/art.js';
@@ -23,25 +23,25 @@ test('Dark Energy combines with every offered mode, up to the entire set',()=>{
  assert.throws(()=>validateConfig(conf({modes:[...ids,'invalid']})),/잘못된/);
 });
 
-test('every campaign retains its opening pressure but gains the same late-wave ramp',()=>{
+test('all campaigns retain their opening HP and escalate at tier-specific rates',()=>{
  const ids=new Set();
  for(const diff of DIFFICULTIES){
   ids.add(diff.id);
   const last=diff.waves.length;
-  assert.deepEqual(regularWavePressure(1,last),{hp:1,speed:1});
-  assert.ok(Math.abs(regularWavePressure(last,last).hp-1.3)<1e-12);
-  assert.ok(Math.abs(regularWavePressure(last,last).speed-1.06)<1e-12);
+  assert.deepEqual(regularWavePressure(1,last,diff.id),{hp:1,speed:1});
+  assert.ok(Math.abs(regularWavePressure(last,last,diff.id).hp-WAVE_ESCALATION[diff.id].hp)<1e-12);
+  assert.ok(Math.abs(regularWavePressure(last,last,diff.id).speed-WAVE_ESCALATION[diff.id].speed)<1e-12);
   for(let wave=2;wave<=last;wave++){
-   const earlier=regularWavePressure(wave-1,last);
-   const later=regularWavePressure(wave,last);
+   const earlier=regularWavePressure(wave-1,last,diff.id);
+   const later=regularWavePressure(wave,last,diff.id);
    assert.ok(later.hp>=earlier.hp&&later.speed>=earlier.speed);
   }
-  assert.ok(regularWavePressure(Math.ceil(last*.25),last).hp<1.06,'opening must remain accessible');
+  assert.ok(regularWavePressure(Math.ceil(last*.25),last,diff.id).hp<1+(WAVE_ESCALATION[diff.id].hp-1)*.17,'opening must remain accessible');
   const s=match({difficulty:diff.id});
   s.wave=last;s.queue=[{type:'zombie',field:0,at:0}];s.enemies=[];
   tick(s);
   assert.ok(s.enemies.length>0);
-  const expected=(18/6)*diff.hp*1.3;
+  const expected=(18/6)*diff.hp*WAVE_ESCALATION[diff.id].hp;
   assert.ok(Math.abs(s.enemies[0].maxHp-expected)<1e-8,diff.id+' late-wave HP');
  }
  assert.equal(ids.size,6);
