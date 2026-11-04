@@ -1,9 +1,9 @@
 import { WORLD, MAPS, TOWERS, ENEMIES, MODES, DIFFICULTIES, PACKS, SKIN_STYLES, CRATES, BOSS_ABILITIES, COMBAT_SCALE, EVENTS, campaignOf, regularWavePressure, starterProfile, skinCandidates, availableCrateStyles } from './data.js';
 import { evolutionAt } from './evolutions.js';
 export const STEP = .05;
-// Damage-based combat cash: 85% of the former full-kill bounty when the
-// original health bar is completely depleted. Earlier cash enables reinvestment.
-const DAMAGE_CASH_FACTOR = .85;
+// Damage earnings are reduced and tied to nominal enemy HP, not multiplied
+// by later waves' large health bars. Damage/overkill accounting stays intact.
+export const DAMAGE_CASH_FACTOR = .60;
 export function bounty(hp) {
   if (!Number.isFinite(hp) || hp <= 0) return 0;
   if (hp <= 10) return Math.max(1, Math.round(hp / 2));
@@ -98,10 +98,10 @@ export function requiredVotes(s) {const n=Object.keys(s.players).length;return n
 function event(s,e) {s.events.push({...e,id:s.nextId++,time:s.time});if(s.events.length>140)s.events.shift();}
 function spawn(s,type,field,source='wave') {
   const d=ENEMIES[type],mods=modifiers(s.config),diff=campaignOf(s.config);
-  const pressure=s.config.eventId||source==='pvp'?{hp:1,speed:1}:regularWavePressure(s.wave,diff.waves.length);
+  const pressure=s.config.eventId||source==='pvp'?{hp:1,speed:1}:regularWavePressure(s.wave,diff.waves.length,s.config.difficulty);
   const hp=d.hp*mods.hp*diff.hp*pressure.hp;
   const shield=(d.shield||0)*mods.hp*diff.hp*pressure.hp;
-  const unit={id:s.nextId++,type,field,hp,maxHp:hp,shield,maxShield:shield,
+  const unit={id:s.nextId++,type,field,hp,maxHp:hp,shield,maxShield:shield,rewardHpBase:hp/pressure.hp,
     progress:0,x:mapOf(s).path[0][0],y:mapOf(s).path[0][1],
     speed:d.speed*mods.speed*pressure.speed,source};
   s.enemies.push(unit);return unit;
@@ -190,7 +190,8 @@ function damage(s,e,n,t,ignoreArmor=false) {
     const eligible=Math.min(hpLoss,Math.max(0,maxPayable-(e.paidDamage||0)));
     if(eligible>0&&e.maxHp>0){
       e.paidDamage=(e.paidDamage||0)+eligible;
-      const rate=e.damageCashRate??(e.damageCashRate=bounty(e.maxHp*COMBAT_SCALE)*DAMAGE_CASH_FACTOR/e.maxHp);
+      const rate=e.damageCashRate??(e.damageCashRate=
+        bounty((e.rewardHpBase||e.maxHp)*COMBAT_SCALE)*DAMAGE_CASH_FACTOR/e.maxHp);
       const team=Object.values(s.players).filter(p=>p.field===e.field);
       const share=eligible*rate/(team.length||1);
       for(const p of team)p.money+=share;
