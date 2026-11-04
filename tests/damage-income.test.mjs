@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createMatch,tick,bounty} from '../src/engine.js';
+import {createMatch,tick,bounty,DAMAGE_CASH_FACTOR} from '../src/engine.js';
 import {COMBAT_SCALE,starterProfile} from '../src/data.js';
 
 const config=(over={})=>({map:'plains',difficulty:'easy',type:'solo',modes:[],...over});
@@ -25,14 +25,14 @@ test('partial hit earns immediate cash proportional to real HP lost',()=>{
  tick(s);
  const lost=10-s.enemies[0].hp;
  assert.ok(lost>0&&lost<10);
- near(s.players.a.money,.85*bounty(10*COMBAT_SCALE)*lost/10);
+ near(s.players.a.money,DAMAGE_CASH_FACTOR*bounty(10*COMBAT_SCALE)*lost/10);
  assert.equal(s.kills,0,'Enemy is not dead but money was earned');
 });
 
 test('a lethal overkill is rewarded for remaining HP only, with no extra kill cash',()=>{
  const s=make();s.enemies=[foe(101,.2,10)];scout(s);
  tick(s);
- near(s.players.a.money,.85*bounty(10*COMBAT_SCALE)*.2/10);
+ near(s.players.a.money,DAMAGE_CASH_FACTOR*bounty(10*COMBAT_SCALE)*.2/10);
  assert.equal(s.kills,1);
 });
 
@@ -54,7 +54,7 @@ test('dark redistribution adds payable health budget without multiplying the min
  // The extra one HP is real, but its damage income budget increases by .5 only.
  receiver.paidDamage=10;receiver.hp=1;receiver.progress=50;receiver.x=200;receiver.y=200;
  s.towers[0].cd=0;tick(s);
- near(s.players.a.money,.85*bounty(.5*COMBAT_SCALE)*(.2/.5)+.85*bounty(10*COMBAT_SCALE)*(.5/10));
+ near(s.players.a.money,DAMAGE_CASH_FACTOR*bounty(.5*COMBAT_SCALE)*(.2/.5)+DAMAGE_CASH_FACTOR*bounty(10*COMBAT_SCALE)*(.5/10));
 });
 
 test('PvP enemy damage pays only defenders in that field',()=>{
