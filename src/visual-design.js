@@ -660,7 +660,115 @@ function expansionPortrait(id,skin='default'){
  +scene+'</svg>';
 }
 
+
+// Summon-rework portraits: five separately authored silhouettes. Each one has
+// visible equipment tied to its actual new role, not a shared palette swap.
+function redesignedSummonPortrait(id,skin='default'){
+  if(!['spirit','phoenix','summoner','papercrane','crystalspider'].includes(id))return null;
+  const base=DESIGNS[id],costume=SCHEMES[skin];
+  const c=costume?{...base,...costume}:base;
+  const tint=c.trim,main=c.main,deep=c.dark,key='summon-'+id+'-'+skin;
+  const defs='<defs><linearGradient id="'+key+'-armor" x1="0" y1="0" x2="1" y2="1"><stop stop-color="'+main+'"/><stop offset=".5" stop-color="'+tint+'"/><stop offset="1" stop-color="'+deep+'"/></linearGradient><radialGradient id="'+key+'-glow"><stop stop-color="#ffffff"/><stop offset=".25" stop-color="'+tint+'"/><stop offset="1" stop-color="'+main+'" stop-opacity="0"/></radialGradient></defs>';
+  const armor='url(#'+key+'-armor)',glow='url(#'+key+'-glow)';
+  const foot='<ellipse cx="94" cy="198" rx="70" ry="9" fill="#111a32" opacity=".32"/>';
+  let figure='';
+  if(id==='spirit'){
+    // Legendary air-command operator, in a gunmetal carrier exosuit.
+    figure='<g stroke-linejoin="round" stroke-linecap="round">'
+      +'<path d="M42 73L19 97L22 149L55 142L63 111M130 71l27 28-4 50-33-6-8-37" fill="#26344e" stroke="'+tint+'" stroke-width="5"/>'
+      +'<path d="M71 141L54 193L84 196L95 156L111 195L141 191L125 136" fill="#25304c" stroke="'+deep+'" stroke-width="6"/>'
+      +'<path d="M63 69L127 68L139 116L123 153L62 153L47 117Z" fill="'+armor+'" stroke="'+deep+'" stroke-width="6"/>'
+      +'<path d="M76 84l19-12 22 13 9 37-32 20-33-20Z" fill="#1d3554" stroke="#a1faff" stroke-width="4"/>'
+      +'<path d="M69 53L76 26L113 22L126 50L118 85L80 86Z" fill="#2c3a5c" stroke="'+deep+'" stroke-width="5"/>'
+      +'<path d="M65 48Q92 30 129 47L122 65L76 67Z" fill="#1e2941" stroke="#76fffa" stroke-width="4"/>'
+      +'<path d="M76 59l43-2-6 17-31 0Z" fill="#80f9ff" stroke="#e2ffff" stroke-width="3"/>'
+      +'<path d="M85 66h24" stroke="#23477a" stroke-width="4"/><path d="M89 87L101 87L95 101Z" fill="#d1c5d9"/>'
+      +'<path d="M54 91L29 116L36 151L52 156L67 121M134 91L155 116L147 151L132 155L119 119" fill="'+armor+'" stroke="'+deep+'" stroke-width="4"/>'
+      +'<path d="M48 111L27 99l-9 9 14 15M140 110l22-11 8 11-17 16" fill="#294760" stroke="#a1ebff" stroke-width="4"/>'
+      +'<rect x="39" y="121" width="31" height="22" rx="6" fill="#1d2b48" stroke="#a9ecff" stroke-width="4"/>'
+      +'<circle cx="48" cy="132" r="5" fill="#72ffff"/><path d="M58 125v14m-7-7h15" stroke="#b5fff7" stroke-width="2.5"/>'
+      +'<path d="M140 80l22-39m-5 8 17-18" stroke="#e6faff" stroke-width="5"/><circle cx="174" cy="32" r="8" fill="#75e8ff"/>'
+      +'<path d="M20 48l-10-22 27 6 14 21ZM139 48l12-23 25 7-14 21Z" fill="#293d5b" stroke="#72f9ff" stroke-width="4"/>'
+      +'<circle cx="28" cy="31" r="13" fill="'+glow+'"/><circle cx="161" cy="30" r="13" fill="'+glow+'"/>'
+      +'<ellipse cx="28" cy="31" rx="23" ry="5" fill="none" stroke="#bdffff" stroke-width="4"/>'
+      +'<ellipse cx="161" cy="30" rx="23" ry="5" fill="none" stroke="#bdffff" stroke-width="4"/>'
+      +'</g>';
+  }else if(id==='phoenix'){
+    // A ritual reincarnation mage with real firebird mantle and sun furnace.
+    figure='<g stroke-linejoin="round" stroke-linecap="round">'
+      +'<path d="M57 98Q20 48 13 9Q51 24 70 71Q75 25 83 6Q102 31 106 66Q134 19 172 7Q161 68 129 106" fill="#d45166" stroke="#ffb07a" stroke-width="6"/>'
+      +'<path d="M62 100Q-4 102 17 163L51 132L41 177L75 151M116 100q67-4 59 60l-39-30 7 48-35-29" fill="#8b3454" stroke="#ffca7d" stroke-width="6"/>'
+      +'<path d="M61 121L43 195L74 199L94 169L121 200L148 195L126 118Z" fill="#582c53" stroke="#f99b65" stroke-width="5"/>'
+      +'<path d="M64 73Q95 52 128 76L134 136L109 156L72 147L56 124Z" fill="'+armor+'" stroke="'+deep+'" stroke-width="6"/>'
+      +'<path d="M75 104L95 88L116 106L108 135L80 135Z" fill="#ffcc79" stroke="#ffebbd" stroke-width="4"/>'
+      +'<path d="M75 62L76 43Q89 23 112 36L121 64L114 87L84 88Z" fill="#d4a69d" stroke="#7d3854" stroke-width="4"/>'
+      +'<path d="M72 50Q55 31 77 13L89 29Q104 -1 125 20L115 40L125 58L106 48L90 62Z" fill="#ff975c" stroke="#ffdf87" stroke-width="4"/>'
+      +'<path d="M83 67l10-2m11-2 10 2" stroke="#763852" stroke-width="4"/>'
+      +'<path d="M56 98L33 123L26 152L48 160L74 119M136 99l22 24 9 29-24 8-28-38" fill="#db9c91" stroke="#8d4651" stroke-width="5"/>'
+      +'<path d="M22 156Q12 133 30 113Q25 138 46 148M151 151q34-17 10-43 5 23-22 33" fill="#ffd36b" stroke="#f37a5e" stroke-width="4"/>'
+      +'<circle cx="97" cy="116" r="17" fill="'+glow+'"/><circle cx="97" cy="116" r="7" fill="#fff4bd"/>'
+      +'<path d="M82 27Q93 2 106 26M40 56Q14 28 29 18M150 62q31-36 13-47" fill="none" stroke="#ffe99a" stroke-width="5"/>'
+      +'</g>';
+  }else if(id==='summoner'){
+    // Expeditionary goblin marshal and shield maker.
+    figure='<g stroke-linejoin="round" stroke-linecap="round">'
+      +'<path d="M62 116Q34 129 28 194L73 191L95 159L115 193L151 196Q143 139 124 114Z" fill="#365744" stroke="#adc58b" stroke-width="5"/>'
+      +'<path d="M71 150L62 197L86 198L95 165M108 164L117 198L139 198L128 151" fill="#314743" stroke="#263b38" stroke-width="5"/>'
+      +'<path d="M67 76L119 74L136 114L122 153L68 152L51 113Z" fill="'+armor+'" stroke="'+deep+'" stroke-width="5"/>'
+      +'<path d="M75 97L97 87L116 104L109 134L83 135Z" fill="#49674c" stroke="#d9e5a5" stroke-width="3"/>'
+      +'<path d="M64 67Q58 31 86 25Q113 16 130 51L122 89L74 90Z" fill="#497c62" stroke="#293f42" stroke-width="5"/>'
+      +'<path d="M62 56L41 37L51 72L72 77M123 52l22-22-4 42-19 8" fill="#9eda8e" stroke="#476454" stroke-width="4"/>'
+      +'<path d="M75 62l12-3m22-3 11 4" stroke="#eaffad" stroke-width="5"/>'
+      +'<path d="M79 80Q97 88 110 79" fill="none" stroke="#2d493e" stroke-width="4"/>'
+      +'<path d="M59 96L31 121L28 159L52 163L76 122M128 94l27 25 8 39-24 6-28-41" fill="#72a57d" stroke="#3a5f54" stroke-width="4"/>'
+      +'<path d="M19 190V26" stroke="#cfb782" stroke-width="9"/><path d="M19 28l24-17 8 27-30 18Z" fill="#cee8a6" stroke="#5f856c" stroke-width="5"/>'
+      +'<path d="M26 73L67 86L27 105Z" fill="#87b884" stroke="#f4f2bd" stroke-width="3"/>'
+      +'<path d="M123 119L160 114L168 145L141 158L114 144Z" fill="#4a7e6b" stroke="#e2f4aa" stroke-width="4"/>'
+      +'<path d="M131 129L150 124L157 138L143 144Z" fill="#d7ed9e"/><circle cx="20" cy="21" r="10" fill="'+glow+'"/>'
+      +'</g>';
+  }else if(id==='papercrane'){
+    // Fine-lined origami architect, surrounded by distinct paper birds.
+    figure='<g stroke-linejoin="round" stroke-linecap="round">'
+      +'<path d="M45 124L21 192L67 199L94 163L123 199L159 194L135 121Z" fill="#f5e5c9" stroke="#8d7a84" stroke-width="5"/>'
+      +'<path d="M65 137L52 195L82 198L93 167M108 169l17 28 30-5-21-51" fill="#cfb3ad" stroke="#8d7883" stroke-width="4"/>'
+      +'<path d="M64 76Q99 54 129 80L138 132L118 158L70 156L49 130Z" fill="'+armor+'" stroke="'+deep+'" stroke-width="5"/>'
+      +'<path d="M63 96L119 90L128 123L98 150L65 130Z" fill="#f9f4dc" stroke="#baa397" stroke-width="4"/>'
+      +'<path d="M73 63Q74 32 94 23L117 36L119 70L107 88L81 82Z" fill="#e1bdad" stroke="#8b7e84" stroke-width="4"/>'
+      +'<path d="M63 58Q72 27 101 15Q127 25 131 52L121 63L95 50L73 79Z" fill="#e9ece7" stroke="#ae9e9f" stroke-width="4"/>'
+      +'<path d="M83 66l8-2m13-3 10 2" stroke="#51435f" stroke-width="3"/>'
+      +'<path d="M53 99L31 124L27 161L53 169L78 130M126 96l25 28 9 34-26 8-29-34" fill="#e1bca9" stroke="#9c7e84" stroke-width="4"/>'
+      +'<path d="M35 94L5 40L64 68L83 37L70 113Z" fill="#fffef1" stroke="#baaaad" stroke-width="4"/>'
+      +'<path d="M120 73L163 26L165 86L138 124Z" fill="#faf2d7" stroke="#baaaad" stroke-width="4"/>'
+      +'<path d="M7 42L62 70M163 27L145 84" stroke="#c8b3bf" stroke-width="2"/>'
+      +'<path d="M58 145L95 127L118 146L97 160Z" fill="#fff8e0" stroke="#c9b4b2" stroke-width="4"/>'
+      +'<path d="M91 91L102 96L98 116L90 122L84 104Z" fill="#c5a7ad"/>'
+      +'<circle cx="20" cy="50" r="4" fill="#f4dfcb"/><circle cx="155" cy="38" r="4" fill="#f4dfcb"/>'
+      +'</g>';
+  }else if(id==='crystalspider'){
+    // Living armored spider foundry with a queen-like geode helm.
+    figure='<g stroke-linejoin="round" stroke-linecap="round">'
+      +'<path d="M52 72L13 45L10 92L59 118M127 72l40-28 10 53-46 21M54 118L14 143L11 177L58 160M128 117l43 27 5 31-48-19" fill="none" stroke="#6bfae2" stroke-width="10"/>'
+      +'<path d="M52 73L13 45L10 92L59 118M127 72l40-28 10 53-46 21M54 118L14 143L11 177L58 160M128 117l43 27 5 31-48-19" fill="none" stroke="#2d5268" stroke-width="4"/>'
+      +'<path d="M69 150L56 195L87 198L96 169L113 199L145 196L127 144Z" fill="#1d3e61" stroke="#60bcbf" stroke-width="5"/>'
+      +'<path d="M59 73Q93 51 128 72L136 137L114 157L68 156L47 130Z" fill="'+armor+'" stroke="#31516a" stroke-width="5"/>'
+      +'<path d="M73 96L94 83L116 98L108 132L88 145L68 128Z" fill="#74fbe7" stroke="#dcfff4" stroke-width="4"/>'
+      +'<path d="M65 64L70 32L92 10L115 28L126 62L113 84L74 83Z" fill="#30607b" stroke="#b7ffed" stroke-width="5"/>'
+      +'<path d="M72 37L91 10L115 28L107 52L80 52Z" fill="#a9ffed" stroke="#eefff9" stroke-width="3"/>'
+      +'<path d="M77 66l12 5m13-5 11 5" stroke="#eafffb" stroke-width="4"/>'
+      +'<path d="M53 99L35 121L26 155L50 163L74 130M130 97l20 27 8 31-24 7-25-32" fill="#80a6a8" stroke="#497d87" stroke-width="5"/>'
+      +'<path d="M67 112L93 97L121 116L94 143Z" fill="#c0fff6" stroke="#378f99" stroke-width="3"/>'
+      +'<circle cx="94" cy="117" r="7" fill="#ffffff"/><circle cx="94" cy="117" r="3" fill="#59dbcb"/>'
+      +'<path d="M63 29l-15-17m67 17 18-17" stroke="#d4fff4" stroke-width="5"/>'
+      +'</g>';
+  }
+  const tier=skin!=='default'?'costume':BASE_ART_TIERS[TOWERS[id]?.rarity||'rare'];
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 210" aria-label="'+id+' '+skin+'" data-design="v2" data-art-tier="'+tier+'" data-base="'+id+'" data-costume="'+skin+'" data-summon-model="rework">'
+    +defs+foot+figure+'</svg>';
+}
+
 export function redesignedPortrait(id,skin='default'){
+  const summonArtwork=redesignedSummonPortrait(id,skin);
+  if(summonArtwork)return summonArtwork;
   const expansion=expansionPortrait(id,skin);
   if(expansion)return expansion;
   if(id==='voidwalker')return voidWalkerPortrait();
