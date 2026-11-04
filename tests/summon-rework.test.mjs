@@ -151,6 +151,32 @@ test('summoned battalions stay deterministic after JSON snapshot restoration',()
  assert.deepEqual(a,b);
 });
 
+test('long Temple event lanes keep squads alive long enough to reach the enemy portal',()=>{
+ const s=createMatch({type:'solo',map:'temple_ruin',difficulty:'normal',eventId:'temple_of_ruin',modes:[]},
+  [{id:'a',profile:starterProfile()}]);
+ s.queue=[];s.enemies=[];enemy(s,280,500000,'temple_guardian');const t=tower(s,'summoner');
+ tick(s);
+ const soldier=s.units.find(u=>u.from===t.id),path=MAPS.find(m=>m.id==='temple_ruin').path;
+ assert.ok(soldier,'the raid needs a goblin march');
+ assert.ok(soldier.life>=routeLength(path)/soldier.speed,'a spawn must not time out before reaching the front');
+ assert.ok(soldier.life<=48,'endurance must remain bounded for networking');
+});
+
+test('PvP soldiers only attack monsters in their own defended field',()=>{
+ const s=createMatch({type:'pvp',map:'plains',difficulty:'easy',modes:[]},
+  [{id:'a',profile:starterProfile()},{id:'b',profile:starterProfile()}]);
+ s.queue=[];s.enemies=[];s.players.b.money=1000000;
+ const defender=enemy(s,300,6000),opponent=enemy(s,300,6000);
+ defender.field=1;opponent.field=0;
+ const t=tower(s,'papercrane');t.field=1;t.owner='b';
+ tick(s);
+ const allied=s.units.filter(u=>u.from===t.id);
+ assert.ok(allied.length>0&&allied.every(u=>u.field===1));
+ const hpBefore=opponent.hp;
+ run(s,70);
+ assert.equal(opponent.hp,hpBefore,'opposite field enemies are not targets for allies');
+});
+
 test('selling a tower removes its active summons and respects per-tower active cap',()=>{
  const s=match();enemy(s,300,1000000);
  const t=tower(s,'spirit');tick(s);
