@@ -35,8 +35,9 @@ test('four novel, unlocked maps have named biomes and unique, playable roads',()
    assert.ok(Math.hypot(x-X,y-Y)>100,id+' no degenerate path segments');
   }
   const entry=map.path[0],exit=map.path.at(-1);
-  assert.ok(entry.some((v,i)=>v===(i?WORLD.height:0)||v===(i?WORLD.height:WORLD.width)),'start on world boundary: '+id);
-  assert.ok(exit.some((v,i)=>v===(i?WORLD.height:0)||v===(i?WORLD.height:WORLD.width)),'exit on world boundary: '+id);
+  const onBoundary=([x,y])=>x===0||x===WORLD.width||y===0||y===WORLD.height;
+  assert.ok(onBoundary(entry),'start on world boundary: '+id);
+  assert.ok(onBoundary(exit),'exit on world boundary: '+id);
   assert.ok(routeLength(map.path)>1850&&routeLength(map.path)<5800,id);
   assert.equal(pointOnPath(map.path,routeLength(map.path)+100).end,true);
   roads.add(JSON.stringify(map.path));
