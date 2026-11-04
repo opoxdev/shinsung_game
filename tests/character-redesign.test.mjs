@@ -28,7 +28,7 @@ test('common and rare are modest, profession-specific characters rather than eli
   const baseline={
     scout:'새총잡이',archer:'궁수',chef:'투척병',scrap:'포수',
     soldier:'전기공',blade:'검객',chemist:'약제사',icewitch:'서리 견습생',
-    spirit:'드론 조작원',hunter:'사냥꾼',marker:'관측원'
+    hunter:'사냥꾼',marker:'관측원'
   };
   for(const [id,name] of Object.entries(baseline)){
     assert.equal(TOWERS[id].name,name,id);
@@ -51,7 +51,7 @@ test('common and rare are modest, profession-specific characters rather than eli
 });
 test('every common and rare default head is rounded or soft-square and outfits use game-like color accents',()=>{
   const ids=Object.keys(TOWERS).filter(id=>['common','rare'].includes(TOWERS[id].rarity)&&id!=='duskarcher'); // New Dusk Archer has its own custom hooded silhouette.
-  assert.equal(ids.length,11);
+  assert.equal(ids.length,10);
   const seen=new Set();
   for(const id of ids){
     const style=CHARACTER_DESIGNS[id];
