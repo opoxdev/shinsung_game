@@ -22,6 +22,17 @@ try {
   assert.equal(await card.locator('svg[data-base="'+id+'"]').count(),1,'new tower portrait missing: '+id);
  }
  await page.locator('.sidebar [data-action="nav"][data-id="home"]').click();
+ // Every new map must be selectable through the actual scrolling map rail.
+ for(const id of ['sakura','moonlake','stardune','skyisles']){
+  await page.locator('.map-pick[data-id="'+id+'"]').click();
+  assert.equal(await page.locator('.map-stage.biome-'+id).count(),1,'map is not selected: '+id);
+  assert.equal(await page.locator('.world-art svg[data-biome-art="'+id+'"]').count(),1,'bespoke SVG did not load: '+id);
+ }
+ // The live map preview also exercises full Canvas terrain baking.
+ await page.locator('[data-action="mapPreview"]').click();
+ await page.locator('canvas.terrain-preview').waitFor({timeout:15000});
+ await page.waitForTimeout(200);
+ await page.locator('.modal [data-action="close"]').click();
  for(const id of ['darkenergy','tank','rift']){
   await page.locator('[data-action="mode"][data-id="'+id+'"]').click();
   assert.ok(await page.locator('[data-action="mode"][data-id="'+id+'"]').evaluate(el=>el.classList.contains('selected')),'challenge mode did not remain selected: '+id);
