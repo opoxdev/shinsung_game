@@ -67,6 +67,22 @@ export const TOWERS = {
 // Evolution costs are authoritative and belong to each installed tower instance.
 for(const [id,def] of Object.entries(TOWERS)) {
   if(!EVOLUTIONS[id])throw Error('타워 진화 데이터 누락: '+id);
+  // v0.13 economy rebalance: ALL battlefield deployments become meaningful
+  // investments. Scale by base tactical price, not collectible rarity; low-cost
+  // mythics remain cheap relative to expensive ordinary late-game specialists.
+  const originalCost=def.cost;
+  const installScale=originalCost<=220?1.35:originalCost<=500?1.55:
+    originalCost<=1000?1.72:1.85;
+  const economyPremium=def.kind==='income'?1.14:1;
+  def.cost=Math.ceil(originalCost*installScale*economyPremium/10)*10;
+  // Price is per placed tower and per level, so repeated max-level builds
+  // must cost substantially more than simply deploying more level-0 copies.
+  // Stage 1 ~1.7x, final stage ~2.8x. Preserve curated stage ordering/traits.
+  EVOLUTIONS[id].forEach((stage,index)=>{
+    const highEndPremium=originalCost>=1500?.16:originalCost>=750?.08:0;
+    const scale=1.68+index*.27+highEndPremium;
+    stage.cost=Math.ceil(stage.cost*scale/10)*10;
+  });
   def.upgrades=EVOLUTIONS[id].map(step=>step.cost);
   // v0.12: buff tower output, not enemy HP or campaign composition.
   const attackBuff=id==='oldgod'?.88:def.kind==='melee'?1.45:1.35;
@@ -213,11 +229,23 @@ const compileWaves=(script,pace,spacing,bonus)=>{
       spacing:Math.max(.27,spacing-i*.006),groups};
   });
 };
-// The opening wave stays identical; later waves gain a smooth shared ramp.
-export function regularWavePressure(wave,total){
+// Difficulty-aware sustained escalation. A smooth power curve raises pressure
+// continuously instead of a sudden final-boss spike. Early waves keep their
+// authored HP; Extreme+ progresses sharply faster than tower purchasing power.
+// The six profiles deliberately share the same fraction/curve but not magnitude.
+export const WAVE_ESCALATION=Object.freeze({
+  easy:   Object.freeze({hp:1.65,speed:1.08}),
+  normal: Object.freeze({hp:2.15,speed:1.11}),
+  hard:   Object.freeze({hp:3.05,speed:1.15}),
+  extreme:Object.freeze({hp:5.15,speed:1.19}),
+  hell:   Object.freeze({hp:7.15,speed:1.23}),
+  ruin:   Object.freeze({hp:9.00,speed:1.27})
+});
+export function regularWavePressure(wave,total,difficulty='normal'){
   const fraction=Math.max(0,Math.min(1,(wave-1)/Math.max(1,total-1)));
-  const weight=fraction*fraction*(3-2*fraction);
-  return {hp:1+.3*weight,speed:1+.06*weight};
+  const weight=fraction**1.42; // ~37% of full escalation by the midpoint
+  const target=WAVE_ESCALATION[difficulty]||WAVE_ESCALATION.normal;
+  return {hp:1+(target.hp-1)*weight,speed:1+(target.speed-1)*weight};
 }
 export const DIFFICULTIES = [
   {id:'easy',name:'쉬움',color:'#9ac985',reward:180,startMoney:500,hp:1,waves:compileWaves(WAVE_SCRIPTS.easy,45,1.18,75)},
