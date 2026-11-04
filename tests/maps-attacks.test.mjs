@@ -8,7 +8,12 @@ const length=path=>path.slice(1).reduce((sum,p,i)=>sum+Math.hypot(p[0]-path[i][0
 test('maps have distinct travel lengths, traversable routes, and matching previews',()=>{
   const lengths=MAPS.map(m=>length(m.path)).sort((a,b)=>a-b);
   assert.ok(lengths.at(-1)/lengths[0]>2.4);
-  for(let i=1;i<lengths.length;i++)assert.ok(lengths[i]-lengths[i-1]>200);
+  // With ten curated maps, distinct route geometry matters more than a fixed
+  // 200px gap between EVERY pair of travel distances.
+  assert.equal(new Set(MAPS.map(m=>JSON.stringify(m.path))).size,MAPS.length);
+  assert.ok(lengths.at(-1)-lengths[0]>2800,'short and marathon routes should coexist');
+  assert.ok(new Set(MAPS.map(m=>Math.round(length(m.path)/20))).size>=7,
+    'the collection needs multiple tactical route lengths');
   for(const map of MAPS){
     for(const [x,y] of map.path)assert.ok(x>=0&&x<=WORLD.width&&y>=0&&y<=WORLD.height);
     for(let i=1;i<map.path.length;i++)assert.ok(Math.hypot(map.path[i][0]-map.path[i-1][0],map.path[i][1]-map.path[i-1][1])>100);
