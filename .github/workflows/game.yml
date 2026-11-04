@@ -87,8 +87,16 @@ jobs:
           if [ -f scripts/runtime-start-smoke.mjs ]; then
             npm install --no-save --ignore-scripts playwright
             npx playwright install --with-deps chromium
-            node scripts/runtime-start-smoke.mjs
+            CAPTURE_MAP_SCREENSHOTS=1 node scripts/runtime-start-smoke.mjs
           fi
+      - name: Upload real Chromium screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shinsung-new-map-screenshots
+          path: screenshots/*.png
+          if-no-files-found: ignore
+          retention-days: 7
 
   pages:
     name: Optional GitHub Pages preview (not the official GAS host)
