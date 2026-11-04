@@ -5,8 +5,12 @@ import assert from 'node:assert/strict';
 import {chromium} from 'playwright';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
+import {mkdirSync} from 'node:fs';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+const capture=process.env.CAPTURE_MAP_SCREENSHOTS==='1';
+const shotsDir=path.join(root,'screenshots');
+if(capture)mkdirSync(shotsDir,{recursive:true});
 const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
 try {
  const page=await browser.newPage({viewport:{width:1280,height:800},deviceScaleFactor:1});
@@ -27,11 +31,16 @@ try {
   await page.locator('.map-pick[data-id="'+id+'"]').click();
   assert.equal(await page.locator('.map-stage.biome-'+id).count(),1,'map is not selected: '+id);
   assert.equal(await page.locator('.world-art svg[data-biome-art="'+id+'"]').count(),1,'bespoke SVG did not load: '+id);
+  if(capture){
+   await page.locator('.world-art svg[data-biome-art="'+id+'"]').waitFor();
+   await page.screenshot({path:path.join(shotsDir,id+'-selection.png'),animations:'disabled'});
+  }
  }
  // The live map preview also exercises full Canvas terrain baking.
  await page.locator('[data-action="mapPreview"]').click();
  await page.locator('canvas.terrain-preview').waitFor({timeout:15000});
  await page.waitForTimeout(200);
+ if(capture)await page.screenshot({path:path.join(shotsDir,'skyisles-terrain-preview.png'),animations:'disabled'});
  await page.locator('.modal [data-action="close"]').click();
  for(const id of ['darkenergy','tank','rift']){
   await page.locator('[data-action="mode"][data-id="'+id+'"]').click();
@@ -45,6 +54,7 @@ try {
    const label=document.querySelector('#wave-clock')?.textContent||'';
    return Number(label.match(/적\s+(\d+)/)?.[1]||0)>0;
  },null,{timeout:15000});
+ if(capture)await page.screenshot({path:path.join(shotsDir,'skyisles-battle.png'),animations:'disabled'});
  const first=await page.locator('#wave-clock').textContent();
  const progress=await page.locator('#wave-progress-fill').evaluate(el=>getComputedStyle(el).transform);
  assert.notEqual(progress,'none','wave progress element must be rendered');
