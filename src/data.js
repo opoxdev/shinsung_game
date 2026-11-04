@@ -31,7 +31,7 @@ export const TOWERS = {
   soldier: { name:'전기공', role: '전기 · 연사', rarity: 'rare', cost: 260, price: 750, color: '#62e7f4', damage: 9, interval: .35, range: 195, kind: 'ranged', cap: 18, upgrades: [350,700,1500], desc:'공구 벨트와 작은 전지팩을 갖춘 전기 수리공. 저렴한 코일 충격기로 빠르게 공격한다.' },
   blade: { name:'검객', role: '근접 · 관통', rarity: 'rare', cost: 230, price: 0, color: '#ff6a92', damage: 25, interval: .9, range: 100, kind: 'melee', cap: 18, upgrades: [260,600,1200], desc:'무명 도복과 연습용 칼집을 가진 떠돌이 검객. 화려한 가면은 특별 스킨의 몫이다.' },
   cannon: { name:'폭파 전문가', role: '폭발 · 광역', rarity: 'epic', cost: 450, price: 1800, color: '#ff9b54', damage: 35, interval: 2, range: 235, splash: 85, kind: 'splash', cap: 14, upgrades: [480,1000,2200], desc:'유탄 발사기와 탄약 배낭을 장착한 폭발물 전문가. 광역 폭발로 적 진형을 무너뜨린다.' },
-  summoner: { name:'고블린 소환사',role:'역진군 · 방패 보병',rarity:'epic',cost:570,price:2200,color:'#a4e68b',damage:65,interval:3.65,range:260,kind:'summon',summons:1,summonStyle:'lane',summonHp:150,unitSpeed:620,unitLife:19,unitAttackInterval:.9,unitAttackRange:70,cap:12,upgrades:[],desc:'아군 기지에서 무장 고블린이 출진해 적 소환 지점으로 진군한다. 적을 만나면 교전하고, 남은 병력 체력으로 충돌 피해를 버틴다.' },
+  summoner: { name:'고블린 소환사',role:'역진군 · 방패 보병',rarity:'epic',cost:570,price:2200,color:'#a4e68b',damage:65,interval:3.65,range:260,kind:'summon',summons:1,summonStyle:'lane',summonHp:150,unitSpeed:115,unitLife:42,unitAttackInterval:.9,unitAttackRange:70,cap:12,upgrades:[],desc:'아군 기지에서 무장 고블린이 출진해 적 소환 지점으로 진군한다. 적을 만나면 교전하고, 남은 병력 체력으로 충돌 피해를 버틴다.' },
   workshop: { name: '버섯 정원', role: '지원 · 버프', rarity: 'epic', cost: 610, price: 1500, color: '#ff88a8', damage: 0, interval: 1, range: 210, kind: 'buff', power:.2, cap: 9, upgrades: [450,900,1800], desc: '빛나는 포자로 아군 공격력을 24% 강화하는 작은 버섯집. 여러 정원의 효과는 중첩되지 않는다.' },
   rail: { name: '별술사', role: '별빛 · 장거리', rarity: 'legendary', cost: 850, price: 5000, color: '#a6d8ff', damage: 170, interval: 2.8, range: 420, kind: 'ranged', cap: 3, upgrades: [1300,2600,5200], desc: '커다란 모자 아래 반짝이는 두 눈. 멀리 있는 적에게 장갑을 꿰뚫는 별빛을 떨어뜨린다.', pierce: true },
   oldgod: { name:'고대의 신',role:'신벌 · 종말의 심판',rarity:'mythic',cost:8500,price:null,color:'#ffd45d',damage:1950,interval:3.5,range:560,splash:170,kind:'judgement',pierce:true,bossBonus:2.2,cap:1,upgrades:[10500,19500,33000],desc:'파멸의 신전 30웨이브 최초 클리어 보상. 후광을 두른 거대한 백색 신체와 황금의 팔, 붉은 오염된 육체가 공명한다. 신벌의 빛으로 광역을 초토화하며 보스에게 추가 피해를 준다.' },
@@ -58,10 +58,10 @@ export const TOWERS = {
   hunter: {name:'사냥꾼',role:'후반 · 보스 저격',rarity:'rare',cost:2200,price:1300,color:'#84a5ff',damage:620,interval:4.5,range:440,kind:'ranged',pierce:true,chargeEvery:3,chargeBonus:2.2,cap:12,upgrades:[],desc:'낡은 긴 총과 튼튼한 외투를 갖춘 산지 사냥꾼. 고가의 후반 타워지만 외형은 소박하다.'},
   scrap: {name:'포수',role:'후반 · 중장갑 폭격',rarity:'common',cost:1450,price:550,color:'#9fb9ae',damage:150,interval:2.4,range:220,splash:74,kind:'splash',cap:14,upgrades:[],desc:'커다란 낡은 포를 직접 끌고 다니는 포수. 비싼 후반형이지만 영웅처럼 장식되지는 않는다.'},
   lullaby: {name:'음향 조율사',role:'초반 · 공격속도 지원',rarity:'epic',cost:195,price:1100,color:'#a1b8ff',damage:0,interval:1,range:145,kind:'buff',haste:.1,cap:10,upgrades:[],desc:'진동 장치를 운용하는 조율사. 기계식 스피커와 공명판으로 주변 타워를 가속한다.'},
-  papercrane: {name:'종이학 조련사',role:'역진군 · 종이학 전령',rarity:'legendary',cost:320,price:4900,color:'#ffdaaf',damage:25,interval:2.6,range:220,kind:'summon',summonStyle:'lane',summons:1,summonHp:110,unitSpeed:790,unitLife:16,unitAttackInterval:.75,unitAttackRange:100,cap:14,upgrades:[],desc:'아군 기지에서 접힌 전령이 날아올라 길을 역주행한다. 적에게 종이 날개를 날리고 충돌 시 서로의 체력만큼 생존이 결정된다.'},
+  papercrane: {name:'종이학 조련사',role:'역진군 · 종이학 전령',rarity:'legendary',cost:320,price:4900,color:'#ffdaaf',damage:25,interval:2.6,range:220,kind:'summon',summonStyle:'lane',summons:1,summonHp:110,unitSpeed:150,unitLife:38,unitAttackInterval:.75,unitAttackRange:100,cap:14,upgrades:[],desc:'아군 기지에서 접힌 전령이 날아올라 길을 역주행한다. 적에게 종이 날개를 날리고 충돌 시 서로의 체력만큼 생존이 결정된다.'},
   pulsekeeper:{name:'공명 북술사',role:'중반 · 전방위 충격파',rarity:'epic',cost:750,price:2600,color:'#d49aff',damage:31,interval:2.3,range:145,kind:'pulse',slow:.83,slowTime:1.15,cap:10,upgrades:[],desc:'묵직한 공명의 북을 두드려 주변 모든 적을 동시에 타격한다. 근처 적이 많을수록 효율이 좋지만 사거리는 짧다.'},
   duskarcher:{name:'황혼 사수',role:'중후반 · 관통·출혈',rarity:'rare',cost:940,price:1300,color:'#d19eff',damage:108,interval:1.75,range:325,kind:'ranged',pierce:true,dot:16,dotTime:2.5,cap:12,upgrades:[],desc:'어두운 숲을 지키는 달빛 사수. 장갑을 무시하는 은빛 화살과 지속 피해를 사용한다.'},
-  crystalspider:{name:'수정 거미술사',role:'역진군 · 수정 거미 부대',rarity:'legendary',cost:1650,price:6700,color:'#84f8f2',damage:96,interval:3.5,range:285,kind:'summon',summonStyle:'lane',summons:2,summonHp:340,unitSpeed:700,unitLife:19,unitAttackInterval:.85,unitAttackRange:120,slow:.78,slowTime:1.4,cap:6,upgrades:[],desc:'아군 기지의 수정 고치에서 거미 전사가 태어나 역진군한다. 결정 바늘로 적을 감속시키고 충돌 후 남은 체력만큼 전진한다.'},
+  crystalspider:{name:'수정 거미술사',role:'역진군 · 수정 거미 부대',rarity:'legendary',cost:1650,price:6700,color:'#84f8f2',damage:96,interval:3.5,range:285,kind:'summon',summonStyle:'lane',summons:2,summonHp:340,unitSpeed:105,unitLife:44,unitAttackInterval:.85,unitAttackRange:120,slow:.78,slowTime:1.4,cap:6,upgrades:[],desc:'아군 기지의 수정 고치에서 거미 전사가 태어나 역진군한다. 결정 바늘로 적을 감속시키고 충돌 후 남은 체력만큼 전진한다.'},
   marker: {name:'관측원',role:'중후반 · 표식 지원',rarity:'rare',cost:680,price:1700,color:'#c7a4f2',damage:20,interval:1.75,range:260,kind:'mark',markAmp:1.22,markTime:3.5,cap:14,upgrades:[],desc:'망원경과 표식 깃발을 지닌 평범한 관측원. 적의 약점을 찾아 아군 집중 공격을 돕는다.'},
 };
 // Evolution costs are authoritative and belong to each installed tower instance.
@@ -214,7 +214,80 @@ const WAVE_SCRIPTS = {
   ruin:`chain:18,harpy:24|sentinel:12,ghost:30|warden:8,mk2:30|overload:5,warlock:10|behemoth:5,sprinter:35|mecha:5,phantom:8|abyss:4,chain:28|doom:1,warden:10|juggernaut:12,harpy:35|nemesis:1,warlock:14|overload:10,frostling:24|colossus:1,ghost:30|behemoth:10,sentinel:20|abyss:7,phantom:12|doom:2,overload:12|warden:15,warlock:20|nemesis:2,mecha:8|colossus:2,harpy:40|oblivion:1,chain:34|abyss:8,behemoth:13|phantom:16,overload:13|doom:4,warden:20|nemesis:3,warlock:20|colossus:2,behemoth:18|oblivion:1,phantom:20|abyss:12,mecha:12|doom:5,overload:17|nemesis:4,warden:25|colossus:3,sentinel:35|oblivion:2,behemoth:18|phantom:25,overload:22|doom:6,abyss:16|nemesis:5,warlock:25|colossus:4,warden:30|oblivion:2,phantom:25|behemoth:24,overload:25|doom:7,nemesis:6|colossus:5,abyss:18|oblivion:3,nemesis:5|oblivion:1,apocalypse:1,colossus:4`
 };
 const WAVE_THEMES = ['전초 탐색','빠른 발자국','강화 방어선','불길한 신호','거대한 그림자','폭주하는 군단','전장의 전환','끝없는 행렬','종말의 그림자','최후 방어'];
-const compileWaves=(script,pace,spacing,bonus)=>{
+// Enemies keep their species HP/shield/speed across EVERY wave. Increasing
+// difficulty comes from upgraded enemy SPECIES and elite escorts, not inflating
+// the same unit's health bar. This keeps monster identities and counters honest.
+export const WAVE_FORMATIONS=Object.freeze({
+  easy:Object.freeze({start:.66,promotions:1,escorts:1,pool:['heavy','boss','tank']}),
+  normal:Object.freeze({start:.48,promotions:2,escorts:2,pool:['mk1','tank','mecha','juggernaut']}),
+  hard:Object.freeze({start:.32,promotions:2,escorts:3,pool:['chain','sentinel','mecha','juggernaut','behemoth']}),
+  extreme:Object.freeze({start:.20,promotions:3,escorts:5,pool:['sentinel','mecha','juggernaut','behemoth','doom','nemesis','colossus']}),
+  hell:Object.freeze({start:.16,promotions:4,escorts:6,pool:['mecha','juggernaut','behemoth','doom','nemesis','colossus','oblivion']}),
+  ruin:Object.freeze({start:.12,promotions:4,escorts:8,pool:['warden','mecha','doom','nemesis','colossus','oblivion','apocalypse']})
+});
+// Each ladder consists of different already-designed monsters with their own
+// actual armor, abilities, model and health. No replacement gets bonus HP.
+const ENEMY_PROMOTIONS={
+  zombie:['zombie','heavy','shieldling','tank','sentinel','juggernaut','behemoth'],
+  swarm:['swarm','runner','sprinter','ghost','harpy','phantom'],
+  runner:['runner','sprinter','mk2','ghost','harpy','phantom'],
+  sprinter:['sprinter','mk2','ghost','harpy','phantom'],
+  mk2:['mk2','ghost','harpy','phantom'],
+  ghost:['ghost','harpy','phantom'],
+  harpy:['harpy','phantom'],
+  heavy:['heavy','shieldling','tank','sentinel','juggernaut','behemoth','colossus'],
+  shieldling:['shieldling','tank','sentinel','juggernaut','behemoth'],
+  mk1:['mk1','chain','sentinel','mecha','juggernaut','behemoth'],
+  chain:['chain','sentinel','mecha','juggernaut','behemoth'],
+  sentinel:['sentinel','juggernaut','behemoth','colossus'],
+  tank:['tank','mecha','juggernaut','behemoth','colossus'],
+  boss:['boss','fastboss','tank','mecha','doom','colossus'],
+  fastboss:['fastboss','tank','mecha','doom','colossus'],
+  mecha:['mecha','behemoth','doom','colossus','oblivion'],
+  splitter:['splitter','bloater','juggernaut','behemoth'],
+  bloater:['bloater','juggernaut','behemoth'],
+  medic:['medic','warlock','warden','nemesis'],
+  warlock:['warlock','warden','nemesis'],
+  warden:['warden','nemesis','colossus'],
+  frostling:['frostling','sentinel','juggernaut','behemoth'],
+  ember:['ember','overload','abyss','doom'],
+  overload:['overload','abyss','doom','oblivion'],
+  juggernaut:['juggernaut','behemoth','colossus'],
+  behemoth:['behemoth','colossus','oblivion'],
+  phantom:['phantom','nemesis'],
+  abyss:['abyss','doom','oblivion'],
+  nemesis:['nemesis','colossus','oblivion'],
+  doom:['doom','colossus','oblivion'],
+  colossus:['colossus','oblivion','apocalypse']
+};
+export function evolveWaveGroups(groups,wave,total,difficulty){
+  const settings=WAVE_FORMATIONS[difficulty];
+  if(!settings||wave<=1)return groups.map(([type,count])=>[type,count]);
+  const fraction=(wave-1)/Math.max(1,total-1);
+  if(fraction<settings.start)return groups.map(([type,count])=>[type,count]);
+  const progress=(fraction-settings.start)/(1-settings.start);
+  // Never replace unique bosses or event monsters; only promote a portion
+  // of a formation so its old enemy species remains a recognizable threat.
+  const strength=Math.max(1,Math.ceil(progress*settings.promotions));
+  const share=.12+.42*progress;
+  const result=[];
+  for(const [type,count] of groups){
+    const ladder=ENEMY_PROMOTIONS[type];
+    const target=ladder?.[Math.min(strength,ladder.length-1)];
+    const upgraded=target&&target!==type&&count>1
+      ?Math.min(count-1,Math.max(1,Math.floor(count*share))):0;
+    if(upgraded){
+      result.push([type,count-upgraded],[target,upgraded]);
+    }else result.push([type,count]);
+  }
+  // Elite escorts appear more often later, using genuinely higher-tier
+  // species. Even a wave with only one existing boss gets an escort.
+  const elite= settings.pool[Math.min(settings.pool.length-1,Math.floor(progress*settings.pool.length))];
+  const count=Math.max(1,Math.ceil(progress*settings.escorts));
+  result.push([elite,count]);
+  return result;
+}
+const compileWaves=(script,pace,spacing,bonus,difficulty=null)=>{
   const lines=script.split('|');
   return lines.map((line,i)=>{
     const groups=line.split(',').map(spec=>{
@@ -222,38 +295,21 @@ const compileWaves=(script,pace,spacing,bonus)=>{
       if(!Object.hasOwn(ENEMIES,type)||!Number.isSafeInteger(count)||count<1||count>60)throw Error('웨이브 편성 오류: '+spec);
       return [type,count];
     });
-    const boss=groups.find(([id])=>ENEMIES[id].size>=30);
+    const formation=difficulty?evolveWaveGroups(groups,i+1,lines.length,difficulty):groups;
+    const boss=formation.find(([id])=>ENEMIES[id].size>=30);
     const tier=Math.floor(i/Math.max(1,Math.ceil(lines.length/10)));
     return {title:i===lines.length-1?'최후의 결전':boss?ENEMIES[boss[0]].name+' 출현':WAVE_THEMES[Math.min(9,tier)],
       duration:pace+(i%5)*4+Math.floor(i/10)*2,bonus:bonus+i*(12+Math.round(bonus/30)),
-      spacing:Math.max(.27,spacing-i*.006),groups};
+      spacing:Math.max(.27,spacing-i*.006),groups:formation};
   });
 };
-// Difficulty-aware sustained escalation. A smooth power curve raises pressure
-// continuously instead of a sudden final-boss spike. Early waves keep their
-// authored HP; Extreme+ progresses sharply faster than tower purchasing power.
-// The six profiles deliberately share the same fraction/curve but not magnitude.
-export const WAVE_ESCALATION=Object.freeze({
-  easy:   Object.freeze({hp:1.65,speed:1.08}),
-  normal: Object.freeze({hp:2.15,speed:1.11}),
-  hard:   Object.freeze({hp:3.05,speed:1.15}),
-  extreme:Object.freeze({hp:5.15,speed:1.19}),
-  hell:   Object.freeze({hp:7.15,speed:1.23}),
-  ruin:   Object.freeze({hp:9.00,speed:1.27})
-});
-export function regularWavePressure(wave,total,difficulty='normal'){
-  const fraction=Math.max(0,Math.min(1,(wave-1)/Math.max(1,total-1)));
-  const weight=fraction**1.42; // ~37% of full escalation by the midpoint
-  const target=WAVE_ESCALATION[difficulty]||WAVE_ESCALATION.normal;
-  return {hp:1+(target.hp-1)*weight,speed:1+(target.speed-1)*weight};
-}
 export const DIFFICULTIES = [
-  {id:'easy',name:'쉬움',color:'#9ac985',reward:180,startMoney:500,hp:1,waves:compileWaves(WAVE_SCRIPTS.easy,45,1.18,75)},
-  {id:'normal',name:'기본',color:'#6bc4e3',reward:350,startMoney:850,hp:1.05,waves:compileWaves(WAVE_SCRIPTS.normal,48,1.0,95)},
-  {id:'hard',name:'어려움',color:'#e8bd6b',reward:650,startMoney:2200,hp:1.15,waves:compileWaves(WAVE_SCRIPTS.hard,51,.9,125)},
-  {id:'extreme',name:'익스트림',color:'#ed8c67',reward:1100,startMoney:4500,hp:1.25,waves:compileWaves(WAVE_SCRIPTS.extreme,55,.78,160)},
-  {id:'hell',name:'지옥',color:'#f47f9b',reward:1800,startMoney:9000,hp:1.5,waves:compileWaves(WAVE_SCRIPTS.hell,58,.68,210)},
-  {id:'ruin',name:'파멸',color:'#b491ea',reward:3000,startMoney:16000,hp:1.8,waves:compileWaves(WAVE_SCRIPTS.ruin,60,.58,270)}
+  {id:'easy',name:'쉬움',color:'#9ac985',reward:180,startMoney:500,hp:1,waves:compileWaves(WAVE_SCRIPTS.easy,45,1.18,75,'easy')},
+  {id:'normal',name:'기본',color:'#6bc4e3',reward:350,startMoney:850,hp:1.05,waves:compileWaves(WAVE_SCRIPTS.normal,48,1.0,95,'normal')},
+  {id:'hard',name:'어려움',color:'#e8bd6b',reward:650,startMoney:2200,hp:1.15,waves:compileWaves(WAVE_SCRIPTS.hard,51,.9,125,'hard')},
+  {id:'extreme',name:'익스트림',color:'#ed8c67',reward:1100,startMoney:4500,hp:1.25,waves:compileWaves(WAVE_SCRIPTS.extreme,55,.78,160,'extreme')},
+  {id:'hell',name:'지옥',color:'#f47f9b',reward:1800,startMoney:9000,hp:1.5,waves:compileWaves(WAVE_SCRIPTS.hell,58,.68,210,'hell')},
+  {id:'ruin',name:'파멸',color:'#b491ea',reward:3000,startMoney:16000,hp:1.8,waves:compileWaves(WAVE_SCRIPTS.ruin,60,.58,270,'ruin')}
 ];
 // Independent event, deliberately NOT a difficulty, mode, or regular map.
 export const EVENTS={
