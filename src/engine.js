@@ -350,6 +350,10 @@ export function tick(s,dt=STEP) {
       const count=Math.min((stats.summons||1)-current,80-s.units.length);
       const lane=stats.summonStyle==='lane';
       const path=mapOf(s).path,baseProgress=lane?routeLength(path):0;
+      // Long event maps must not exhaust a squad's timer before it can
+      // physically reach the enemy front. Endurance is route-aware and bounded.
+      const lifetime=lane?Math.min(48,Math.max(stats.unitLife||12,
+        baseProgress/Math.max(1,stats.unitSpeed||550)+3)):(stats.unitLife||9);
       for(let i=0;i<count;i++){
         const progress=lane?Math.max(0,baseProgress-i*19):0;
         const origin=lane?pointOnPath(path,progress):{x:t.x,y:t.y};
@@ -358,7 +362,7 @@ export function tick(s,dt=STEP) {
           level:t.level,role:lane?'lane':'orbit',target:e.id,
           x:origin.x,y:origin.y,progress,phase:lane?'march':'launch',
           hp:lane?stats.summonHp||120:1,maxHp:lane?stats.summonHp||120:1,
-          life:stats.unitLife||9,speed:stats.unitSpeed||550,
+          life:lifetime,maxLife:lifetime,speed:stats.unitSpeed||550,
           damage:stats.damage*power,attackCd:.25+(i%3)*.12,
           attackInterval:stats.unitAttackInterval||.8,
           attackRange:stats.unitAttackRange||80,
