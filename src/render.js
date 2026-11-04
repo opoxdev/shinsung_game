@@ -100,7 +100,13 @@ export class Renderer {
         for(const e of state.enemies)if(e.field===f&&this.visible(e.x+offset,e.y))drawEnemyOverlay(g,e,state.time);
         for(const u of state.units)if(u.field===f&&this.visible(u.x+offset,u.y))this.summon(g,u,now);
         let damageLabels=0,attackVisuals=0;
-        for(const e of state.events){if(e.kind==='damage'&&e.field===f&&(this.reducedEffects||damageLabels++>=24))continue;const age=state.time-e.time;if(e.field!==f||age<0||age>.45||!this.visible(e.x+offset,e.y,180))continue;
+        // Newest-first: count only ON-SCREEN, LIVE damage labels. The old
+        // forward pass counted stale/offscreen hits before checking visibility,
+        // so after a busy wave the newest damage numbers were never drawn.
+        for(let i=state.events.length-1;i>=0;i--){const e=state.events[i];
+          const age=state.time-e.time;
+          if(e.field!==f||age<0||age>.45||!this.visible(e.x+offset,e.y,180))continue;
+          if(e.kind==='damage'&&(this.reducedEffects||damageLabels++>=32))continue;
           if(isTowerAttackEffect(e)&&++attackVisuals>(this.reducedEffects?32:90))continue;
           g.globalAlpha=1-age/.45;g.strokeStyle=TOWERS[e.type]?.color||ENEMIES[e.type]?.color||'#ffd88c';g.lineWidth=e.type==='rail'?5:3;g.shadowColor=g.strokeStyle;g.shadowBlur=0;
           if(isTowerAttackEffect(e)){
