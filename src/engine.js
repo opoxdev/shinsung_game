@@ -23,6 +23,17 @@ export function pointOnPath(path,distance){
   const ratio=segment.length?(distance-segment.start)/segment.length:0;
   return {x:segment.a[0]+segment.dx*ratio,y:segment.a[1]+segment.dy*ratio};
 }
+// Both teams share the authored road. Friendly walkers travel from the
+// defender's base (path end) toward the enemy portal (path start).
+const pathLengths=new WeakMap();
+export function routeLength(path){
+ let length=pathLengths.get(path);
+ if(length===undefined){
+  length=0;for(let i=1;i<path.length;i++)length+=Math.hypot(path[i][0]-path[i-1][0],path[i][1]-path[i-1][1]);
+  pathLengths.set(path,length);
+ }
+ return length;
+}
 export function pathDistance(path,x,y) {
   let min=Infinity;
   for(let i=1;i<path.length;i++) {
@@ -142,7 +153,7 @@ export function command(s,playerId,c) {
     if(c.kind==='upgrade') {
       const cost=TOWERS[t.type].upgrades[t.level];if(cost===undefined)return fail('최대 레벨입니다.');if(p.money<cost)return fail('전투 자금이 부족합니다.');
       p.ach=p.ach||{places:0,upgrades:0};p.ach.upgrades++;p.money-=cost;t.level++;t.spent+=cost;t.cd=Math.min(t.cd,towerStats(t).interval);event(s,{kind:'upgrade',x:t.x,y:t.y,field:t.field,type:t.type,level:t.level});
-    } else if(c.kind==='sell') {p.money+=Math.floor(t.spent*7/10);s.towers=s.towers.filter(a=>a.id!==t.id);}
+    } else if(c.kind==='sell') {p.money+=Math.floor(t.spent*7/10);s.towers=s.towers.filter(a=>a.id!==t.id);s.units=s.units.filter(u=>u.from!==t.id);}
     else {if(!['first','strong','near'].includes(c.target))return fail('잘못된 타겟입니다.');t.target=c.target;}
   } else if(c.kind==='skip') {
     if(s.waveTime<8)return fail('웨이브 시작 8초 후 스킵할 수 있습니다.');
@@ -319,11 +330,15 @@ export function tick(s,dt=STEP) {
       continue;
     }
     if(t.cd>0)continue;
-    const candidates=s.enemies.filter(e=>e.field===t.field&&e.hp>0&&(t.x-e.x)**2+(t.y-e.y)**2<=stats.range**2);
+    const candidates=s.enemies.filter(e=>e.field===t.field&&e.hp>0&&(stats.kind==='summon'&&stats.summonStyle==='lane'||(t.x-e.x)**2+(t.y-e.y)**2<=stats.range**2));
     const order=t.target==='strong'?(a,b)=>b.hp-a.hp:t.target==='near'?(a,b)=>(a.x-t.x)**2+(a.y-t.y)**2-(b.x-t.x)**2-(b.y-t.y)**2:(a,b)=>b.progress-a.progress;
     if(stats.kind==='melee'||(stats.multi||1)>1)candidates.sort(order);
     else {let best=0;for(let i=1;i<candidates.length;i++)if(order(candidates[i],candidates[best])<0)best=i;if(best)[candidates[0],candidates[best]]=[candidates[best],candidates[0]];}
     const e=candidates[0];if(!e)continue;
+    // Each spawner maintains a bounded active squad, rather than emitting
+    // unlimited suicide units once every shot cooldown.
+    const current=stats.kind==='summon'?s.units.reduce((n,u)=>n+(u.from===t.id&&u.life>0?1:0),0):0;
+    if(stats.kind==='summon'&&current>=Math.max(1,stats.summons||1)){t.cd=0;continue;}
     const buffs=auras.filter(({t:b,stats:bs})=>b.field===t.field&&dist(b,t)<=bs.range);
     // Strongest aura of each category wins; different kinds may coexist.
     const power=buffs.reduce((a,{t:b,stats:bs})=>Math.max(a,1+(bs.power??(b.type==='workshop'?.2:0))),1);
@@ -332,8 +347,30 @@ export function tick(s,dt=STEP) {
     t.angle=Math.atan2(e.y-t.y,e.x-t.x);
     event(s,{kind:stats.kind,from:t.id,x:t.x,y:t.y,tx:e.x,ty:e.y,field:t.field,type:t.type,level:t.level});
     if(stats.kind==='summon'){
-      const count=stats.summons||1;
-      for(let i=0;i<count&&s.units.length<80;i++)s.units.push({id:s.nextId++,x:t.x+i*12,y:t.y-i*6,field:t.field,target:e.id,damage:stats.damage*power,type:t.type,life:stats.unitLife||8,speed:stats.unitSpeed||210,level:t.level});
+      const count=Math.min((stats.summons||1)-current,80-s.units.length);
+      const lane=stats.summonStyle==='lane';
+      const path=mapOf(s).path,baseProgress=lane?routeLength(path):0;
+      for(let i=0;i<count;i++){
+        const progress=lane?Math.max(0,baseProgress-i*19):0;
+        const origin=lane?pointOnPath(path,progress):{x:t.x,y:t.y};
+        s.units.push({
+          id:s.nextId++,from:t.id,owner:t.owner,field:t.field,type:t.type,
+          level:t.level,role:lane?'lane':'orbit',target:e.id,
+          x:origin.x,y:origin.y,progress,phase:lane?'march':'launch',
+          hp:lane?stats.summonHp||120:1,maxHp:lane?stats.summonHp||120:1,
+          life:stats.unitLife||9,speed:stats.unitSpeed||550,
+          damage:stats.damage*power,attackCd:.25+(i%3)*.12,
+          attackInterval:stats.unitAttackInterval||.8,
+          attackRange:stats.unitAttackRange||80,
+          angle:(t.id*.61+i*6.283185307179586/Math.max(1,count)),
+          radius:(stats.orbitRadius||62)+i*7,
+          orbitShotInterval:stats.orbitShotInterval||.75,
+          explosionMult:stats.orbitExplosionMult||3,
+          explosionRadius:stats.orbitSplash||90
+        });
+      }
+      event(s,{kind:lane?'summon-march':'summon-launch',from:t.id,x:lane?path.at(-1)[0]:t.x,
+        y:lane?path.at(-1)[1]:t.y,field:t.field,type:t.type,count,level:t.level});
     }else if(stats.kind==='judgement'){
       const hits=s.enemies.filter(a=>a.field===t.field&&a.hp>0&&dist(a,e)<=stats.splash);
       for(const target of hits){
@@ -369,11 +406,110 @@ export function tick(s,dt=STEP) {
       }
     }
   }
-  // Summon units are capped at 80, enemies at 350. Index by stable ID
-  // once per tick instead of searching up to 350 enemies for each summon.
+  // Summon rework: bounded orbiting gunships and reverse-lane combat squads.
+  // All state is serializable and all effects/damage are server-authoritative.
   const enemyById=new Map(s.enemies.map(e=>[e.id,e]));
-  for(const u of s.units) {
-    u.life-=dt;let e=enemyById.get(u.target);
+  const ownerById=new Map(s.towers.map(t=>[t.id,t]));
+  const road=mapOf(s).path;
+  for(const u of s.units){
+    u.life-=dt;
+    if(u.role==='orbit'){
+      const owner=ownerById.get(u.from),stats=owner?towerStats(owner):towerStats(u);
+      let e=enemyById.get(u.target);
+      if(!e||e.hp<=0||e.field!==u.field){
+        e=null;let nearest=Infinity;
+        for(const enemy of s.enemies){
+          if(enemy.hp<=0||enemy.field!==u.field)continue;
+          const radius=owner?stats.range:470;
+          const distance=owner?(enemy.x-owner.x)**2+(enemy.y-owner.y)**2:(enemy.x-u.x)**2+(enemy.y-u.y)**2;
+          if(distance<nearest&&distance<=radius*radius){nearest=distance;e=enemy;}
+        }
+        if(e)u.target=e.id;
+      }
+      if(u.life<=0){
+        // Final suicide dive affects all foes in the blast radius, then
+        // the tower launches a replacement automatically after a short pause.
+        if(e&&e.hp>0){
+          const hit=owner||u,radius=u.explosionRadius||90;
+          for(const other of s.enemies){
+            if(other.hp<=0||other.field!==u.field)continue;
+            if((other.x-e.x)**2+(other.y-e.y)**2<=radius*radius)
+              applyHit(s,other,u.damage*(u.explosionMult||3),hit,stats);
+          }
+          u.x=e.x;u.y=e.y;
+          event(s,{kind:'summon-crash',x:e.x,y:e.y,field:u.field,type:u.type,
+            level:u.level,radius,from:u.from});
+        }
+        u.life=0;
+        if(owner)owner.cd=Math.min(Math.max(0,owner.cd),.36);
+        continue;
+      }
+      if(!e)continue;
+      u.angle+=(u.type==='phoenix'?2.6:3.7)*dt;
+      const orbitX=e.x+Math.cos(u.angle)*(u.radius||62),
+            orbitY=e.y+Math.sin(u.angle)*(u.radius||62)-12;
+      const distance=Math.hypot(orbitX-u.x,orbitY-u.y),step=(u.speed||500)*dt;
+      if(distance>step&&distance>0){u.x+=(orbitX-u.x)*step/distance;u.y+=(orbitY-u.y)*step/distance;}
+      else {u.x=orbitX;u.y=orbitY;u.phase='orbit';}
+      u.attackCd=(u.attackCd||0)-dt;
+      if(u.phase==='orbit'&&u.attackCd<=0&&e.hp>0){
+        u.attackCd=u.orbitShotInterval||.75;
+        const hit=owner||u,shot=u.type==='phoenix'?u.damage*.78:u.damage*.52;
+        event(s,{kind:'summon-shot',x:u.x,y:u.y,tx:e.x,ty:e.y,field:u.field,
+          type:u.type,level:u.level,from:u.from});
+        applyHit(s,e,shot,hit,stats);
+        // Fireballs splash nearby and leave the Phoenix's burn effect.
+        if(u.type==='phoenix'){
+          for(const other of s.enemies)if(other!==e&&other.hp>0&&other.field===u.field
+            &&(other.x-e.x)**2+(other.y-e.y)**2<=42*42)
+            applyHit(s,other,shot*.36,hit,stats);
+        }
+      }
+      continue;
+    }
+    if(u.role==='lane'){
+      if(u.life<=0||u.hp<=0){u.life=0;continue;}
+      const previous=u.progress??routeLength(road);
+      u.progress=Math.max(0,previous-(u.speed||580)*dt);
+      const point=pointOnPath(road,u.progress);u.x=point.x;u.y=point.y;
+      let e=null,closest=Infinity;
+      // Lane progress, rather than Euclidean distance, prevents soldiers
+      // attacking enemies through the folds of a winding map.
+      for(const enemy of s.enemies){
+        if(enemy.field!==u.field||enemy.hp<=0)continue;
+        const separation=Math.abs(enemy.progress-u.progress);
+        if(separation<closest){closest=separation;e=enemy;}
+      }
+      if(e&&closest<=u.attackRange){
+        u.attackCd=(u.attackCd||0)-dt;
+        if(u.attackCd<=0&&closest>28){
+          u.attackCd=u.attackInterval||.85;
+          const owner=ownerById.get(u.from)||u;
+          event(s,{kind:'summon-shot',x:u.x,y:u.y,tx:e.x,ty:e.y,field:u.field,
+            type:u.type,level:u.level,from:u.from});
+          applyHit(s,e,u.damage*.42,owner,towerStats(owner));
+        }
+        if(e.hp>0&&closest<=28){
+          const owner=ownerById.get(u.from)||u;
+          const pierce=towerStats(owner).pierce;
+          const armorFactor=pierce?1:Math.max(.1,1-(ENEMIES[e.type].armor||0));
+          const mark=e.markUntil>s.time&&e.markAmp>1?e.markAmp:1;
+          const enemyEffectiveHP=(e.hp+(e.shield||0))/(armorFactor*mark);
+          const hpBefore=u.hp;
+          damage(s,e,hpBefore,owner);
+          u.hp=Math.max(0,hpBefore-enemyEffectiveHP);
+          event(s,{kind:'summon-clash',x:u.x,y:u.y,tx:e.x,ty:e.y,field:u.field,
+            type:u.type,level:u.level,remaining:u.hp});
+          if(u.hp<=.0001)u.life=0;
+          else u.attackCd=.35;
+        }
+      }
+      if(u.progress<=0){u.life=0;event(s,{kind:'summon-arrive',x:u.x,y:u.y,field:u.field,type:u.type});}
+      continue;
+    }
+    // Backward compatibility for already-running older match snapshots;
+    // newly spawned units always carry an explicit orbit/lane role.
+    let e=enemyById.get(u.target);
     if(e?.hp<=0)e=null;
     if(!e){e=s.enemies.find(e=>e.field===u.field&&e.hp>0);if(e)u.target=e.id;}
     if(!e)continue;
