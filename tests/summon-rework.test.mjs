@@ -7,7 +7,7 @@ import {character} from '../src/art.js';
 import {Renderer} from '../src/render.js';
 
 const config={type:'solo',map:'plains',difficulty:'normal',modes:[]};
-function match(){const s=createMatch(config,[{id:'a',profile:starterProfile()}]);s.queue=[];s.enemies=[];s.players.a.money=10000000;return s;}
+function match(){const s=createMatch(config,[{id:'a',profile:starterProfile()}]);s.queue=[];s.enemies=[];s.players.a.money=10000000;s.waveDeadline=1e8;return s;}
 function enemy(s,progress=300,hp=5000,type='heavy'){
  const pos=pointOnPath(MAPS.find(m=>m.id===s.config.map).path,progress);
  const e={id:s.nextId++,type,field:0,progress,x:pos.x,y:pos.y,hp,maxHp:hp,shield:0,maxShield:0,speed:0};
@@ -69,6 +69,31 @@ test('Phoenixes orbit, burn, splash and return as new birds after the final dive
  assert.ok(s.units.filter(u=>u.from===t.id).length<=towerStats(t).summons);
 });
 
+test('all base-spawned allies move at walking pace through every evolution',()=>{
+ const limits={summoner:155,papercrane:195,crystalspider:148};
+ const base={summoner:115,papercrane:150,crystalspider:105};
+ for(const [type,limit] of Object.entries(limits)){
+  assert.equal(towerStats({type,level:0}).unitSpeed,base[type]);
+  let previous=0;
+  for(let level=0;level<=EVOLUTIONS[type].length;level++){
+   const stats=towerStats({type,level});
+   assert.equal(stats.summonStyle,'lane');
+   assert.ok(stats.unitSpeed>=previous&&stats.unitSpeed<=limit,type+' evolves too fast');
+   assert.ok(stats.unitSpeed<200,'lane summons are soldiers, not bullets');
+   previous=stats.unitSpeed;
+  }
+  const s=match();enemy(s,300,500000);
+  const t=tower(s,type);tick(s);
+  const u=s.units.find(ally=>ally.from===t.id);
+  assert.equal(u.speed,base[type]);
+  const initialProgress=u.progress;
+  for(let i=0;i<20;i++)tick(s);
+  const distance=initialProgress-u.progress;
+  assert.ok(distance>90&&distance<200,'one second must not cross the map');
+  assert.ok(u.life>0,'slow travel must remain possible');
+ }
+});
+
 test('goblins, paper cranes and crystal spiders spawn at allied base and march backward along the road',()=>{
  for(const id of ['summoner','papercrane','crystalspider']){
   const s=match();enemy(s,300,100000);const t=tower(s,id);
@@ -96,7 +121,7 @@ test('friendly HP collision: weaker enemy dies while stronger goblin survives wi
  const t=tower(s,'summoner');tick(s);
  const u=s.units.find(u=>u.from===t.id),initial=u.hp;
  let collided=false;
- for(let i=0;i<400&&!collided;i++){
+ for(let i=0;i<1400&&!collided;i++){
   tick(s);collided=s.events.some(x=>x.kind==='summon-clash'&&x.from===u.id);
   // clash metadata uses enemy coordinates and tower type; identify by unit survival
   if(s.events.some(x=>x.kind==='summon-clash'&&x.type==='summoner'))collided=true;
@@ -111,7 +136,7 @@ test('friendly HP collision: stronger enemy survives but consumes the weaker uni
  const s=match(),e=enemy(s,300,25000,'heavy');const t=tower(s,'summoner');tick(s);
  const u=s.units.find(x=>x.from===t.id);
  let collided=false;
- for(let i=0;i<400&&!collided;i++){
+ for(let i=0;i<1400&&!collided;i++){
   tick(s);
   collided=s.events.some(ev=>ev.kind==='summon-clash'&&ev.type==='summoner');
  }
@@ -159,7 +184,7 @@ test('long Temple event lanes keep squads alive long enough to reach the enemy p
  const soldier=s.units.find(u=>u.from===t.id),path=MAPS.find(m=>m.id==='temple_ruin').path;
  assert.ok(soldier,'the raid needs a goblin march');
  assert.ok(soldier.life>=routeLength(path)/soldier.speed,'a spawn must not time out before reaching the front');
- assert.ok(soldier.life<=48,'endurance must remain bounded for networking');
+ assert.ok(soldier.life<=150,'endurance must remain bounded for networking');
 });
 
 test('PvP soldiers only attack monsters in their own defended field',()=>{
