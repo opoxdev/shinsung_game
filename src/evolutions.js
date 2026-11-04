@@ -15,10 +15,10 @@ export const EVOLUTIONS = {
     v('월영의 사격술',2150,3.15,1.42,1.33,'wings','달그림자 아래 빠르게 2명을 사격한다.',{multi:2,dot:54,dotTime:3.5}),
     v('달이 지는 순간',4400,4.7,1.6,1.48,'crown','저격의 정점을 이루는 관통탄.',{multi:2,dot:87,dotTime:4})],
   crystalspider:[
-    v('강화 수정각',1150,1.48,1.09,1.1,'spider-armor','두 마리 거미에게 단단한 수정 다리를 장착한다.',{summons:2,summonHp:500,unitSpeed:745,unitLife:20}),
-    v('거미 전투 진영',2500,2.1,1.21,1.2,'spider-hive','세 거미가 아군 기지에서 동시에 출동한다.',{summons:3,summonHp:730,unitSpeed:800,unitLife:21,unitAttackInterval:.74}),
-    v('여왕의 결정',5200,3.05,1.34,1.32,'spider-queen','네 고급 거미가 결정 바늘로 적을 견제한다.',{summons:4,summonHp:1120,unitSpeed:855,unitLife:22,unitAttackInterval:.62,slow:.7,slowTime:1.9}),
-    v('수정 군체',10400,4.25,1.48,1.44,'spider-colony','다섯 거미가 긴 거리를 달려와 괴물 부대를 맞받아친다.',{summons:5,summonHp:1740,unitSpeed:930,unitLife:24,unitAttackInterval:.53,slow:.62,slowTime:2.3})],
+    v('강화 수정각',1150,1.48,1.09,1.1,'spider-armor','두 마리 거미에게 단단한 수정 다리를 장착한다.',{summons:2,summonHp:500,unitSpeed:112,unitLife:20}),
+    v('거미 전투 진영',2500,2.1,1.21,1.2,'spider-hive','세 거미가 아군 기지에서 동시에 출동한다.',{summons:3,summonHp:730,unitSpeed:122,unitLife:21,unitAttackInterval:.74}),
+    v('여왕의 결정',5200,3.05,1.34,1.32,'spider-queen','네 고급 거미가 결정 바늘로 적을 견제한다.',{summons:4,summonHp:1120,unitSpeed:134,unitLife:22,unitAttackInterval:.62,slow:.7,slowTime:1.9}),
+    v('수정 군체',10400,4.25,1.48,1.44,'spider-colony','다섯 거미가 긴 거리를 달려와 괴물 부대를 맞받아친다.',{summons:5,summonHp:1740,unitSpeed:148,unitLife:24,unitAttackInterval:.53,slow:.62,slowTime:2.3})],
   voidwalker:[
     v('그림자 주먹',750,1.45,1.08,1.08,'orb','암흑 파동의 위력과 범위를 확장한다.',{splash:114}),
     v('심연의 맥동',1600,2.15,1.2,1.16,'aura','검은 에너지의 맥동으로 넓은 지역을 타격한다.',{splash:137}),
@@ -50,10 +50,10 @@ export const EVOLUTIONS = {
     v('연소 유탄',1000,2.5,1.3,1.15,'crown','연소탄이 적에게 잔불 피해를 남긴다.',{splash:113,dot:13,dotTime:2.6}),
     v('초고폭 유탄',2200,4.5,1.4,1.3,'star','거대한 화염 폭발이 넓은 구역을 뒤덮는다.',{splash:155,dot:25,dotTime:3.2})],
   summoner:[
-    v('방패 지급',550,1.45,1.13,1.08,'goblin-shield','고블린에게 전투 방패를 지급해 기지부터 밀고 나가는 힘을 키운다.',{summons:1,summonHp:260,unitSpeed:650,unitLife:20}),
-    v('쌍검 보병대',1200,2.0,1.2,1.18,'goblin-dual','두 전사가 나란히 진군하며 근거리에서 칼을 휘두른다.',{summons:2,summonHp:390,unitSpeed:680,unitLife:21,unitAttackInterval:.78}),
-    v('강철 진군',2400,2.95,1.3,1.28,'goblin-guard','중갑 고블린 세 명이 적 체력을 정면으로 받아낸다.',{summons:3,summonHp:600,unitSpeed:730,unitLife:23,unitAttackInterval:.67}),
-    v('군단의 대장',5200,4.1,1.43,1.43,'goblin-general','네 정예 고블린이 선봉대가 되어 출진한다.',{summons:4,summonHp:940,unitSpeed:780,unitLife:25,unitAttackInterval:.54})],
+    v('방패 지급',550,1.45,1.13,1.08,'goblin-shield','고블린에게 전투 방패를 지급해 기지부터 밀고 나가는 힘을 키운다.',{summons:1,summonHp:260,unitSpeed:120,unitLife:20}),
+    v('쌍검 보병대',1200,2.0,1.2,1.18,'goblin-dual','두 전사가 나란히 진군하며 근거리에서 칼을 휘두른다.',{summons:2,summonHp:390,unitSpeed:130,unitLife:21,unitAttackInterval:.78}),
+    v('강철 진군',2400,2.95,1.3,1.28,'goblin-guard','중갑 고블린 세 명이 적 체력을 정면으로 받아낸다.',{summons:3,summonHp:600,unitSpeed:140,unitLife:23,unitAttackInterval:.67}),
+    v('군단의 대장',5200,4.1,1.43,1.43,'goblin-general','네 정예 고블린이 선봉대가 되어 출진한다.',{summons:4,summonHp:940,unitSpeed:155,unitLife:25,unitAttackInterval:.54})],
   workshop:[
     v('영양 포자',450,1,1,1.13,'thorns','주변 타워 공격력 강화가 30%로 상승한다.',{power:.3}),
     v('무지개 버섯',900,1,1,1.28,'crystal','다채로운 포자가 공격력 40% 강화 효과를 만든다.',{power:.4}),
@@ -157,10 +157,10 @@ export const EVOLUTIONS = {
     v('동조 신호',420,1,1,1.3,'wings','증폭 신호 범위와 공격속도 지원 효과가 향상된다.',{haste:.21}),
     v('전술 방송망',990,1,1,1.52,'halo','집중 전술 방송으로 인접 타워 공격속도를 30% 높인다.',{haste:.3})],
   papercrane:[
-    v('접은 철날개',300,1.45,1.09,1.05,'paper-steel','강화 접기법으로 종이학의 몸체를 단단하게 만든다.',{summons:1,summonHp:160,unitSpeed:850,unitLife:17}),
-    v('쌍둥이 전령',750,2.15,1.18,1.13,'paper-pair','두 마리의 전령이 기지에서 나란히 출발한다.',{summons:2,summonHp:220,unitSpeed:900,unitLife:18}),
-    v('수천 개의 소원',1750,3.1,1.32,1.24,'paper-wish','세 마리가 종이 날개를 날려 적을 견제한다.',{summons:3,summonHp:310,unitSpeed:970,unitLife:19,unitAttackInterval:.58}),
-    v('천상의 종이 폭풍',3900,4.55,1.48,1.35,'paper-storm','네 마리의 강철 종이학이 적의 행렬을 가른다.',{summons:4,summonHp:450,unitSpeed:1050,unitLife:21,unitAttackInterval:.49})],
+    v('접은 철날개',300,1.45,1.09,1.05,'paper-steel','강화 접기법으로 종이학의 몸체를 단단하게 만든다.',{summons:1,summonHp:160,unitSpeed:157,unitLife:17}),
+    v('쌍둥이 전령',750,2.15,1.18,1.13,'paper-pair','두 마리의 전령이 기지에서 나란히 출발한다.',{summons:2,summonHp:220,unitSpeed:168,unitLife:18}),
+    v('수천 개의 소원',1750,3.1,1.32,1.24,'paper-wish','세 마리가 종이 날개를 날려 적을 견제한다.',{summons:3,summonHp:310,unitSpeed:180,unitLife:19,unitAttackInterval:.58}),
+    v('천상의 종이 폭풍',3900,4.55,1.48,1.35,'paper-storm','네 마리의 강철 종이학이 적의 행렬을 가른다.',{summons:4,summonHp:450,unitSpeed:195,unitLife:21,unitAttackInterval:.49})],
   marker:[
     v('표적 레이저',540,1.45,1.08,1.1,'crystal','조준 레이저가 맞힌 적에게 28% 추가 피해 표식을 남긴다.',{markAmp:1.28,markTime:4}),
     v('다중 표식',1250,2.1,1.22,1.18,'double','두 적에게 동시에 표식을 각인한다.',{markAmp:1.32,markTime:4.4,multi:2}),
