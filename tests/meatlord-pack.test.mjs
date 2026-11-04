@@ -92,11 +92,13 @@ test('individual limits are loosened for ordinary towers while extremes remain b
   assert.equal(TOWERS.sonic.cap,2);
   assert.equal(TOWERS.rail.cap,3);
   assert.equal(TOWERS.aurora.cap,2);
-  for(const id of ['scout','archer','blade','soldier','chef','icewitch','scrap','hunter','spirit','marker'])
+  for(const id of ['scout','archer','blade','soldier','chef','icewitch','scrap','hunter','marker'])
     assert.ok(TOWERS[id].cap>=12,id+' should allow a flexible build');
   for(const id of ['summoner','firefly','knight','drone','lullaby','papercrane'])
     assert.ok(TOWERS[id].cap>=10,id);
   assert.ok(TOWERS.banker.cap<=8,'income stacking should still be bounded');
+  assert.equal(TOWERS.spirit.rarity,'legendary');
+  assert.ok(TOWERS.spirit.cap<=8,'Legendary flying gunships must remain bounded');
   const s=game({difficulty:'ruin'});
   s.players.a.loadout=['hunter','oldgod'];s.players.a.money=1000000;
   for(let i=0;i<6;i++){
