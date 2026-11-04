@@ -15,10 +15,10 @@ export const EVOLUTIONS = {
     v('월영의 사격술',2150,3.15,1.42,1.33,'wings','달그림자 아래 빠르게 2명을 사격한다.',{multi:2,dot:54,dotTime:3.5}),
     v('달이 지는 순간',4400,4.7,1.6,1.48,'crown','저격의 정점을 이루는 관통탄.',{multi:2,dot:87,dotTime:4})],
   crystalspider:[
-    v('수정 고치',1150,1.5,1.1,1.1,'crystal','고치에서 만들어지는 거미가 더욱 강해진다.',{summons:2}),
-    v('거미 군단',2500,2.15,1.22,1.2,'aura','한 번에 3마리의 수정 거미가 출격한다.',{summons:3,unitLife:8.5}),
-    v('왕관의 수정',5200,3.1,1.34,1.32,'crown','결정이 커져 오래 지속되는 거미를 만든다.',{summons:4,unitLife:9}),
-    v('천 개의 실',10400,4.25,1.48,1.44,'halo','단단한 수정 거미 5마리를 넓은 영역에 소환한다.',{summons:5,unitLife:10})],
+    v('강화 수정각',1150,1.48,1.09,1.1,'spider-armor','두 마리 거미에게 단단한 수정 다리를 장착한다.',{summons:2,summonHp:500,unitSpeed:745,unitLife:20}),
+    v('거미 전투 진영',2500,2.1,1.21,1.2,'spider-hive','세 거미가 아군 기지에서 동시에 출동한다.',{summons:3,summonHp:730,unitSpeed:800,unitLife:21,unitAttackInterval:.74}),
+    v('여왕의 결정',5200,3.05,1.34,1.32,'spider-queen','네 고급 거미가 결정 바늘로 적을 견제한다.',{summons:4,summonHp:1120,unitSpeed:855,unitLife:22,unitAttackInterval:.62,slow:.7,slowTime:1.9}),
+    v('수정 군체',10400,4.25,1.48,1.44,'spider-colony','다섯 거미가 긴 거리를 달려와 괴물 부대를 맞받아친다.',{summons:5,summonHp:1740,unitSpeed:930,unitLife:24,unitAttackInterval:.53,slow:.62,slowTime:2.3})],
   voidwalker:[
     v('그림자 주먹',750,1.45,1.08,1.08,'orb','암흑 파동의 위력과 범위를 확장한다.',{splash:114}),
     v('심연의 맥동',1600,2.15,1.2,1.16,'aura','검은 에너지의 맥동으로 넓은 지역을 타격한다.',{splash:137}),
@@ -50,10 +50,10 @@ export const EVOLUTIONS = {
     v('연소 유탄',1000,2.5,1.3,1.15,'crown','연소탄이 적에게 잔불 피해를 남긴다.',{splash:113,dot:13,dotTime:2.6}),
     v('초고폭 유탄',2200,4.5,1.4,1.3,'star','거대한 화염 폭발이 넓은 구역을 뒤덮는다.',{splash:155,dot:25,dotTime:3.2})],
   summoner:[
-    v('고블린 친구',550,1.4,1.12,1.08,'orb','고블린을 조금 더 자주 소환한다.',{summons:1,unitSpeed:235}),
-    v('쌍둥이 소환',1200,1.9,1.18,1.18,'double','한 번에 두 고블린을 전장에 부른다.',{summons:2,unitSpeed:245}),
-    v('정글 지팡이',2400,2.9,1.3,1.28,'thorns','세 마리의 전투 고블린이 사냥을 돕는다.',{summons:3,unitSpeed:270,unitLife:10}),
-    v('고블린 대행진',5200,4.2,1.4,1.44,'crown','네 마리의 정예 소환수가 적을 집요하게 추격한다.',{summons:4,unitSpeed:335,unitLife:12})],
+    v('방패 지급',550,1.45,1.13,1.08,'goblin-shield','고블린에게 전투 방패를 지급해 기지부터 밀고 나가는 힘을 키운다.',{summons:1,summonHp:260,unitSpeed:650,unitLife:20}),
+    v('쌍검 보병대',1200,2.0,1.2,1.18,'goblin-dual','두 전사가 나란히 진군하며 근거리에서 칼을 휘두른다.',{summons:2,summonHp:390,unitSpeed:680,unitLife:21,unitAttackInterval:.78}),
+    v('강철 진군',2400,2.95,1.3,1.28,'goblin-guard','중갑 고블린 세 명이 적 체력을 정면으로 받아낸다.',{summons:3,summonHp:600,unitSpeed:730,unitLife:23,unitAttackInterval:.67}),
+    v('군단의 대장',5200,4.1,1.43,1.43,'goblin-general','네 정예 고블린이 선봉대가 되어 출진한다.',{summons:4,summonHp:940,unitSpeed:780,unitLife:25,unitAttackInterval:.54})],
   workshop:[
     v('영양 포자',450,1,1,1.13,'thorns','주변 타워 공격력 강화가 30%로 상승한다.',{power:.3}),
     v('무지개 버섯',900,1,1,1.28,'crystal','다채로운 포자가 공격력 40% 강화 효과를 만든다.',{power:.4}),
@@ -84,10 +84,11 @@ export const EVOLUTIONS = {
     v('이중 냉각기',850,2.4,1.3,1.26,'wings','냉각탄 두 발을 서로 다른 목표에 발사한다.',{multi:2,slow:.4,slowTime:3.2}),
     v('빙결 폭풍 장치',1750,3.9,1.5,1.42,'crown','초저온 폭풍 장치가 넓은 지역을 둔화시킨다.',{kind:'splash',splash:104,slow:.33,slowTime:4})],
   spirit:[
-    v('드론 추진기',440,1.6,1.14,1.11,'orb','개량된 추진기로 드론이 더 빨리 목표를 추적한다.',{summons:2,unitSpeed:315}),
-    v('삼중 드론 편대',900,2.2,1.23,1.2,'double','정찰 드론 세 기가 각자 목표를 찾아 비행한다.',{summons:3,unitSpeed:335}),
-    v('드론 전술 편대',1800,3.2,1.38,1.3,'wings','전술 드론 네 기가 적을 추격한다.',{summons:4,unitSpeed:365,unitLife:10}),
-    v('고속 추적 편대',3700,4.6,1.52,1.48,'halo','고속 드론 다섯 기가 정밀 추적한다.',{summons:5,unitSpeed:400,unitLife:12})],
+    v('자이로 기관포',950,1.36,1.06,1.08,'rotor','신형 자이로가 선회 안정성을 높이고 기관포 사격을 강화한다.',{summons:2,orbitShotInterval:.52,orbitExplosionMult:3.1,orbitSplash:82,unitSpeed:575,unitLife:7.5}),
+    v('삼각 편대',1900,1.87,1.12,1.18,'formation','동시에 세 기의 드론을 유지하며 비행 중 공격한다.',{summons:3,orbitShotInterval:.49,orbitExplosionMult:3.4,orbitSplash:90,unitSpeed:620,unitLife:8}),
+    v('이중 레일건',3900,2.65,1.19,1.27,'railgun','정밀 레일 기관총과 고출력 자폭탄을 장착한다.',{summons:3,orbitShotInterval:.37,orbitExplosionMult:3.7,orbitSplash:102,unitSpeed:670,unitLife:8.5}),
+    v('대공 편대장',7600,3.65,1.3,1.38,'flagship','네 기의 장갑 드론이 전장을 회전하며 연속 사격한다.',{summons:4,orbitShotInterval:.34,orbitExplosionMult:4.1,orbitSplash:115,unitSpeed:720,unitLife:9}),
+    v('천공의 요새',15000,4.85,1.42,1.51,'fortress','다섯 기의 전설 편대가 사격 후 초광역 에너지 폭발로 마무리한다.',{summons:5,orbitShotInterval:.3,orbitExplosionMult:4.6,orbitSplash:133,unitSpeed:770,unitLife:9.4})],
   firefly:[
     v('확산형 분사구',600,1.65,1.12,1.08,'wings','불꽃 파편의 범위와 피해를 높인다.',{splash:85,dot:13,dotTime:2.8}),
     v('장시간 연소',1250,2.7,1.33,1.2,'flame','분사된 화염이 적에게 오래 남아 피해를 준다.',{splash:104,dot:24,dotTime:3.5}),
@@ -128,11 +129,11 @@ export const EVOLUTIONS = {
     v('성운의 전류',6100,3.85,1.48,1.37,'wings','번개가 적 진영을 뒤흔든다.',{splash:180,slow:.42,slowTime:3.1}),
     v('태풍의 중심',12500,5.7,1.73,1.5,'halo','광범위 낙뢰가 적을 묶어둔다.',{splash:215,slow:.35,slowTime:3.8})],
   phoenix:[
-    v('첫 번째 깃털',2500,1.5,1.13,1.08,'flame','불사조가 더욱 빠르게 날아간다.',{summons:2,unitSpeed:405,dot:30,dotTime:3}),
-    v('세 개의 불씨',5000,2.25,1.21,1.17,'wings','세 마리의 불사조가 적을 추격한다.',{summons:3,unitSpeed:450,dot:42,dotTime:3.5}),
-    v('붉은 왕관',9500,3.3,1.37,1.27,'crown','화염 조련사의 왕관이 소환수 넷을 부른다.',{summons:4,unitSpeed:480,dot:60,dotTime:4}),
-    v('되살아나는 태양',17000,4.7,1.52,1.42,'halo','다섯 불사조가 장시간 날아다닌다.',{summons:5,unitSpeed:520,unitLife:12,dot:80,dotTime:4}),
-    v('영원한 불꽃',29000,6.4,1.8,1.55,'star','여섯 불사조가 불멸의 화염을 뿌린다.',{summons:6,unitSpeed:570,unitLife:14,dot:105,dotTime:5})],
+    v('불씨의 날갯짓',2500,1.46,1.08,1.08,'ember-wing','두 불사조가 더 빠르게 선회하며 화염을 내려꽂는다.',{summons:2,orbitShotInterval:.72,orbitSplash:119,orbitExplosionMult:3.4,dot:30,dotTime:3.5}),
+    v('세 개의 태양',5000,2.14,1.15,1.17,'triple-sun','세 마리가 윤회하며 불꽃을 쏘고 차례로 자폭한다.',{summons:3,orbitShotInterval:.68,orbitSplash:125,orbitExplosionMult:3.8,unitLife:9.5,dot:40,dotTime:4}),
+    v('태양의 둥지',9500,3.05,1.22,1.27,'solar-nest','화염 오라를 두른 불사조 편대와 뜨거운 폭발.',{summons:3,orbitShotInterval:.58,orbitSplash:139,orbitExplosionMult:4.15,unitLife:10.2,dot:62,dotTime:4}),
+    v('윤회의 왕관',17000,4.15,1.32,1.4,'rebirth','네 마리의 불사조가 강력한 윤회 폭풍을 남긴다.',{summons:4,orbitShotInterval:.53,orbitSplash:150,orbitExplosionMult:4.45,unitLife:10.8,dot:88,dotTime:4.5}),
+    v('영원히 타는 태양',29000,5.8,1.43,1.55,'eternal-sun','황금 화염 편대가 계속 부활하며 전장을 태운다.',{summons:4,orbitShotInterval:.47,orbitSplash:168,orbitExplosionMult:5,unitLife:11.5,dot:112,dotTime:5})],
   aurora:[
     v('초록 성운',3400,1.52,1.12,1.11,'crystal','우주 광선의 도약 거리가 길어진다.',{chain:7,chainRange:230,slow:.55,slowTime:2.2}),
     v('푸른 파동',6900,2.25,1.27,1.22,'wings','오로라가 여덟 적을 관통한다.',{chain:8,chainRange:255,slow:.5,slowTime:2.5}),
@@ -156,10 +157,10 @@ export const EVOLUTIONS = {
     v('동조 신호',420,1,1,1.3,'wings','증폭 신호 범위와 공격속도 지원 효과가 향상된다.',{haste:.21}),
     v('전술 방송망',990,1,1,1.52,'halo','집중 전술 방송으로 인접 타워 공격속도를 30% 높인다.',{haste:.3})],
   papercrane:[
-    v('바람 접기',300,1.5,1.1,1.05,'wings','종이학의 날갯짓이 더 빨라진다.',{summons:1,unitSpeed:365,unitLife:7}),
-    v('두 마리의 학',750,2.2,1.16,1.13,'double','접은 종이학 두 마리가 빠르게 적을 추격한다.',{summons:2,unitSpeed:390,unitLife:7}),
-    v('천 마리의 소원',1750,3.2,1.31,1.24,'star','세 마리의 종이학이 출구까지 적을 쫓는다.',{summons:3,unitSpeed:430,unitLife:9}),
-    v('종이비행 폭풍',3900,4.55,1.48,1.35,'halo','네 마리의 종이학이 지칠 때까지 전장을 누빈다.',{summons:4,unitSpeed:475,unitLife:11})],
+    v('접은 철날개',300,1.45,1.09,1.05,'paper-steel','강화 접기법으로 종이학의 몸체를 단단하게 만든다.',{summons:1,summonHp:160,unitSpeed:850,unitLife:17}),
+    v('쌍둥이 전령',750,2.15,1.18,1.13,'paper-pair','두 마리의 전령이 기지에서 나란히 출발한다.',{summons:2,summonHp:220,unitSpeed:900,unitLife:18}),
+    v('수천 개의 소원',1750,3.1,1.32,1.24,'paper-wish','세 마리가 종이 날개를 날려 적을 견제한다.',{summons:3,summonHp:310,unitSpeed:970,unitLife:19,unitAttackInterval:.58}),
+    v('천상의 종이 폭풍',3900,4.55,1.48,1.35,'paper-storm','네 마리의 강철 종이학이 적의 행렬을 가른다.',{summons:4,summonHp:450,unitSpeed:1050,unitLife:21,unitAttackInterval:.49})],
   marker:[
     v('표적 레이저',540,1.45,1.08,1.1,'crystal','조준 레이저가 맞힌 적에게 28% 추가 피해 표식을 남긴다.',{markAmp:1.28,markTime:4}),
     v('다중 표식',1250,2.1,1.22,1.18,'double','두 적에게 동시에 표식을 각인한다.',{markAmp:1.32,markTime:4.4,multi:2}),
