@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {COMBAT_SCALE,TOWERS,DIFFICULTIES,regularWavePressure,WAVE_ESCALATION,starterProfile} from '../src/data.js';
+import {COMBAT_SCALE,TOWERS,ENEMIES,DIFFICULTIES,WAVE_FORMATIONS,evolveWaveGroups,starterProfile} from '../src/data.js';
 import {DAMAGE_CASH_FACTOR,bounty,createMatch,tick,command} from '../src/engine.js';
 import {EVOLUTIONS} from '../src/evolutions.js';
 
@@ -74,51 +74,55 @@ test('beginner funds still permit initial defense; new economy blocks premature 
  assert.equal(s.players.a.money,before);
 });
 
-test('sustained pressure rises continuously and sharply for Extreme, Hell and Ruin',()=>{
+test('tiered waves escalate through stronger monsters, never a per-type HP or speed multiplier',()=>{
  const tiers=['easy','normal','hard','extreme','hell','ruin'];
- const finals=tiers.map(t=>WAVE_ESCALATION[t].hp);
- assert.ok(finals.every((v,i)=>i===0||v>finals[i-1]));
- assert.ok(WAVE_ESCALATION.extreme.hp>=4.5);
- assert.ok(WAVE_ESCALATION.hell.hp>=6);
- assert.ok(WAVE_ESCALATION.ruin.hp>=8);
+ assert.deepEqual(Object.keys(WAVE_FORMATIONS),tiers);
+ const lateBodies=[];
  for(const d of DIFFICULTIES){
-  const total=d.waves.length;
-  near(regularWavePressure(1,total,d.id).hp,1);
-  const mid=regularWavePressure(Math.floor(total/2)+1,total,d.id);
-  assert.ok(mid.hp>1+(WAVE_ESCALATION[d.id].hp-1)*.3,d.id+' midpoint is still too easy');
-  const last=regularWavePressure(total,total,d.id);
-  near(last.hp,WAVE_ESCALATION[d.id].hp);
-  near(last.speed,WAVE_ESCALATION[d.id].speed);
-  for(let wave=2;wave<=total;wave++){
-   const a=regularWavePressure(wave-1,total,d.id);
-   const b=regularWavePressure(wave,total,d.id);
-   assert.ok(b.hp>a.hp&&b.speed>a.speed,
-    d.id+' should get harder EVERY wave, not only final wave');
-  }
+  const settings=WAVE_FORMATIONS[d.id];
+  const start=d.waves[0],last=d.waves.at(-1);
+  assert.ok(settings.pool.length>=3);
+  assert.ok(settings.escorts>=1);
+  const draft=[['heavy',18],['runner',12]];
+  assert.deepEqual(evolveWaveGroups(draft,1,d.waves.length,d.id),draft);
+  const final=evolveWaveGroups(draft,d.waves.length,d.waves.length,d.id);
+  assert.ok(final.some(([type])=>!draft.some(([before])=>before===type)),
+   d.id+' must deploy stronger named species by the finale');
+  assert.ok(last.groups.length>start.groups.length,
+   d.id+' needs more diverse wave formations late');
+  assert.ok(last.groups.some(([type])=>settings.pool.includes(type)));
+  lateBodies.push(final);
  }
+ assert.ok(lateBodies[3].length>=lateBodies[0].length);
+ assert.ok(WAVE_FORMATIONS.extreme.escorts>WAVE_FORMATIONS.hard.escorts);
+ assert.ok(WAVE_FORMATIONS.ruin.escorts>WAVE_FORMATIONS.hell.escorts);
 });
 
-test('inflating enemy HP does not multiply the total cash earned from that enemy',()=>{
+test('every wave uses fixed per-species HP, speed and damage payout, not an inflated bar',()=>{
  assert.ok(DAMAGE_CASH_FACTOR<.7&&DAMAGE_CASH_FACTOR>.4);
  for(const difficulty of ['easy','normal','hard','extreme','hell','ruin']){
-  const d=DIFFICULTIES.find(x=>x.id===difficulty),s=make(difficulty);
-  s.queue=[{type:'heavy',field:0,at:0}];s.enemies=[];s.wave=d.waves.length;
-  tick(s);
-  const foe=s.enemies.find(e=>e.type==='heavy');
-  assert.ok(foe,difficulty+' enemy needs to spawn');
-  const pressure=regularWavePressure(s.wave,d.waves.length,difficulty);
-  near(foe.maxHp/foe.rewardHpBase,pressure.hp);
-  const fullBarIncome=foe.maxHp*
-    (bounty(foe.rewardHpBase*COMBAT_SCALE)*DAMAGE_CASH_FACTOR/foe.maxHp);
-  near(fullBarIncome,bounty(foe.rewardHpBase*COMBAT_SCALE)*DAMAGE_CASH_FACTOR);
-  // Damaging half an inflated HP bar is only half of nominal income.
-  s.queue=[];s.players.a.money=0;
-  foe.x=200;foe.y=200;
-  s.towers=[{id:9000,owner:'a',field:0,type:'scout',x:200,y:120,level:0,cd:0,target:'first'}];
-  const initialHp=foe.hp;tick(s);
-  const lost=initialHp-foe.hp;
-  assert.ok(lost>0,difficulty+' tower must hit');
-  near(s.players.a.money,
-   lost/foe.maxHp*bounty(foe.rewardHpBase*COMBAT_SCALE)*DAMAGE_CASH_FACTOR);
+  const d=DIFFICULTIES.find(x=>x.id===difficulty);
+  const values=[];
+  for(const wave of [1,Math.ceil(d.waves.length/2),d.waves.length]){
+   const s=make(difficulty);
+   s.queue=[{type:'heavy',field:0,at:0}];s.enemies=[];s.wave=wave;
+   tick(s);
+   const foe=s.enemies.find(e=>e.type==='heavy');
+   assert.ok(foe,difficulty+' enemy needs to spawn');
+   near(foe.maxHp,ENEMIES.heavy.hp*d.hp);
+   near(foe.speed,ENEMIES.heavy.speed);
+   near(foe.rewardHpBase,foe.maxHp);
+   s.queue=[];s.players.a.money=0;
+   foe.x=200;foe.y=200;
+   s.towers=[{id:9000,owner:'a',field:0,type:'scout',x:200,y:120,level:0,cd:0,target:'first'}];
+   const initialHp=foe.hp;
+   tick(s);
+   const lost=initialHp-foe.hp;
+   assert.ok(lost>0,difficulty+' tower must hit');
+   near(s.players.a.money,lost/foe.maxHp*bounty(foe.maxHp*COMBAT_SCALE)*DAMAGE_CASH_FACTOR);
+   values.push([foe.maxHp,foe.speed,foe.damageCashRate]);
+  }
+  for(const v of values.slice(1))for(let j=0;j<3;j++)
+   near(v[j],values[0][j]);
  }
 });
