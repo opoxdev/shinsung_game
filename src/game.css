@@ -1004,3 +1004,42 @@ body{background:#15203d;color:var(--text)}button{border:2px solid #101a35;border
 .pack-challenge-unlock,.meatlord-unlock{color:#f9c8bf;font-weight:700}
 .pack-challenge-unlock{display:inline-block;padding:8px 11px;border:1px solid #a75b70;border-radius:9px;background:#7a3f5633;font-size:12px}
 .pack-card-meatlord .monster-roster{grid-template-columns:repeat(3,minmax(0,1fr))}
+
+/* Expanded worlds: horizontal scroll-snap prevents 9 maps crushing the cards.
+   The stage still owns all scrolling; no extra vertical space is introduced. */
+.map-picker{
+  display:flex;grid-template-columns:none;gap:9px;align-items:stretch;
+  overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;
+  scroll-snap-type:x mandatory;scroll-padding-inline:3px;
+  scrollbar-width:thin;scrollbar-color:#dbf5ff55 #15274255;
+  padding:3px 4px 6px;max-width:calc(100% - 24px);
+}
+.map-pick{
+  flex:0 0 clamp(94px,17%,136px);
+  scroll-snap-align:start;min-width:0;height:82px;
+  transition:border-color .18s,box-shadow .18s,transform .18s;
+}
+.map-pick:hover{transform:translateY(-2px);border-color:var(--map)}
+.map-pick.selected{border-color:var(--map);box-shadow:0 0 0 1px var(--map),0 0 12px color-mix(in srgb,var(--map) 35%,transparent)}
+.map-pick.selected>b{background:color-mix(in srgb,var(--map) 28%,#1c2d50)}
+.map-pick:focus-visible{outline:3px solid #ffedb1;outline-offset:-3px}
+.map-pick .map-mini{height:55px}
+.map-pick>b{display:block;font-size:11px;padding:4px 2px 2px}
+.map-stage.biome-sakura{border-color:#cd90ab;background:#f8b5d1}
+.map-stage.biome-sakura .world-art:after{background:linear-gradient(transparent 30%,#79486c22 68%,#3a325daa 100%)}
+.map-stage.biome-sakura .map-copy .eyebrow{color:#fff2f8}
+.map-stage.biome-moonlake{border-color:#8fa7d2;background:#334a89}
+.map-stage.biome-moonlake .world-art:after{background:linear-gradient(transparent 27%,#101c4633 60%,#111b48e0 100%)}
+.map-stage.biome-moonlake .map-copy h2{text-shadow:0 3px #202651,0 0 19px #a6c9f9aa}
+.map-stage.biome-skyisles{border-color:#9ef3df;background:#a8e5eb}
+.map-stage.biome-skyisles .world-art:after{background:linear-gradient(transparent 31%,#316b7922 70%,#23587da6 100%)}
+.map-stage.biome-skyisles .map-copy .eyebrow{color:#eaffee}
+.map-stage.biome-stardune{border-color:#e0b49f;background:#8f749e}
+.map-stage.biome-stardune .world-art:after{background:linear-gradient(transparent 30%,#6a436e38 69%,#302548bd 100%)}
+.map-stage.biome-stardune .map-copy h2{color:#fff0ca;text-shadow:0 3px #503b69,0 0 16px #ffe2b977}
+@media(max-width:620px){
+  .map-picker{left:7px;right:7px;max-width:calc(100% - 14px);gap:6px}
+  .map-pick{flex-basis:94px;height:79px}
+  .map-pick .map-mini{height:53px}
+  .map-pick>b{display:block;font-size:10px}
+}
