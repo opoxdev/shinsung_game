@@ -5,6 +5,18 @@ import { makeTerrain } from './terrain.js';
 import { drawEnemy, drawEnemyOverlay } from './enemy-art.js';
 import { drawTowerAttackEffect, drawTowerPresence, isTowerAttackEffect } from './combat-fx.js';
 import { TERRAIN_MARGIN, constrainCamera } from './presentation.js';
+// Streaming culling avoids per-frame array copies. Crucially, quota accounting
+// happens only AFTER age, field, and screen-visibility checks.
+export function* combatEventsToRender(events,time,field,isVisible,reduced=false){
+  let damage=0,attacks=0;
+  for(let i=events.length-1;i>=0;i--){
+    const e=events[i],age=time-e.time;
+    if(e.field!==field||age<0||age>.45||!isVisible(e))continue;
+    if(e.kind==='damage'&&(reduced||damage++>=32))continue;
+    if(isTowerAttackEffect(e)&&++attacks>(reduced?32:90))continue;
+    yield e;
+  }
+}
 export const portrait=character;
 export { landscape } from './art.js';
 // Aim is a continuous world-space angle, not a 4/8-direction sprite choice.
@@ -99,15 +111,9 @@ export class Renderer {
         g.imageSmoothingEnabled=true;
         for(const e of state.enemies)if(e.field===f&&this.visible(e.x+offset,e.y))drawEnemyOverlay(g,e,state.time);
         for(const u of state.units)if(u.field===f&&this.visible(u.x+offset,u.y))this.summon(g,u,now);
-        let damageLabels=0,attackVisuals=0;
-        // Newest-first: count only ON-SCREEN, LIVE damage labels. The old
-        // forward pass counted stale/offscreen hits before checking visibility,
-        // so after a busy wave the newest damage numbers were never drawn.
-        for(let i=state.events.length-1;i>=0;i--){const e=state.events[i];
+        for(const e of combatEventsToRender(state.events,state.time,f,
+          ev=>this.visible(ev.x+offset,ev.y,180),this.reducedEffects)){
           const age=state.time-e.time;
-          if(e.field!==f||age<0||age>.45||!this.visible(e.x+offset,e.y,180))continue;
-          if(e.kind==='damage'&&(this.reducedEffects||damageLabels++>=32))continue;
-          if(isTowerAttackEffect(e)&&++attackVisuals>(this.reducedEffects?32:90))continue;
           g.globalAlpha=1-age/.45;g.strokeStyle=TOWERS[e.type]?.color||ENEMIES[e.type]?.color||'#ffd88c';g.lineWidth=e.type==='rail'?5:3;g.shadowColor=g.strokeStyle;g.shadowBlur=0;
           if(isTowerAttackEffect(e)){
             const rarity=TOWERS[e.type]?.rarity;
@@ -162,6 +168,13 @@ export class Renderer {
             g.beginPath();g.arc(e.x,e.y,8+age*(isMark?56:125),0,Math.PI*2);g.stroke();
             if(isMark){g.fillStyle='#efd1ff';g.font='bold 18px sans-serif';g.fillText('⌖',e.x-9,e.y-25-age*36);}
             else{g.fillStyle='#ffe9a4';g.font='bold 23px sans-serif';g.fillText('✦',e.x-12,e.y-28-age*45);}
+          }else if(e.kind==='rift'){
+            const phase=Math.min(1,age/.45);
+            g.save();g.strokeStyle='#c27aff';g.fillStyle='#e3baff';
+            g.lineWidth=7*(1-phase)+1;g.shadowColor='#bb68ff';g.shadowBlur=10;
+            g.beginPath();g.ellipse(e.x,e.y,13+65*phase,33+90*phase,phase*.55,0,Math.PI*2);g.stroke();
+            g.font='bold 19px sans-serif';g.fillText('✦ 균열 증원',e.x+25,e.y-32-phase*30);
+            g.restore();
           }else if(e.kind==='kill'){
             const pieces=e.split?9:e.size>=28?13:5;
             g.strokeStyle=e.color||'#fff3b9';g.lineWidth=2+Math.max(0,4-age*10);
@@ -239,6 +252,19 @@ export class Renderer {
     const bob=Math.sin(time*11+u.id)*3;
     g.save();g.translate(u.x,u.y+bob);
     g.fillStyle='#17343c55';g.beginPath();g.ellipse(0,13,16,6,0,0,7);g.fill();
+    if(u.type==='crystalspider'){
+      // The spiders are crystalline arachnids, not generic goblin placeholders.
+      g.fillStyle='#59c8c0';g.strokeStyle='#c7fff5';g.lineWidth=3;
+      for(let i=0;i<4;i++){
+        const py=-11+i*6;
+        g.beginPath();g.moveTo(-6,py);g.lineTo(-24-i%2*4,py-11+i*3);
+        g.moveTo(6,py);g.lineTo(24+i%2*4,py-11+i*3);g.stroke();
+      }
+      g.beginPath();g.moveTo(0,-27);g.lineTo(12,-9);g.lineTo(0,13);g.lineTo(-12,-9);
+      g.closePath();g.fill();g.stroke();
+      g.fillStyle='#efffff';g.fillRect(-6,-11,4,4);g.fillRect(4,-11,4,4);
+      g.restore();return;
+    }
     if(u.type==='spirit'){
       // The former lantern ghost is now a lightweight tactical scouting drone.
       g.shadowColor='#86cde5';g.shadowBlur=9;
