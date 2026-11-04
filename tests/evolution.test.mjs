@@ -40,12 +40,12 @@ test('five same-type placed units upgrade independently; each has its own spent,
   const id=towers[2].id;
   assert.equal(command(s,'a',{kind:'upgrade',id}).ok,true);
   assert.equal(towers[2].level,1);
-  assert.equal(towers[2].spent,150+180);
-  assert.equal(s.players.a.money,money-180);
+  assert.equal(towers[2].spent,TOWERS.scout.cost+TOWERS.scout.upgrades[0]);
+  assert.equal(s.players.a.money,money-TOWERS.scout.upgrades[0]);
   assert.ok(towerStats(towers[2]).damage>towerStats(towers[1]).damage);
   assert.notEqual(character('scout','default',1),character('scout','default',0));
   for(const other of towers.filter(t=>t.id!==id)){
-    assert.equal(other.level,0);assert.equal(other.spent,150);
+    assert.equal(other.level,0);assert.equal(other.spent,TOWERS.scout.cost);
     assert.equal(towerStats(other).stageName,'기본 장비');
   }
   for(let i=1;i<TOWERS.scout.upgrades.length;i++)assert.equal(command(s,'a',{kind:'upgrade',id}).ok,true);
