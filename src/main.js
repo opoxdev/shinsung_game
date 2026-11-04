@@ -487,6 +487,35 @@ function evolutionItem(look){
     flame:['#ffb27d','<path d="M26 84Q5 56 31 18q1 32 22 26Q63 16 64 8q37 48 8 76Z" fill="#ff946c" stroke="#ffcc81" stroke-width="5"/><path d="M43 84Q32 63 52 42q20 29 8 42" fill="#ffeaa2"/>'],
     double:['#a7e8ff','<path d="M21 13v70m58-70v70" stroke="#b9e7ff" stroke-width="11"/><path d="M10 27h23m35 0h23" stroke="#ffdcaa" stroke-width="9"/>']
   };
+  // Custom evolution badges for the newly authored summon equipment.
+  // The same stage theme appears on the model rather than a generic crown.
+  const summonIcons={
+    rotor:['#77efff','drone',1],formation:['#77efff','drone',2],
+    railgun:['#77efff','drone',3],flagship:['#77efff','drone',4],
+    fortress:['#77efff','drone',5],
+    'ember-wing':['#ffb05a','phoenix',1],'triple-sun':['#ffb05a','phoenix',2],
+    'solar-nest':['#ffb05a','phoenix',3],rebirth:['#ffb05a','phoenix',4],
+    'eternal-sun':['#ffb05a','phoenix',5],
+    'goblin-shield':['#b3ed96','goblin',1],'goblin-dual':['#b3ed96','goblin',2],
+    'goblin-guard':['#b3ed96','goblin',3],'goblin-general':['#b3ed96','goblin',4],
+    'paper-steel':['#ffebcb','paper',1],'paper-pair':['#ffebcb','paper',2],
+    'paper-wish':['#ffebcb','paper',3],'paper-storm':['#ffebcb','paper',4],
+    'spider-armor':['#75ffe6','spider',1],'spider-hive':['#75ffe6','spider',2],
+    'spider-queen':['#75ffe6','spider',3],'spider-colony':['#75ffe6','spider',4]
+  };
+  if(Object.hasOwn(summonIcons,look)){
+    const [color,type,level]=summonIcons[look];
+    const shapes={
+      drone:'<path d="M27 49H73L82 63H18Z" fill="#294c66" stroke="#b5fdff" stroke-width="5"/><circle cx="20" cy="46" r="13" fill="none" stroke="#a0f7ff" stroke-width="5"/><circle cx="80" cy="46" r="13" fill="none" stroke="#a0f7ff" stroke-width="5"/><path d="M50 61v22" stroke="#e2ffff" stroke-width="6"/>',
+      phoenix:'<path d="M19 78Q3 52 14 24Q23 54 41 34L52 13 67 41Q81 22 86 10Q109 54 74 83Z" fill="#ff9762" stroke="#ffe4a1" stroke-width="4"/><path d="M43 84Q30 62 52 42Q71 64 61 85Z" fill="#fff1a5"/>',
+      goblin:'<path d="M50 12L84 27V64Q72 82 50 91Q24 75 17 62V27Z" fill="#587f66" stroke="#e4f6b6" stroke-width="5"/><path d="M35 42l15-14 16 14-7 20H41Z" fill="#d4f6a4"/>',
+      paper:'<path d="M6 42L46 11 51 42 93 23 72 68 53 59 33 85 30 57Z" fill="#fff5df" stroke="#cfb2ac" stroke-width="5"/><path d="M10 42l43 17L46 11" fill="none" stroke="#e6d2bd" stroke-width="2"/>',
+      spider:'<path d="M50 10L72 31 66 67 50 88 28 67 29 31Z" fill="#71f9e7" stroke="#dcfff9" stroke-width="5"/><path d="M27 41L9 27m17 32L8 69m66-28 19-14m-18 33 19 9" stroke="#a0fff2" stroke-width="5" fill="none"/>'
+    };
+    const stars=Array.from({length:level},(_,i)=>'<circle cx="'+(18+i*15)+'" cy="94" r="3" fill="'+color+'"/>').join('');
+    return '<svg viewBox="0 0 100 100" aria-label="'+esc(look)+'" style="--item-color:'+color+'">'+shapes[type]+stars+'</svg>';
+  }
+
   const fallback={orb:'◉',bandanna:'〰',thorns:'❧',crystal:'◆',wings:'✧',cape:'♜',antenna:'⚡',gold:'◈',coral:'♧',mask:'◈',aura:'✺'};
   if(!assets[look])return `<span class="evo-item-symbol">${fallback[look]||'✦'}</span>`;
   const [color,paths]=assets[look];return `<svg viewBox="0 0 100 100" aria-hidden="true" style="--item-color:${color}">${paths}</svg>`;
