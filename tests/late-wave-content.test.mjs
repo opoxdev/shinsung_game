@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {TOWERS,MODES,DIFFICULTIES,regularWavePressure,WAVE_ESCALATION,starterProfile} from '../src/data.js';
+import {TOWERS,MODES,DIFFICULTIES,ENEMIES,COMBAT_SCALE,WAVE_FORMATIONS,evolveWaveGroups,starterProfile} from '../src/data.js';
 import {createMatch,command,tick,validateConfig,towerStats,modifiers} from '../src/engine.js';
 import {EVOLUTIONS} from '../src/evolutions.js';
 import {character} from '../src/art.js';
@@ -23,28 +23,46 @@ test('Dark Energy combines with every offered mode, up to the entire set',()=>{
  assert.throws(()=>validateConfig(conf({modes:[...ids,'invalid']})),/잘못된/);
 });
 
-test('all campaigns retain their opening HP and escalate at tier-specific rates',()=>{
- const ids=new Set();
+test('every difficulty keeps each monster species HP and speed constant across waves',()=>{
+ const tiers=new Set();
  for(const diff of DIFFICULTIES){
-  ids.add(diff.id);
-  const last=diff.waves.length;
-  assert.deepEqual(regularWavePressure(1,last,diff.id),{hp:1,speed:1});
-  assert.ok(Math.abs(regularWavePressure(last,last,diff.id).hp-WAVE_ESCALATION[diff.id].hp)<1e-12);
-  assert.ok(Math.abs(regularWavePressure(last,last,diff.id).speed-WAVE_ESCALATION[diff.id].speed)<1e-12);
-  for(let wave=2;wave<=last;wave++){
-   const earlier=regularWavePressure(wave-1,last,diff.id);
-   const later=regularWavePressure(wave,last,diff.id);
-   assert.ok(later.hp>=earlier.hp&&later.speed>=earlier.speed);
+  tiers.add(diff.id);
+  const waveCount=diff.waves.length;
+  // Raw templates are authoritative; the difficulty multiplier is fixed
+  // for the campaign, NOT dependent on the wave number.
+  for(const wave of [1,Math.ceil(waveCount/2),waveCount]){
+   const s=match({difficulty:diff.id});
+   s.wave=wave;s.queue=[{type:'zombie',field:0,at:0}];s.enemies=[];
+   tick(s);
+   assert.ok(s.enemies.length>0);
+   const e=s.enemies.find(x=>x.type==='zombie');
+   assert.ok(e);
+   assert.ok(Math.abs(e.maxHp-ENEMIES.zombie.hp*diff.hp)<1e-9,diff.id+' wave '+wave);
+   assert.equal(e.speed,ENEMIES.zombie.speed,diff.id+' wave '+wave);
+   assert.equal(e.rewardHpBase,e.maxHp);
   }
-  assert.ok(regularWavePressure(Math.ceil(last*.25),last,diff.id).hp<1+(WAVE_ESCALATION[diff.id].hp-1)*.17,'opening must remain accessible');
-  const s=match({difficulty:diff.id});
-  s.wave=last;s.queue=[{type:'zombie',field:0,at:0}];s.enemies=[];
-  tick(s);
-  assert.ok(s.enemies.length>0);
-  const expected=(18/6)*diff.hp*WAVE_ESCALATION[diff.id].hp;
-  assert.ok(Math.abs(s.enemies[0].maxHp-expected)<1e-8,diff.id+' late-wave HP');
+  const raw=diff.waves[0].groups;
+  assert.deepEqual(evolveWaveGroups(raw,1,waveCount,diff.id),raw,'no early-wave promotion');
+  const last=diff.waves.at(-1).groups;
+  assert.ok(last.some(([type])=>WAVE_FORMATIONS[diff.id].pool.includes(type)));
  }
- assert.equal(ids.size,6);
+ assert.equal(tiers.size,6);
+});
+
+test('later waves send stronger monster species rather than inflating HP',()=>{
+ const raw=[['zombie',20],['runner',15],['shieldling',6],['boss',1]];
+ for(const d of DIFFICULTIES){
+  const full=d.waves.length;
+  const before=evolveWaveGroups(raw,1,full,d.id);
+  const after=evolveWaveGroups(raw,full,full,d.id);
+  assert.deepEqual(before,raw);
+  const newTypes=after.filter(([type])=>!raw.some(([original])=>original===type));
+  assert.ok(newTypes.length>=2,d.id+' must introduce genuinely different enemies');
+  const strong=after.some(([type])=>ENEMIES[type].hp>ENEMIES.boss.hp);
+  assert.ok(strong,d.id+' must use higher-tier templates by the final wave');
+  assert.deepEqual(raw,[['zombie',20],['runner',15],['shieldling',6],['boss',1]],
+   'promotion must not mutate author-authored wave recipes');
+ }
 });
 
 test('Rift Reinforcements adds controlled recurring mobs via standard wave queue',()=>{
