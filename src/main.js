@@ -509,7 +509,7 @@ function inspector(){
   const cash=state.players[playerId]?.money||0;
   const nextStats=next?towerStats({...t,level:t.level+1}):null;
   const names={ranged:'원거리 사격',melee:'근접 검격',splash:'범위 폭발',chain:'연쇄 공격',summon:'소환술',buff:'지원 오라',income:'주기적 수입',mark:'약점 표식'};
-  const kind=names[stats.kind]||d.role;
+  const kind=stats.kind==='summon'?(stats.summonStyle==='orbit'?'선회 사격 · 충돌 폭발':'기지 출격 · 체력 교환'):names[stats.kind]||d.role;
   const future=nextStats?(stats.kind!==nextStats.kind?' · '+kind+' → '+(names[nextStats.kind]||'특수 공격'):''):'';
   const compare=(now,after,kind='whole')=>{const show=kind==='interval'?formatAttackInterval:formatWholeStat;return `<strong>${show(now)}</strong>${after!==undefined?` <span class="evo-delta">→ ${show(after)}</span>`:''}`;};
   const info=next?`<section class="evo-next"><div class="evo-upgrade-layout"><div class="evo-item-art" role="img" aria-label="${esc(next.look)} 장비">${evolutionItem(next.look)}</div><div><div class="evo-next-header"><small>다음 진화 / LEVEL ${t.level+2}</small><b>${esc(next.name)}</b></div><p>${esc(next.desc)}</p><span class="evo-effect">${esc(future||'새 장비·특수 효과를 획득합니다')}</span></div></div></section>`
@@ -524,7 +524,14 @@ function inspector(){
       <div>사거리${compare(stats.range,nextStats?.range)}</div>
       <div>공격 방식<b>${kind}</b></div></div>
     ${stats.kind==='income'?`<p class="evo-extra">수입: +${fmt(stats.income)} / ${formatAttackInterval(stats.interval)}</p>`:''}
-    ${stats.kind==='summon'?`<p class="evo-extra">소환수 ${stats.summons||1}마리 · 이동 속도 ${stats.unitSpeed||210}</p>`:''}
+    ${stats.kind==='summon'?(stats.summonStyle==='orbit'?
+    `<p class="evo-extra">✦ 전설·신화 선회 편대 · 활동 ${formatAttackInterval(stats.unitLife||8)} 후 자폭·재소환</p>
+      <p class="evo-extra">최대 편대 ${compare(stats.summons||1,nextStats?.summons)}기 · 사격 주기 ${compare(stats.orbitShotInterval||.75,nextStats?.orbitShotInterval,'interval')}</p>
+      <p class="evo-extra">폭발 배율 ×${(stats.orbitExplosionMult||3).toFixed(1)} · 폭발 반경 ${compare(stats.orbitSplash||90,nextStats?.orbitSplash)}</p>`:
+    `<p class="evo-extra">⚔ 아군 기지에서 출발 → 적 소환 지점으로 역진군</p>
+      <p class="evo-extra">병력 ${compare(stats.summons||1,nextStats?.summons)}명 · 소환수 체력 ${compare(stats.summonHp||120,nextStats?.summonHp)} · 이동 속도 ${compare(stats.unitSpeed||550,nextStats?.unitSpeed)}</p>
+      <p class="evo-extra">피격·충돌 시 체력을 교환하며 생존 병력은 계속 전진 · 선제 공격 주기 ${compare(stats.unitAttackInterval||.8,nextStats?.unitAttackInterval,'interval')}</p>`
+  ):''}
     ${stats.kind==='chain'?`<p class="evo-extra">연쇄 타겟 ${stats.chain||3}명 · 도약 범위 ${stats.chainRange||120}</p>`:''}
     ${stats.markAmp?`<p class="evo-extra">표식이 남은 적은 피해량 +${Math.round((stats.markAmp-1)*100)}% · ${formatAttackInterval(stats.markTime||3)}</p>`:''}
     ${stats.chargeEvery?`<p class="evo-extra">${fmt(stats.chargeEvery)}발마다 충전탄 추가 피해 +${fmt(((stats.chargeBonus||2)-1)*100)}% · 보스 집중 사격</p>`:''}
