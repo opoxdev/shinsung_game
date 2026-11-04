@@ -761,6 +761,17 @@ function redesignedSummonPortrait(id,skin='default'){
       +'<path d="M63 29l-15-17m67 17 18-17" stroke="#d4fff4" stroke-width="5"/>'
       +'</g>';
   }
+  // A purchased costume adds a silhouette-defining mechanical/ritual badge,
+  // not merely a palette swap; collectible variants remain recognizable.
+  if(skin!=='default'){
+    const emblem=skin==='hologram'?'M13 15L36 7 47 29 25 42Z':
+      skin==='frostfire'?'M24 8L48 29 25 51 11 29Z':
+      skin==='celestial'?'M22 13L39 6 54 31 36 45Z':
+      skin==='starlight'?'M16 7L36 26 22 47 8 27Z':
+      skin==='solstice'?'M26 7Q48 19 35 43Q12 35 26 7Z':
+      'M21 7L46 13 41 41 16 36Z';
+    figure+='<g data-costume-shape="'+skin+'"><path d="'+emblem+'" fill="'+tint+'" stroke="#f7ffff" stroke-width="3"/><circle cx="29" cy="26" r="4" fill="#fff"/></g>';
+  }
   const tier=skin!=='default'?'costume':BASE_ART_TIERS[TOWERS[id]?.rarity||'rare'];
   return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 210" aria-label="'+id+' '+skin+'" data-design="v2" data-art-tier="'+tier+'" data-base="'+id+'" data-costume="'+skin+'" data-summon-model="rework">'
     +defs+foot+figure+'</svg>';
