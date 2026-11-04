@@ -16,7 +16,7 @@ function canvasSpy(){
 const attack=(type,kind)=>({
  id:103,kind,field:0,x:200,y:190,tx:310,ty:260,type,level:3,amount:17
 });
-test('all 32 towers are represented by deterministic high-contrast VFX palettes',()=>{
+test('all 35 towers are represented by deterministic high-contrast VFX palettes',()=>{
  assert.deepEqual([...EFFECT_TYPES].sort(),Object.keys(TOWERS).sort());
  const colors=new Set(),shapes=new Set();
  for(const id of EFFECT_TYPES){
@@ -30,7 +30,7 @@ test('all 32 towers are represented by deterministic high-contrast VFX palettes'
  assert.ok(shapes.size>=19,'combat signatures should be varied, not generic');
 });
 
-test('all 32 basic and evolved tower presences can be rendered with normal and reduced effects',()=>{
+test('all 35 basic and evolved tower presences can be rendered with normal and reduced effects',()=>{
  for(const [id,def] of Object.entries(TOWERS)){
   for(const quality of [0,1]){
    const {g,commands}=canvasSpy();
