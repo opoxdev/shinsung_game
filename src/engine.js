@@ -1,4 +1,4 @@
-import { WORLD, MAPS, TOWERS, ENEMIES, MODES, DIFFICULTIES, PACKS, SKIN_STYLES, CRATES, BOSS_ABILITIES, COMBAT_SCALE, EVENTS, campaignOf, regularWavePressure, starterProfile, skinCandidates, availableCrateStyles } from './data.js';
+import { WORLD, MAPS, TOWERS, ENEMIES, MODES, DIFFICULTIES, PACKS, SKIN_STYLES, CRATES, BOSS_ABILITIES, COMBAT_SCALE, EVENTS, campaignOf, starterProfile, skinCandidates, availableCrateStyles } from './data.js';
 import { evolutionAt } from './evolutions.js';
 export const STEP = .05;
 // Damage earnings are reduced and tied to nominal enemy HP, not multiplied
@@ -98,12 +98,14 @@ export function requiredVotes(s) {const n=Object.keys(s.players).length;return n
 function event(s,e) {s.events.push({...e,id:s.nextId++,time:s.time});if(s.events.length>140)s.events.shift();}
 function spawn(s,type,field,source='wave') {
   const d=ENEMIES[type],mods=modifiers(s.config),diff=campaignOf(s.config);
-  const pressure=s.config.eventId||source==='pvp'?{hp:1,speed:1}:regularWavePressure(s.wave,diff.waves.length,s.config.difficulty);
-  const hp=d.hp*mods.hp*diff.hp*pressure.hp;
-  const shield=(d.shield||0)*mods.hp*diff.hp*pressure.hp;
-  const unit={id:s.nextId++,type,field,hp,maxHp:hp,shield,maxShield:shield,rewardHpBase:hp/pressure.hp,
+  // A monster has identical stats on wave 1 and wave 30. Difficulty and
+  // challenge modes have static multipliers; waves get harder ONLY by
+  // sending stronger enemy species and more elite formations.
+  const hp=d.hp*mods.hp*diff.hp;
+  const shield=(d.shield||0)*mods.hp*diff.hp;
+  const unit={id:s.nextId++,type,field,hp,maxHp:hp,shield,maxShield:shield,rewardHpBase:hp,
     progress:0,x:mapOf(s).path[0][0],y:mapOf(s).path[0][1],
-    speed:d.speed*mods.speed*pressure.speed,source};
+    speed:d.speed*mods.speed,source};
   s.enemies.push(unit);return unit;
 }
 function nextWave(s) {
@@ -353,8 +355,8 @@ export function tick(s,dt=STEP) {
       const path=mapOf(s).path,baseProgress=lane?routeLength(path):0;
       // Long event maps must not exhaust a squad's timer before it can
       // physically reach the enemy front. Endurance is route-aware and bounded.
-      const lifetime=lane?Math.min(48,Math.max(stats.unitLife||12,
-        baseProgress/Math.max(1,stats.unitSpeed||550)+3)):(stats.unitLife||9);
+      const lifetime=lane?Math.min(150,Math.max(stats.unitLife||36,
+        baseProgress/Math.max(1,stats.unitSpeed||130)+7)):(stats.unitLife||9);
       for(let i=0;i<count;i++){
         const progress=lane?Math.max(0,baseProgress-i*19):0;
         const origin=lane?pointOnPath(path,progress):{x:t.x,y:t.y};
@@ -363,7 +365,7 @@ export function tick(s,dt=STEP) {
           level:t.level,role:lane?'lane':'orbit',target:e.id,
           x:origin.x,y:origin.y,progress,phase:lane?'march':'launch',
           hp:lane?stats.summonHp||120:1,maxHp:lane?stats.summonHp||120:1,
-          life:lifetime,maxLife:lifetime,speed:stats.unitSpeed||550,
+          life:lifetime,maxLife:lifetime,speed:stats.unitSpeed||(lane?130:550),
           damage:stats.damage*power,attackCd:.25+(i%3)*.12,
           attackInterval:stats.unitAttackInterval||.8,
           attackRange:stats.unitAttackRange||80,
