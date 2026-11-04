@@ -3,6 +3,9 @@ import { TOWERS } from './data.js';
 // Everyday/common and craft/rare portraits use modest civilian jobs.
 // Epic/legendary/mythic gain progressively unique silhouettes; no military-uniform template.
 const DESIGNS={
+  pulsekeeper:{main:'#985ac4',dark:'#34304e',trim:'#f1d5ff',helmet:'hood',weapon:'drum',rig:'cape'},
+  duskarcher:{main:'#5b5379',dark:'#252741',trim:'#c7a6f2',helmet:'hood',weapon:'bow',rig:'cape'},
+  crystalspider:{main:'#49beb4',dark:'#273b65',trim:'#bbf9ed',helmet:'spire',weapon:'crystal',rig:'heavy'},
   voidwalker:{main:'#9d469c',dark:'#242441',trim:'#83c9e9',helmet:'hood',weapon:'dark',rig:'cape'},
   oldgod:{main:'#fff7e9',dark:'#683647',trim:'#ffd764',helmet:'halo',weapon:'judgement',rig:'titan'},
   scout:{"main":"#628ec4","dark":"#334e71","trim":"#f3d184","helmet":"none","weapon":"slingshot","rig":"casual"},
@@ -588,7 +591,78 @@ function oldGodPortrait(){
 // Hand-authored scalable figure based on the supplied character reference.
 // All artwork is self-contained SVG; no requests during gameplay.
 function voidWalkerPortrait(){return "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 180 210\" aria-label=\"심연의 방랑자\" data-design=\"v2\" data-art-tier=\"myth\" data-base=\"voidwalker\" data-costume=\"default\">\n<defs>\n<linearGradient id=\"vw-pants\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\"><stop stop-color=\"#40577a\"/><stop offset=\".53\" stop-color=\"#242d4d\"/><stop offset=\"1\" stop-color=\"#151629\"/></linearGradient>\n<linearGradient id=\"vw-sash\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\"><stop stop-color=\"#84d4fd\"/><stop offset=\".45\" stop-color=\"#237dc1\"/><stop offset=\"1\" stop-color=\"#1d315f\"/></linearGradient>\n<linearGradient id=\"vw-cloth\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\"><stop stop-color=\"#e85bd2\"/><stop offset=\".6\" stop-color=\"#8c368c\"/><stop offset=\"1\" stop-color=\"#432047\"/></linearGradient>\n<radialGradient id=\"vw-flame\"><stop stop-color=\"#ffeafa\"/><stop offset=\".24\" stop-color=\"#c995ff\"/><stop offset=\".62\" stop-color=\"#994afa\"/><stop offset=\"1\" stop-color=\"#6732e8\" stop-opacity=\"0\"/></radialGradient>\n</defs>\n<ellipse cx=\"90\" cy=\"194\" rx=\"68\" ry=\"11\" fill=\"#ee2464\" opacity=\".25\"/>\n<g stroke=\"#b85af1\" stroke-linecap=\"round\" fill=\"none\">\n <path d=\"M38 135Q17 125 20 111Q6 95 22 78Q10 102 37 112Q27 117 38 135M142 143Q166 122 151 106Q172 83 155 64Q160 88 140 102\" stroke-width=\"6\" opacity=\".58\"/>\n <path d=\"M31 127Q5 118 11 97M152 136Q173 119 171 95M47 148Q28 136 32 118M143 151Q159 135 149 122\" stroke-width=\"2.7\" opacity=\".9\"/>\n</g>\n<g stroke=\"#271a38\" stroke-width=\"2.4\" stroke-linejoin=\"round\">\n <!-- Flowing blue cape, split dark trousers and sandal feet -->\n <path d=\"M75 99Q56 115 56 155L48 184Q70 196 86 177L100 117Z\" fill=\"#2377a7\"/>\n <path d=\"M98 103Q118 124 126 172L138 188Q115 199 99 179L85 122Z\" fill=\"url(#vw-pants)\"/>\n <path d=\"M62 129Q64 159 58 184L81 185L93 143L103 185L123 182Q119 149 113 124Z\" fill=\"url(#vw-pants)\"/>\n <path d=\"M60 183L57 197Q66 204 79 198L82 186Z M105 185L103 199Q118 205 130 198L123 182Z\" fill=\"#b99082\"/>\n <path d=\"M56 196Q63 200 81 198M103 198Q119 203 131 198\" stroke=\"#763647\" fill=\"none\"/>\n <path d=\"M62 190L80 189M108 190L124 189\" stroke=\"#78425a\" fill=\"none\" stroke-width=\"3\"/>\n <!-- body and exposed tattooed chest -->\n <path d=\"M73 76Q90 69 108 78L118 111L110 131L67 126L62 101Z\" fill=\"#ae837e\"/>\n <path d=\"M80 81Q89 95 98 81Q106 91 103 111Q94 116 90 122Q79 108 76 101Z\" fill=\"#93626e\" opacity=\".68\"/>\n <path d=\"M85 89q21-7 14 11q-8 15-18-1q-3-15 16-13M84 96q18 0 8 11M89 91l-8-12M93 91l11-11M91 102l-9 16M95 101l10 14\" fill=\"none\" stroke=\"#4c253d\" stroke-width=\"3.2\"/>\n <!-- wide royal-blue sash and magenta drape -->\n <path d=\"M109 91Q91 105 66 120L70 133Q96 125 120 106Z\" fill=\"url(#vw-sash)\"/>\n <path d=\"M111 105Q94 117 74 120L65 138Q100 136 116 121Z\" fill=\"#34538a\"/>\n <path d=\"M81 131Q92 130 105 126L100 190L82 182Z\" fill=\"url(#vw-cloth)\"/>\n <path d=\"M94 137Q93 170 91 186\" fill=\"none\" stroke=\"#f285e5\" stroke-width=\"2\"/>\n <path d=\"M104 121L116 115L120 126L108 132Z\" fill=\"#d09b51\"/>\n <!-- arms -->\n <path d=\"M66 87Q55 93 53 117L44 153Q48 165 58 158L70 123L79 97Z\" fill=\"#b18b88\"/>\n <path d=\"M110 89Q123 91 128 115L143 151Q142 165 132 159L115 129L103 96Z\" fill=\"#bd9993\"/>\n <path d=\"M45 151q-9 8-5 15q5 5 8-2q-2 10 5 10q5-2 3-10q6 8 9 1l-8-14M132 153q-6 12 2 17q4 2 6-8q-1 10 6 8q6-3-1-18\" fill=\"#d9aaa1\"/>\n <!-- head and silver hair -->\n <path d=\"M70 58Q65 35 83 31Q104 26 113 42L115 59L109 78Q95 90 79 76Z\" fill=\"#b98d86\"/>\n <path d=\"M66 53Q53 37 69 21Q82 11 104 24Q114 14 123 31L119 48Q110 39 107 29Q90 39 69 37Z\" fill=\"#e9ebf5\"/>\n <path d=\"M69 47Q64 64 71 87Q62 82 60 66Q53 47 61 34M113 39Q123 50 119 72Q128 65 126 49\" fill=\"#cce1f4\"/>\n <path d=\"M83 24Q99 9 114 24Q119 30 113 39Q100 26 83 34Z\" fill=\"#eeeaf5\"/>\n <!-- purple head wrap -->\n <path d=\"M63 45Q74 18 107 25L118 40L111 50Q94 40 77 54L68 60Z\" fill=\"#8f387e\"/>\n <path d=\"M60 46Q72 22 104 27L112 36M73 53Q97 38 112 48\" stroke=\"#db6ac0\" stroke-width=\"3\" fill=\"none\"/>\n <path d=\"M81 60L89 59M102 58L108 59M90 70Q100 77 107 67\" fill=\"none\" stroke=\"#402c43\" stroke-width=\"2.3\"/>\n <path d=\"M120 35Q141 20 130 10M66 25Q59 15 64 8M113 65Q132 82 118 97\" fill=\"none\" stroke=\"#e5edfa\" stroke-width=\"3\"/>\n</g>\n<!-- Distinct violet energy in each hand -->\n<g opacity=\".95\">\n<circle cx=\"49\" cy=\"156\" r=\"21\" fill=\"url(#vw-flame)\"/><circle cx=\"141\" cy=\"151\" r=\"20\" fill=\"url(#vw-flame)\"/>\n<g stroke=\"#da93ff\" stroke-width=\"2.4\" fill=\"none\" stroke-linecap=\"round\">\n<path d=\"M42 146q-10-17 4-29q-3 18 10 21q15 17-1 28M140 138q17-19 5-30q3 15-5 18q-14 12 2 29\"/>\n<path d=\"M31 149l-9-11M55 139l8-13M154 148l12-17M137 165l-4 10\"/>\n</g><circle cx=\"49\" cy=\"153\" r=\"5\" fill=\"#eddbff\"/><circle cx=\"140\" cy=\"151\" r=\"5\" fill=\"#eddbff\"/>\n</g></svg>";}
+
+// Three bespoke tower silhouettes, rendered as self-contained vector portraits.
+// Original shapes are independent of the legacy fighter portrait templates.
+const NEW_TOWER_SCENES={
+  pulsekeeper:'<g stroke-linejoin="round" stroke-linecap="round">'
+   +'<path d="M48 118Q28 146 25 187L61 195L84 159L112 196L152 187Q143 138 122 115Z" fill="#5e3d85" stroke="#322948" stroke-width="5"/>'
+   +'<path d="M68 156L62 196L82 198L92 158M107 159L119 197L141 195L127 157" fill="#28365b" stroke="#2d2949" stroke-width="5"/>'
+   +'<path d="M59 74Q44 79 43 122L65 141L89 117L117 141L138 124Q134 83 110 73Z" fill="#8d55ae" stroke="#302948" stroke-width="5"/>'
+   +'<path d="M62 106Q84 88 115 107L112 143L66 139Z" fill="#c080d8" stroke="#543569" stroke-width="4"/>'
+   +'<path d="M65 86Q50 48 68 30Q85 15 111 27Q130 49 114 88L95 106Z" fill="#412c67" stroke="#c38ae4" stroke-width="5"/>'
+   +'<path d="M66 53Q72 27 89 24Q105 29 111 50L102 76L82 78Z" fill="#e4b5a5" stroke="#45324e" stroke-width="3"/>'
+   +'<path d="M66 50Q76 29 84 28L79 56L100 43L113 48Q102 15 84 23Q65 26 61 46Z" fill="#ece8ff" stroke="#6c5c9e" stroke-width="3"/>'
+   +'<path d="M77 60L84 59M97 59L104 60" stroke="#432c57" stroke-width="4"/>'
+   +'<path d="M59 106L36 124L27 152Q32 163 41 154L72 133M119 106L141 126L152 150Q147 163 136 153L107 134" fill="#e0ad9f" stroke="#5a3956" stroke-width="5"/>'
+   +'<ellipse cx="88" cy="135" rx="45" ry="41" fill="#663969" stroke="#ffe3ad" stroke-width="6"/>'
+   +'<ellipse cx="88" cy="135" rx="36" ry="33" fill="#cf83ec" stroke="#e6c4fd" stroke-width="4"/>'
+   +'<ellipse cx="88" cy="135" rx="24" ry="23" fill="#3d2c68" stroke="#ffe6bc" stroke-width="3"/>'
+   +'<path d="M88 109v52M62 135h52M70 117l36 36M106 117l-36 36" stroke="#e2b8ff" stroke-width="3"/>'
+   +'<circle cx="88" cy="135" r="9" fill="#fff2e0"/><path d="M40 134L25 128M138 132l17-5" stroke="#c2a5ff" stroke-width="5"/>'
+   +'<ellipse cx="88" cy="134" rx="58" ry="19" fill="none" stroke="#d5a1fb" stroke-width="2.5" stroke-dasharray="12 9"/>'
+   +'</g>',
+  duskarcher:'<g stroke-linejoin="round" stroke-linecap="round">'
+   +'<path d="M44 88Q17 122 28 190L67 197L88 156L119 196L157 191Q144 116 127 85Z" fill="#2e2e4f" stroke="#4e3e70" stroke-width="5"/>'
+   +'<path d="M67 142L58 198L85 198L92 161M106 155L121 199L145 198L129 140" fill="#414466" stroke="#282943" stroke-width="5"/>'
+   +'<path d="M56 86Q89 73 121 87L136 132L110 152L71 149L46 130Z" fill="#625c89" stroke="#272943" stroke-width="5"/>'
+   +'<path d="M75 122L121 113L123 143L91 154Z" fill="#b4a2d2" stroke="#59446b" stroke-width="4"/>'
+   +'<path d="M61 96Q53 72 63 46Q76 20 103 27Q129 39 128 68L120 98Z" fill="#383653" stroke="#aa83cc" stroke-width="5"/>'
+   +'<path d="M67 53Q90 34 115 52L113 81L79 95L69 78Z" fill="#caa99d" stroke="#3c344b" stroke-width="3"/>'
+   +'<path d="M63 51L83 24L103 28L123 49L117 65L103 55L78 65L68 81Z" fill="#4b3d66" stroke="#af89d0" stroke-width="4"/>'
+   +'<path d="M75 68l13-2m13-1 11 1" stroke="#d6fff9" stroke-width="4"/><path d="M85 81q12 6 23-1" fill="none" stroke="#584055" stroke-width="3"/>'
+   +'<path d="M51 100L31 136L38 159L55 152L75 121M126 102L142 132L136 154L119 151L111 119" fill="#d2a89f" stroke="#5a3e53" stroke-width="5"/>'
+   +'<path d="M143 26Q161 65 152 103Q165 145 141 187" fill="none" stroke="#dcb3e8" stroke-width="8"/>'
+   +'<path d="M143 27Q113 88 143 188M143 26L132 35M143 188l-11-9" fill="none" stroke="#ffead1" stroke-width="2.8"/>'
+   +'<path d="M54 135L143 107L54 143" fill="none" stroke="#a4e7eb" stroke-width="5"/>'
+   +'<path d="M143 107l-20-10v20Z" fill="#f2e1ff" stroke="#a9d5ff" stroke-width="3"/>'
+   +'<path d="M27 54l25 20M32 49l26 18M39 43l22 17" stroke="#d2bed2" stroke-width="4"/>'
+   +'<path d="M32 44L26 91L42 94L53 54Z" fill="#4c3b5d" stroke="#e2aadd" stroke-width="3"/>'
+   +'<circle cx="142" cy="107" r="6" fill="#ffecfc"/>'
+   +'</g>',
+  crystalspider:'<g stroke-linejoin="round" stroke-linecap="round">'
+   +'<g fill="none" stroke="#65eedb" stroke-width="8">'
+   +'<path d="M64 108L29 89L12 108M66 125L23 123L8 144M65 143L30 155L24 183M118 108L150 89L166 108M117 125L155 122L170 145M119 143L152 155L160 183"/>'
+   +'</g><g fill="none" stroke="#b3fff1" stroke-width="3">'
+   +'<path d="M62 108L29 89L12 108M64 125L23 123L8 144M64 143L30 155L24 183M120 108L150 89L166 108M119 125L155 122L170 145M121 143L152 155L160 183"/>'
+   +'</g>'
+   +'<path d="M64 85Q72 57 91 58Q114 56 121 86L129 143Q93 176 53 142Z" fill="#2a5470" stroke="#8bf4e8" stroke-width="6"/>'
+   +'<path d="M59 104L41 144L68 169L90 146L111 169L140 143L122 105Z" fill="#42628c" stroke="#63bcb9" stroke-width="5"/>'
+   +'<path d="M60 141L51 187L76 190L88 153M99 153L113 190L137 188L123 142" fill="#273f63" stroke="#65b9be" stroke-width="5"/>'
+   +'<path d="M63 75Q54 47 74 28L99 17L120 35L125 75L111 92L72 91Z" fill="#3c6a85" stroke="#a2fff2" stroke-width="5"/>'
+   +'<path d="M70 38L91 12L115 33L108 60L80 61Z" fill="#9fffea" stroke="#d9fff7" stroke-width="4"/>'
+   +'<path d="M79 58L87 72L79 84L67 72M103 58L112 70L105 83L94 70" fill="#b6fff5" stroke="#385b6c" stroke-width="3"/>'
+   +'<path d="M80 65l9 8 8-8" fill="none" stroke="#263851" stroke-width="3"/>'
+   +'<path d="M60 103L46 121L41 144L58 149L74 119M122 103L137 121L142 144L127 150L111 117" fill="#b4a2a5" stroke="#407a8c" stroke-width="5"/>'
+   +'<path d="M86 94L108 105L101 131L84 143L65 124L70 101Z" fill="#91ffed" stroke="#e4fffa" stroke-width="5"/>'
+   +'<path d="M86 101L98 113L89 134L75 119Z" fill="#4cb5bc" stroke="#e1fff7" stroke-width="2.7"/>'
+   +'<circle cx="89" cy="116" r="5" fill="#fff"/><path d="M80 172L89 187L98 172" fill="none" stroke="#8cfbe8" stroke-width="5"/>'
+   +'<path d="M70 49L53 31M111 46L132 27" stroke="#cbfff3" stroke-width="5"/>'
+   +'</g>'
+};
+function expansionPortrait(id,skin='default'){
+ const scene=NEW_TOWER_SCENES[id];if(!scene)return null;
+ const rarity=TOWERS[id]?.rarity||'rare';
+ const tier=BASE_ART_TIERS[rarity]||'craft';
+ return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 210" aria-label="'+id+'" data-base="'+id+'" data-design="v2" data-art-tier="'+tier+'" data-costume="'+skin+'">'
+ +'<ellipse cx="91" cy="194" rx="67" ry="10" fill="#1e2034" opacity=".27"/>'
+ +'<ellipse cx="91" cy="182" rx="51" ry="8" fill="none" stroke="'+(id==='crystalspider'?'#65ffdf':'#cba4fa')+'" stroke-width="3" opacity=".6"/>'
+ +scene+'</svg>';
+}
+
 export function redesignedPortrait(id,skin='default'){
+  const expansion=expansionPortrait(id,skin);
+  if(expansion)return expansion;
   if(id==='voidwalker')return voidWalkerPortrait();
   if(id==='oldgod')return oldGodPortrait();
  const base=DESIGNS[id];if(!base)return null;
