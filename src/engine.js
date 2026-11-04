@@ -1,4 +1,4 @@
-import { WORLD, MAPS, TOWERS, ENEMIES, MODES, DIFFICULTIES, PACKS, SKIN_STYLES, CRATES, BOSS_ABILITIES, COMBAT_SCALE, EVENTS, campaignOf, starterProfile, skinCandidates, availableCrateStyles } from './data.js';
+import { WORLD, MAPS, TOWERS, ENEMIES, MODES, DIFFICULTIES, PACKS, SKIN_STYLES, CRATES, BOSS_ABILITIES, COMBAT_SCALE, EVENTS, campaignOf, regularWavePressure, starterProfile, skinCandidates, availableCrateStyles } from './data.js';
 import { evolutionAt } from './evolutions.js';
 export const STEP = .05;
 // Damage-based combat cash: 85% of the former full-kill bounty when the
@@ -87,11 +87,12 @@ export function requiredVotes(s) {const n=Object.keys(s.players).length;return n
 function event(s,e) {s.events.push({...e,id:s.nextId++,time:s.time});if(s.events.length>140)s.events.shift();}
 function spawn(s,type,field,source='wave') {
   const d=ENEMIES[type],mods=modifiers(s.config),diff=campaignOf(s.config);
-  const hp=d.hp*mods.hp*diff.hp;
-  const shield=(d.shield||0)*mods.hp*diff.hp;
+  const pressure=s.config.eventId||source==='pvp'?{hp:1,speed:1}:regularWavePressure(s.wave,diff.waves.length);
+  const hp=d.hp*mods.hp*diff.hp*pressure.hp;
+  const shield=(d.shield||0)*mods.hp*diff.hp*pressure.hp;
   const unit={id:s.nextId++,type,field,hp,maxHp:hp,shield,maxShield:shield,
     progress:0,x:mapOf(s).path[0][0],y:mapOf(s).path[0][1],
-    speed:d.speed*mods.speed,source};
+    speed:d.speed*mods.speed*pressure.speed,source};
   s.enemies.push(unit);return unit;
 }
 function nextWave(s) {
@@ -104,6 +105,16 @@ function nextWave(s) {
   // Keep old queued enemies when skipping. A skip cannot erase unspawned enemies.
   for(const [type,count] of w.groups)for(let i=0;i<count;i++) {
     s.fields.forEach((_,field)=>s.queue.push({type,field,at:s.time+delay}));delay+=w.spacing;
+  }
+  // Rift Reinforcements: extra speedy enemies on every third regular wave.
+  // Scheduling them through the ordinary queue keeps skipping deterministic.
+  if(!s.config.eventId&&s.config.modes.includes('rift')&&s.wave%3===0){
+    const extra=Math.min(7,2+Math.floor(s.wave/4)),type=s.wave>=9?'sprinter':'runner';
+    for(let i=0;i<extra;i++){
+      s.fields.forEach((_,field)=>s.queue.push({type,field,at:s.time+delay}));
+      delay+=Math.max(.28,w.spacing*.75);
+    }
+    s.fields.forEach((_,field)=>event(s,{kind:'rift',field,x:mapOf(s).path[0][0],y:mapOf(s).path[0][1],count:extra}));
   }
   // Never start the next timed wave before the current formation has finished arriving.
   s.waveDeadline=Math.max(w.duration,delay+8);
@@ -333,6 +344,10 @@ export function tick(s,dt=STEP) {
     }else if(stats.kind==='splash'){
       const hits=s.enemies.filter(a=>a.field===t.field&&a.hp>0&&dist(a,e)<=stats.splash);
       for(const a of hits)applyHit(s,a,stats.damage*power,t,stats);
+    }else if(stats.kind==='pulse'){
+      // A radial pulse hits every target already found in the tower's range;
+      // no additional full-enemy scan, and slow effects follow applyHit().
+      for(const a of candidates)if(a.hp>0)applyHit(s,a,stats.damage*power,t,stats);
     }else if(stats.kind==='melee'){
       for(const a of candidates.slice(0,stats.cleave||3))applyHit(s,a,stats.damage*power,t,stats);
     }else if(stats.kind==='chain'){
