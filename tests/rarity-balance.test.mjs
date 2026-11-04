@@ -45,11 +45,13 @@ test('six new unique towers have independent art, mechanics and evolution',()=>{
  }
  assert.equal(new Set(NEW.map(id=>character(id))).size,6);
 });
-test('cheap mythic and legendary towers can be deployed at the starting wallet amount',()=>{
+test('cheap mythic remains deployable, but legendary costs now require deliberate saving',()=>{
  const s=match();s.players.p.money=500;
  assert.equal(command(s,'p',{kind:'place',type:'starseed',x:240,y:100}).ok,true);
+ assert.equal(command(s,'p',{kind:'place',type:'papercrane',x:340,y:100}).ok,false);
+ assert.equal(s.players.p.money,500-TOWERS.starseed.cost);
+ s.players.p.money+=TOWERS.papercrane.cost;
  assert.equal(command(s,'p',{kind:'place',type:'papercrane',x:340,y:100}).ok,true);
- assert.equal(s.players.p.money,500-TOWERS.starseed.cost-TOWERS.papercrane.cost);
 });
 test('rare late-game sniper fires a deterministic third-shot charged projectile',()=>{
  const s=match();const e=target(s,100000);
