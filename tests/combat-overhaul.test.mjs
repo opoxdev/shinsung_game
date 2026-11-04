@@ -3,13 +3,14 @@ import assert from 'node:assert/strict';
 import {TOWERS,ENEMIES,MAPS,COMBAT_SCALE,starterProfile} from '../src/data.js';
 import {towerStats,pointOnPath,createMatch,tick} from '../src/engine.js';
 import {enemyStyle} from '../src/enemy-art.js';
-test('damage buffs preserve costs and enemy health; god receives a modest sustained nerf',()=>{
+test('damage buffs preserve DPS and enemy templates while all combat prices rise',()=>{
  const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-8,`${a} != ${b}`);
  near(TOWERS.scout.damage/TOWERS.scout.interval,(6/.7)/COMBAT_SCALE*1.35/.92);
  near(TOWERS.blade.damage/TOWERS.blade.interval,(25/.9)/COMBAT_SCALE*1.45/.92);
  near(TOWERS.oldgod.damage/TOWERS.oldgod.interval,(1950/3.5)/COMBAT_SCALE*.88/1.04);
  near(TOWERS.workshop.power,.24);near(TOWERS.banker.income,144);
- assert.equal(TOWERS.scout.cost,150);assert.equal(TOWERS.oldgod.cost,8500);near(ENEMIES.zombie.hp,18/COMBAT_SCALE);
+ assert.ok(TOWERS.scout.cost>150);assert.ok(TOWERS.oldgod.cost>8500);
+ near(ENEMIES.zombie.hp,18/COMBAT_SCALE);
  for(const [id,d] of Object.entries(TOWERS))for(let level=0;level<=d.upgrades.length;level++){
   const stats=towerStats({type:id,level});assert.ok(Number.isFinite(stats.damage)&&stats.damage>=0);assert.ok(stats.interval>0);
   assert.ok(Object.isFrozen(stats));assert.strictEqual(stats,towerStats({type:id,level}));
