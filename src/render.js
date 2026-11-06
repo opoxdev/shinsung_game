@@ -95,7 +95,14 @@ export class Renderer {
     g.save();g.translate(this.width/2,this.height/2);g.scale(this.scale,this.scale);g.translate(-this.camera.x,-this.camera.y);
     if(!this.cache.has(map.id)){this.cache.clear();this.cache.set(map.id,makeTerrain(map));}
     for(let f=0;f<(state?.fields.length||1);f++){
-      const offset=f*2100;g.save();g.translate(offset,0);
+      const offset=f*2100;
+      // In PvP the other 1800px world is usually outside the viewport.
+      // Skip its terrain, all towers, enemies and effects completely rather
+      // than clipping/rasterizing a second huge map every display frame.
+      const viewHalfWidth=this.width/(2*this.scale);
+      if(offset+WORLD.width+TERRAIN_MARGIN<this.camera.x-viewHalfWidth
+        ||offset-TERRAIN_MARGIN>this.camera.x+viewHalfWidth)continue;
+      g.save();g.translate(offset,0);
       // Partition overlapping outskirts at the midpoint between PvP fields.
       g.save();g.beginPath();const left=f===0?-TERRAIN_MARGIN:-150,right=f===this.fields-1?WORLD.width+TERRAIN_MARGIN:1950;
       g.rect(left,-TERRAIN_MARGIN,right-left,WORLD.height+2*TERRAIN_MARGIN);g.clip();
