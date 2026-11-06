@@ -19,14 +19,17 @@ const COLORS={
  scrap:['#ffac74','#fff0cb','blast'],lullaby:['#adb9ff','#f0f4ff','sound'],
  papercrane:['#ffe0ad','#ffffff','origami'],marker:['#c995ff','#fff9ff','target'],
  pulsekeeper:['#c78cff','#f9e9ff','pulse'],duskarcher:['#d8a8ff','#fff7ff','arrow'],
- crystalspider:['#67ffe5','#ffffff','crystal']
+ crystalspider:['#67ffe5','#ffffff','crystal'],
+ sunlancer:['#ffce75','#fff5cc','sunbeam'],
+ graviturge:['#b48aff','#f4e8ff','gravity'],
+ thornkeeper:['#8df5ae','#efffd4','thorn']
 };
 const PROFILES=Object.freeze(Object.fromEntries(Object.entries(COLORS).map(([id,[primary,core,shape]])=>
  [id,Object.freeze({primary,core,shape})])));
 export const towerEffectProfile=type=>PROFILES[type]||Object.freeze({primary:'#aee4ff',core:'#fff',shape:'bolt'});
 export const EFFECT_TYPES=Object.freeze(Object.keys(PROFILES));
 export const isTowerAttackEffect=e=>!!e&&(
- ['ranged','melee','splash','pulse','chain','summon','mark','judgement','divine','arc','income','buff','charged'].includes(e.kind)
+ ['ranged','melee','splash','pulse','beam','chain','summon','mark','judgement','divine','arc','income','buff','charged'].includes(e.kind)
  &&!!PROFILES[e.type]);
 const TAU=Math.PI*2;
 const clamp=n=>Math.max(0,Math.min(1,n));
@@ -322,6 +325,19 @@ export function drawTowerAttackEffect(g,e,age,quality=1){
  if(q>=2){g.shadowColor=profile.primary;g.shadowBlur=8;}
  if(e.kind==='divine'||e.kind==='judgement')divine(g,e,age,profile,q);
  else if(e.kind==='charged')charged(g,e,age,profile,q);
+ else if(e.kind==='beam'){
+  const x=e.x,y=e.y-22,dx=(e.tx??e.x)-e.x,dy=(e.ty??e.y)-e.y+22;
+  const distance=Math.hypot(dx,dy)||1,range=Math.min(620,e.range||380);
+  const tx=x+dx/distance*range,ty=y+dy/distance*range;
+  const fade=1-clamp(age/.44);
+  line(g,x,y,tx,ty,profile.primary,17*fade+3);
+  line(g,x,y,tx,ty,profile.core,7*fade+1);
+  if(q>0)for(let i=0;i<5;i++){
+    const p=(i+.5)/5;
+    diamond(g,x+(tx-x)*p,y+(ty-y)*p,5+4*fade,profile.core);
+  }
+  shock(g,tx,ty,age,profile.primary,profile.core,42,q);
+ }
  else if(e.kind==='arc'||e.kind==='chain')beam(g,e,age,profile,q);
  else if(e.kind==='melee')slash(g,e,age,profile,q);
  else if(e.kind==='splash')explosion(g,e,age,profile,q);
