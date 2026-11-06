@@ -105,15 +105,14 @@ test('enemy hover hit testing respects real position, target size and PvP field 
   assert.equal(enemyUnderCursor([{...a,hp:0}],{x:100,y:100}),null);
   assert.equal(enemyUnderCursor([a],{x:0,y:0},2),null);
 });
-test('defeat pays half progress-weighted non-clear rewards without unique unlocks',()=>{
+test('defeat pays modest progress rewards while clear pays 8x with major bonus',()=>{
   for(const d of DIFFICULTIES){
     const s=createMatch(cfg({difficulty:d.id}),player());
     const max=d.waves.length;
     for(const wave of [0,1,Math.floor(max/2),max]){
       s.wave=wave;s.status='defeat';
       const reward=rewardFor(s,'p');
-      const clear=Math.floor(d.reward*.2);
-      const expected=Math.floor((d.reward-clear)*.5*wave/max);
+      const expected=Math.floor(d.reward*.4*wave/max);
       assert.equal(reward.coins,expected,d.id+':'+wave);
       assert.equal(reward.clearBonus,0);
       assert.equal(reward.sonic,false);
@@ -121,14 +120,14 @@ test('defeat pays half progress-weighted non-clear rewards without unique unlock
     }
     s.status='victory';
     const win=rewardFor(s,'p');
-    assert.equal(win.coins,d.reward,d.id);
-    assert.equal(win.clearBonus,Math.floor(d.reward*.2));
+    assert.equal(win.coins,d.reward*8,d.id);
+    assert.equal(win.clearBonus,Math.floor(d.reward*8*.7));
   }
   const mod=createMatch(cfg({difficulty:'hard',modes:['elite']}),player());
   mod.status='defeat';mod.wave=11;
   const d=DIFFICULTIES.find(d=>d.id==='hard');
   const base=Math.floor(d.reward*1.5);
-  assert.equal(rewardFor(mod,'p').coins,Math.floor((base-Math.floor(base*.2))*.5*11/d.waves.length));
+  assert.equal(rewardFor(mod,'p').coins,Math.floor(base*.4*11/d.waves.length));
   const pvp=createMatch(cfg({type:'pvp'}),[{id:'p',profile:starterProfile()},{id:'other',profile:starterProfile()}]);
   pvp.status='complete';pvp.winner=1;
   assert.equal(rewardFor(pvp,'p').coins,0,'No intentional-loss currency farming in PvP');
