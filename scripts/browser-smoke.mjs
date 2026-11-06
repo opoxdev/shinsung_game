@@ -67,7 +67,7 @@ try{
   await page.click('[data-action="leave"]');
   assert.equal(await page.locator('.temple-page').count(),0);
   await page.click('[data-action="nav"][data-id="towers"]');
-  assert.equal(await page.locator('.tower-card').count(),34);
+  assert.equal(await page.locator('.tower-card').count(),37);
   await page.click('[data-action="nav"][data-id="shop"]');
   assert.ok(await page.locator('.shop-tabs').count());
   await page.click('[data-action="nav"][data-id="home"]');
