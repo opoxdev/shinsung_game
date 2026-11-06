@@ -4,6 +4,21 @@
 const v=(name,cost,damageMult,rateMult,rangeMult,look,desc,traits={})=>
   ({name,cost,damageMult,rateMult,rangeMult,look,desc,...traits});
 export const EVOLUTIONS = {
+  sunlancer:[
+    v('해뜰녘의 검',1550,1.55,1.12,1.12,'solar-blade','창끝에 일출의 빛이 맺혀 광선 폭을 넓힌다.',{beamWidth:58,beamTargets:8}),
+    v('쌍태양 창술',3200,2.2,1.25,1.22,'double-sun','직선 투과력을 높여 두꺼운 적진을 꿰뚫는다.',{beamWidth:68,beamTargets:9}),
+    v('정오의 심판',6700,3.2,1.43,1.36,'solar-judgment','붉은 태양 핵이 넓은 광선을 방사한다.',{beamWidth:78,beamTargets:11,slow:.85,slowTime:1.2}),
+    v('영원한 일출',14100,4.8,1.67,1.52,'solar-crown','거대한 천상의 광선을 꿰어 길 위 모든 적을 베어낸다.',{beamWidth:100,beamTargets:14,slow:.76,slowTime:1.6})],
+  graviturge:[
+    v('떠오르는 궤도',750,1.5,1.1,1.08,'orbit','사슬이 더 멀리 휘어지며 중력장을 넓힌다.',{chain:5,chainRange:178,slow:.61,slowTime:2}),
+    v('자줏빛 사건',1750,2.25,1.22,1.17,'gravity-vortex','여섯 적을 끌어당기는 중력 결계를 만든다.',{chain:6,chainRange:195,slow:.57,slowTime:2.3}),
+    v('기울어진 별자리',3500,3.15,1.38,1.29,'constellation','중력 사슬이 일곱 적을 꿰어 움직임을 둔화한다.',{chain:7,chainRange:215,slow:.5,slowTime:2.7}),
+    v('특이점 발생',7400,4.55,1.62,1.42,'singularity','여덟 방향으로 이어지는 보랏빛 특이점 폭풍.',{chain:8,chainRange:245,slow:.43,slowTime:3})],
+  thornkeeper:[
+    v('맹독 포자',530,1.5,1.08,1.12,'toxic-spore','더 넓고 강력한 독 포자를 퍼뜨린다.',{splash:100,dot:38,dotTime:3.3}),
+    v('덤불 장벽',1250,2.15,1.2,1.2,'thorn-wall','가시 덤불이 적의 발을 붙잡는다.',{splash:111,dot:58,dotTime:3.6,slow:.72,slowTime:1.7}),
+    v('독화의 만개',2700,3.1,1.35,1.32,'toxic-bloom','맹독꽃이 퍼져 광역 피해와 장시간 중독을 남긴다.',{splash:123,dot:92,dotTime:4,slow:.65,slowTime:2}),
+    v('영원의 정원',5900,4.4,1.54,1.42,'eternal-garden','전장을 뒤덮는 가시 정원과 치명적인 포자 폭풍.',{splash:142,dot:150,dotTime:4.5,slow:.56,slowTime:2.4})],
   pulsekeeper:[
     v('진동 가죽',420,1.5,1.04,1.12,'bandanna','두꺼운 북가죽으로 충격파가 더 넓게 퍼진다.'),
     v('공명진',900,2.15,1.24,1.24,'gear','바닥에 공명 무늬가 펼쳐져 근접 적들을 한꺼번에 흔든다.',{slow:.77,slowTime:1.5}),
