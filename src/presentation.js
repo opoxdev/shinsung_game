@@ -57,7 +57,26 @@ export class MotionView {
       let x=u.x,y=u.y;
       if(online&&active){
         const target=enemyById.get(u.target);
-        if(target){const dx=target.x-x,dy=target.y-y,length=Math.hypot(dx,dy),ratio=Math.min(1,(u.speed||210)*ahead/(length||1));x+=dx*ratio;y+=dy*ratio;}
+        if(u.role==='lane'){
+          // Reverse-marching allies must remain ON the road in multiplayer.
+          // The old generic target chase made them visibly teleport across
+          // map bends during the 3-second server snapshot interval.
+          const progress=Math.max(0,(u.progress||0)-(u.speed||130)*ahead);
+          const point=pointOnPath(path,progress);
+          x=point.x;y=point.y;
+        }else if(u.role==='orbit'&&target){
+          const angle=(u.angle||0)+(u.type==='phoenix'?2.6:3.7)*ahead;
+          const radius=u.radius||62;
+          const px=target.x+Math.cos(angle)*radius;
+          const py=target.y+Math.sin(angle)*radius-12;
+          const dx=px-x,dy=py-y,length=Math.hypot(dx,dy);
+          const ratio=Math.min(1,(u.speed||550)*ahead/(length||1));
+          x+=dx*ratio;y+=dy*ratio;
+        }else if(target){
+          const dx=target.x-x,dy=target.y-y,length=Math.hypot(dx,dy);
+          const ratio=Math.min(1,(u.speed||210)*ahead/(length||1));
+          x+=dx*ratio;y+=dy*ratio;
+        }
       }
       if(online&&changed){v.dx=v.x-x;v.dy=v.y-y;}
       const dx=active?v.dx*decay:0,dy=active?v.dy*decay:0,previous=this.previous.get(u.id);
