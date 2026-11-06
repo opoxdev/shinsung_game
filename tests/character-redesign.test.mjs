@@ -9,7 +9,7 @@ const pathGeometry=svg=>Array.from(svg.matchAll(/<path d="([^"]+)"/g),m=>m[1]).j
 
 test('all thirty-five baseline characters have unique silhouettes across five rarity tiers',()=>{
   const ids=Object.keys(TOWERS);
-  assert.equal(ids.length,35);
+  assert.equal(ids.length,38);
   assert.deepEqual(Object.keys(CHARACTER_DESIGNS).sort(),ids.sort());
   const portraits=new Set();
   for(const id of ids){
@@ -51,7 +51,7 @@ test('common and rare are modest, profession-specific characters rather than eli
 });
 test('every common and rare default head is rounded or soft-square and outfits use game-like color accents',()=>{
   const ids=Object.keys(TOWERS).filter(id=>['common','rare'].includes(TOWERS[id].rarity)&&id!=='duskarcher'); // New Dusk Archer has its own custom hooded silhouette.
-  assert.equal(ids.length,10);
+  assert.equal(ids.length,11);
   const seen=new Set();
   for(const id of ids){
     const style=CHARACTER_DESIGNS[id];
