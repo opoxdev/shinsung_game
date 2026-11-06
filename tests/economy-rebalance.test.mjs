@@ -11,7 +11,8 @@ const previousInstallCosts={
  drone:1250,clockmaker:390,banker:340,mermaid:790,prism:1090,
  reaper:2200,storm:1900,phoenix:2800,aurora:3200,starseed:145,
  hunter:2200,scrap:1450,lullaby:195,papercrane:320,pulsekeeper:750,
- duskarcher:940,crystalspider:1650,marker:680
+ duskarcher:940,crystalspider:1650,marker:680,
+ sunlancer:2250,graviturge:1030,thornkeeper:680
 };
 const make=(difficulty='easy')=>createMatch(
  {type:'solo',map:'plains',difficulty,modes:[]},
@@ -20,7 +21,7 @@ const make=(difficulty='easy')=>createMatch(
 const near=(actual,expected)=>assert.ok(Math.abs(actual-expected)<1e-9,
  `expected ${expected} but got ${actual}`);
 
-test('all 35 battlefield placement prices increase, without sorting towers by rarity',()=>{
+test('all 38 battlefield placement prices increase, without sorting towers by rarity',()=>{
  assert.deepEqual(Object.keys(TOWERS).sort(),Object.keys(previousInstallCosts).sort());
  let minFactor=Infinity,maxFactor=-Infinity;
  for(const [id,previous] of Object.entries(previousInstallCosts)){
