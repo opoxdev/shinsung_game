@@ -647,7 +647,14 @@ async function openRoom(code){
       state=JSON.parse(r.stateJson);seenSnapshot=state.time;
       seq=Math.max(seq,state.players[playerId]?.seq||0);
       if(!$('#battlefield'))beginGame();
-      else{updateHud();inspector();}
+      else{
+        // HUD is refreshed on its normal throttled frame loop. Rebuilding
+        // the entire inspector on every socket snapshot causes layout spikes
+        // while multiple players place or evolve towers.
+        const selected=state.towers.find(t=>t.id===renderer?.selected);
+        const pane=$('#tower-inspector');
+        if(pane&&selected&&pane.dataset.evolutionKey!==selected.id+':'+selected.level)inspector();
+      }
     }else modal(waitingRoomMarkup(code,r,online.user.uid));
   },e=>{
     toast('실시간 연결: '+e.message);
@@ -858,7 +865,10 @@ function frame(now){
   // A display exception must never stop the simulation or the RAF chain.
   try {
   // Cap expensive Canvas + SVG rendering; timing and network are independent.
-  const interval=state?0:48;
+  // Draw at full refresh rate in ordinary combat; on huge remote battles,
+  // 40 FPS delivers smoother interaction than dropping frames under 60 FPS
+  // worth of 2-field Canvas work and prediction overhead.
+  const interval=state?(isOnlineMatch&&state.enemies.length>=120?25:0):48;
   if(now-lastPaintTime<interval)return;
   lastPaintTime=now;
   const dt=Math.min(.1,(now-(lastTime||now))/1000);lastTime=now;
