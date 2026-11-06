@@ -68,7 +68,8 @@ export function createMatch(config, players) {
   if(!Array.isArray(players)||players.length<1||players.length>4||new Set(players.map(p=>p.id)).size!==players.length) throw Error('참가 인원이 올바르지 않습니다.');
   if(config.type==='pvp'&&players.length!==2||config.type==='solo'&&players.length!==1) throw Error('PvP는 2명, 솔로는 1명이 필요합니다.');
   const startMoney=campaignOf(config).startMoney;
-  const s={version:1,config,players:{},fields:config.type==='pvp'?[100,100]:[100],towers:[],enemies:[],units:[],queue:[],events:[],wave:0,time:0,waveTime:0,spawnClock:0,nextId:1,status:'playing',votes:[],kills:0,winner:null};
+  const startingHealth=config.modes.includes('laststand')?55:100;
+  const s={version:1,config,players:{},fields:config.type==='pvp'?[startingHealth,startingHealth]:[startingHealth],towers:[],enemies:[],units:[],queue:[],events:[],wave:0,time:0,waveTime:0,spawnClock:0,nextId:1,status:'playing',votes:[],kills:0,winner:null};
   players.forEach((p,i)=>{
     const profile=p.profile||starterProfile();
     s.players[p.id]={id:p.id,name:String(profile.name).slice(0,20),field:config.type==='pvp'?i:0,money:startMoney,loadout:[...profile.loadout],pack:profile.pack,cooldowns:{},seq:0,skins:profile.equippedSkins||{},ach:{places:0,upgrades:0}};
@@ -128,6 +129,18 @@ function nextWave(s) {
       delay+=Math.max(.28,w.spacing*.75);
     }
     s.fields.forEach((_,field)=>event(s,{kind:'rift',field,x:mapOf(s).path[0][0],y:mapOf(s).path[0][1],count:extra}));
+  }
+  // Eclipse mode introduces entirely NEW enemy species, not inflated stats.
+  // It uses the same bounded wave queue, so online clients stay deterministic.
+  if(!s.config.eventId&&s.config.modes.includes('eclipse')&&s.wave%4===0){
+    const extra=Math.min(7,2+Math.floor(s.wave/7));
+    const type=s.wave>=Math.ceil(d.waves.length*.5)?'phantom':'ghost';
+    for(let i=0;i<extra;i++){
+      s.fields.forEach((_,field)=>s.queue.push({type,field,at:s.time+delay}));
+      delay+=Math.max(.3,w.spacing*.6);
+    }
+    s.fields.forEach((_,field)=>event(s,{kind:'eclipse',field,
+      x:mapOf(s).path[0][0],y:mapOf(s).path[0][1],count:extra}));
   }
   // Never start the next timed wave before the current formation has finished arriving.
   s.waveDeadline=Math.max(w.duration,delay+8);
@@ -348,7 +361,8 @@ export function tick(s,dt=STEP) {
     const haste=buffs.reduce((a,{stats:bs})=>Math.max(a,1+(bs.haste||0)),1);
     t.cd=stats.interval/haste;t.shots=(t.shots||0)+1;
     t.angle=Math.atan2(e.y-t.y,e.x-t.x);
-    event(s,{kind:stats.kind,from:t.id,x:t.x,y:t.y,tx:e.x,ty:e.y,field:t.field,type:t.type,level:t.level});
+    event(s,{kind:stats.kind,from:t.id,x:t.x,y:t.y,tx:e.x,ty:e.y,field:t.field,type:t.type,level:t.level,
+      range:stats.kind==='beam'?stats.range:undefined});
     if(stats.kind==='summon'){
       const count=Math.min((stats.summons||1)-current,80-s.units.length);
       const lane=stats.summonStyle==='lane';
@@ -388,6 +402,22 @@ export function tick(s,dt=STEP) {
     }else if(stats.kind==='splash'){
       const hits=s.enemies.filter(a=>a.field===t.field&&a.hp>0&&dist(a,e)<=stats.splash);
       for(const a of hits)applyHit(s,a,stats.damage*power,t,stats);
+    }else if(stats.kind==='beam'){
+      // Solar lance: a finite-width straight line through the selected
+      // target, never an unlimited global hit. Reuse the in-range candidate
+      // array instead of scanning the full enemy roster a second time.
+      const vx=e.x-t.x,vy=e.y-t.y,mag=Math.hypot(vx,vy)||1;
+      const ux=vx/mag,uy=vy/mag,half=(stats.beamWidth||45)*.5;
+      let hit=0;
+      for(const a of candidates){
+        if(a.hp<=0)continue;
+        const xx=a.x-t.x,yy=a.y-t.y,along=xx*ux+yy*uy;
+        const perpendicular=Math.abs(xx*uy-yy*ux);
+        if(along>=0&&along<=stats.range&&perpendicular<=half){
+          applyHit(s,a,stats.damage*power,t,stats);
+          if(++hit>=(stats.beamTargets||6))break;
+        }
+      }
     }else if(stats.kind==='pulse'){
       // A radial pulse hits every target already found in the tower's range;
       // no additional full-enemy scan, and slow effects follow applyHit().
