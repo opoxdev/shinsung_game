@@ -362,7 +362,7 @@ export function tick(s,dt=STEP) {
     t.cd=stats.interval/haste;t.shots=(t.shots||0)+1;
     t.angle=Math.atan2(e.y-t.y,e.x-t.x);
     event(s,{kind:stats.kind,from:t.id,x:t.x,y:t.y,tx:e.x,ty:e.y,field:t.field,type:t.type,level:t.level,
-      range:stats.kind==='beam'?stats.range:undefined});
+      ...(stats.kind==='beam'?{range:stats.range}:{})});
     if(stats.kind==='summon'){
       const count=Math.min((stats.summons||1)-current,80-s.units.length);
       const lane=stats.summonStyle==='lane';
