@@ -146,6 +146,13 @@ export class Renderer {
               g.lineTo(e.x+Math.cos(a+.1)*rr,e.y+Math.sin(a+.1)*rr);g.stroke();
             }
             g.restore();
+          }else if(e.kind==='eclipse'){
+            const p=Math.min(1,age/.45);g.save();
+            g.strokeStyle='#c1a1ff';g.lineWidth=6*(1-p)+1;
+            g.shadowColor='#a68aff';g.shadowBlur=this.reducedEffects?0:10;
+            g.beginPath();g.ellipse(e.x,e.y-17,20+p*60,30+p*75,0,0,Math.PI*2);g.stroke();
+            g.fillStyle='#efe2ff';g.font='bold 18px sans-serif';
+            g.fillText('☾ 월식 기습',e.x+32,e.y-65-p*18);g.restore();
           }else if(e.kind==='summon-clash'){
             const p=Math.min(1,age/.45);g.save();g.strokeStyle='#f6ffd4';g.lineWidth=4*(1-p)+1;
             g.beginPath();g.arc(e.x,e.y,12+p*44,0,7);g.stroke();
