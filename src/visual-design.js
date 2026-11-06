@@ -3,6 +3,9 @@ import { TOWERS } from './data.js';
 // Everyday/common and craft/rare portraits use modest civilian jobs.
 // Epic/legendary/mythic gain progressively unique silhouettes; no military-uniform template.
 const DESIGNS={
+  sunlancer:{main:'#bd8757',dark:'#54465b',trim:'#ffeab1',helmet:'knight',weapon:'greatsword',rig:'cape'},
+  graviturge:{main:'#7766ba',dark:'#33285e',trim:'#dcbbff',helmet:'spire',weapon:'aurora',rig:'cape'},
+  thornkeeper:{main:'#6d9c7d',dark:'#315b53',trim:'#d9ffd0',helmet:'hood',weapon:'vial',rig:'cape'},
   pulsekeeper:{main:'#985ac4',dark:'#34304e',trim:'#f1d5ff',helmet:'hood',weapon:'drum',rig:'cape'},
   duskarcher:{main:'#5b5379',dark:'#252741',trim:'#c7a6f2',helmet:'hood',weapon:'bow',rig:'cape'},
   crystalspider:{main:'#49beb4',dark:'#273b65',trim:'#bbf9ed',helmet:'spire',weapon:'crystal',rig:'heavy'},
@@ -800,6 +803,20 @@ export function redesignedPortrait(id,skin='default'){
    const front=plain?prestigeFront(id,c,rarity):'';
    art=back+(base.rig==='structure'?buildingPortrait(id,c,skin):base.rig==='relic'?relicPortrait(id,c,skin):fighterPortrait(id,c,skin))+front;
  }
+ // Signature extras distinguish the new three from generic fighters:
+ // the sun knight's radiant lance, gravity rings and living thorn crown.
+ if(id==='sunlancer')art+=
+   '<circle cx="94" cy="64" r="37" stroke="#ffe7a5" stroke-width="4" stroke-dasharray="9 7" fill="none" opacity=".75"/>'
+  +'<path d="M140 28l8-19 9 19 19 10-19 9-9 19-8-19-19-9Z" fill="#fff1c1" stroke="#e4ae5f" stroke-width="3"/>'
+  +'<path d="M161 41l15-27m-4 43 15 11" stroke="#ffe9ad" stroke-width="4"/>';
+ else if(id==='graviturge')art+=
+   '<ellipse cx="94" cy="104" rx="68" ry="24" fill="none" stroke="#cda5ff" stroke-width="4" transform="rotate(-22 94 104)"/>'
+  +'<ellipse cx="94" cy="104" rx="56" ry="40" fill="none" stroke="#a28cff" stroke-width="2" transform="rotate(26 94 104)"/>'
+  +'<circle cx="153" cy="41" r="9" fill="#e9d8ff" stroke="#9b72e4" stroke-width="4"/>';
+ else if(id==='thornkeeper')art+=
+   '<path d="M54 50Q44 27 33 30l8 15-20 5 29 15m76-10q13-25 26-25l-4 18 17 4-34 15" fill="#a5dfa2" stroke="#416f55" stroke-width="3"/>'
+  +'<path d="M33 146q15-14 25-7m-24 17q18-12 28-7" stroke="#8ad99c" stroke-width="4" fill="none"/>'
+  +'<circle cx="151" cy="71" r="9" fill="#baffbe"/>';
  // Every model is standalone and stays recognizable at the 75px battle scale.
  const border=(suit&&['mythic','legendary'].includes(skin))?'': '';
  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 210" aria-label="'+id+(skin==='default'?'':' '+skin)+'" data-design="v2" data-art-tier="'+(skin==='default'?BASE_ART_TIERS[rarity]:'costume')+'" data-base="'+id+'" data-costume="'+skin+'">'
