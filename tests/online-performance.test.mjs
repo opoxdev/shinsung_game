@@ -10,8 +10,9 @@ const make=()=>Core.createMatch(cfg,[player]);
 
 test('online prediction advances a cloned simulation without mutating authoritative state',()=>{
   const original=make(),before=JSON.stringify(original);
-  const first=visualPrediction(original,0.9);
-  const predicted=visualPrediction(original,0.9,first.state,first.source);
+  let predicted=visualPrediction(original,0.9);
+  const first=predicted;
+  for(let i=0;i<4;i++)predicted=visualPrediction(original,0.9,predicted.state,predicted.source);
   assert.notStrictEqual(predicted.state,original);
   assert.strictEqual(predicted.source,original);
   assert.equal(JSON.stringify(original),before);
@@ -26,12 +27,14 @@ test('online prediction reuses its private state and resets on newer server snap
   const source=make();
   const a=visualPrediction(source,0.3);
   const b=visualPrediction(source,0.6,a.state,a.source);
+  const c1=visualPrediction(source,0.6,b.state,b.source);
   assert.strictEqual(b.state,a.state);
-  assert.ok(b.state.time>=0.55);
+  assert.strictEqual(c1.state,b.state);
+  assert.ok(c1.state.time>=0.55);
   assert.equal(source.time,0);
   const latest=JSON.parse(JSON.stringify(source));
   Core.advance(latest,0.9);
-  const c=visualPrediction(latest,0.1,b.state,b.source);
+  const c=visualPrediction(latest,0.1,c1.state,c1.source);
   assert.notStrictEqual(c.state,b.state);
   assert.strictEqual(c.source,latest);
   assert.ok(c.state.time>=latest.time);
@@ -40,7 +43,7 @@ test('online prediction reuses its private state and resets on newer server snap
 test('prediction is bounded to prevent CPU spikes after suspended browser tabs',()=>{
   const source=make();
   const a=visualPrediction(source,9000);
-  assert.ok(a.state.time<=0.61,'at most 12 fixed steps per render frame');
+  assert.ok(a.state.time<=0.21,'at most four fixed steps per render frame');
   assert.equal(source.time,0);
   let prior=a;
   for(let i=0;i<6;i++)prior=visualPrediction(source,9000,prior.state,prior.source);
