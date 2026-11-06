@@ -561,13 +561,16 @@ export function rewardFor(s,id) {
   if(s.config.type==='pvp')return {coins:0,xp:0,sonic:false,aurora:false,voidwalker:false,meatlordPack:false,win,clearBonus:0};
   const maxWave=d.waves.length;
   const progress=Math.max(0,Math.min(1,s.wave/maxWave));
-  const totalCoins=Math.floor(d.reward*modifiers(s.config).reward);
-  const totalXp=maxWave*20;
-  // Keep existing full-clear payouts, but explicitly separate the 20%
-  // completion-only share from the participation reward pool.
-  const clearBonus=Math.floor(totalCoins*.2),clearXp=Math.floor(totalXp*.2);
-  const coins=win?totalCoins:Math.floor((totalCoins-clearBonus)*.5*progress);
-  const xp=win?totalXp:Math.floor((totalXp-clearXp)*.5*progress);
+  // Full-clear rewards fund permanent unlocks and expensive higher-rarity
+  // tower progression. Completion is worth 8x the former account-currency
+  // payout and 3x XP; partial runs retain their modest participation payout.
+  // Multiplayer co-op uses the exact same authoritative server formula.
+  const baseCoins=Math.floor(d.reward*modifiers(s.config).reward);
+  const totalCoins=baseCoins*8;
+  const totalXp=maxWave*20*3;
+  const clearBonus=Math.floor(totalCoins*.70),clearXp=Math.floor(totalXp*.50);
+  const coins=win?totalCoins:Math.floor(baseCoins*.4*progress);
+  const xp=win?totalXp:Math.floor(maxWave*20*.4*progress);
   return {coins,xp,clearBonus:win?clearBonus:0,
     sonic:!s.config.eventId&&win&&DIFFICULTIES.indexOf(d)>=3&&s.config.modes.includes('supersonic'),
     aurora:!s.config.eventId&&win&&d.id==='ruin'&&s.config.modes.includes('elite'),
