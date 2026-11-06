@@ -7,8 +7,11 @@ export function visualPrediction(authoritative,elapsed,previous=null,previousSou
   let state=previousSource===authoritative&&previous?previous:JSON.parse(JSON.stringify(authoritative));
   const target=authoritative.time+Math.min(4.25,Math.max(0,elapsed));
   let steps=0;
-  // Keep the main thread responsive after tab restoration or slow devices.
-  while(steps<12&&state.status==='playing'&&state.time+STEP*.5<target){
+  // Never run a large authoritative prediction burst inside a single
+  // animation frame. Visual movement continues via MotionView interpolation.
+  // Dense multiplayer fights need an even smaller budget to avoid frame spikes.
+  const budget=state.enemies.length>=160?2:state.enemies.length>=75?3:4;
+  while(steps<budget&&state.status==='playing'&&state.time+STEP*.5<target){
     tick(state);steps++;
   }
   return {state,source:authoritative};
