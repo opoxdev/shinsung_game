@@ -340,7 +340,22 @@ function christmasPage(){
           <p>${stage.description}</p>
           <div class="christmas-chapter-monster">${monsterPortrait(boss)}<div><b>마지막 보스</b><span>${ENEMIES[boss].name}</span></div></div>
           <div class="christmas-stage-prize">${portrait(stage.unlock)}<div><small>최초 클리어 한정 보상</small><b>${tower.name}</b><span>◈ ${fmt(event.reward*8)} · 패스 경험치 +${stage.passXp} · ${stage.waves}웨이브</span></div></div>
-          <button class="christmas-start" data-action="christmasStageSolo" data-id="${stage.id}" ${christmasEnabled&&unlocked?'':'disabled'}>${done?'↻ 다시 도전':'❄ 단계 공략 시작'} →</button>
+          <div class="christmas-entry-actions">
+            <button class="christmas-start" data-action="christmasStageSolo" data-id="${stage.id}" ${christmasEnabled&&unlocked?'':'disabled'}>❄ ${done?'솔로 재도전':'솔로 공략'}</button>
+            <button class="christmas-start christmas-coop-start" data-action="christmasStageCoop" data-id="${stage.id}" ${christmasEnabled&&unlocked?'':'disabled'}>✦ 2~4인 협동전</button>
+          </div>
+        </article>`;
+      }).join('')}</div>
+    </section>
+    <section class="christmas-skin-showcase" aria-label="크리스마스 배틀패스 한정 스킨">
+      <div class="christmas-heading"><span class="eyebrow">FESTIVAL COUTURE · FOUR EXCLUSIVE COSTUMES</span><h2>축제의 한정 의상</h2><p>배틀패스에서 획득하는 네 가지 독립 디자인. 전투 능력치는 바뀌지 않으며, 획득한 스킨은 타워 구성에서 장착할 수 있습니다.</p></div>
+      <div class="christmas-skin-grid">${CHRISTMAS_PASS.filter(t=>t.reward.skin).map(tier=>{
+        const [id,skin]=tier.reward.skin;
+        const owned=!!profile.skins?.[id+':'+skin];
+        return `<article class="christmas-skin-card" data-festival-skin="${skin}">
+          <span class="christmas-skin-level">PASS LV. ${tier.level} <small>${owned?'✓ 보유':'한정 보상'}</small></span>
+          <div class="christmas-skin-portrait">${portrait(id,skin)}</div>
+          <b>${SKIN_STYLES[skin].name}</b><span>${TOWERS[id].name}</span>
         </article>`;
       }).join('')}</div>
     </section>
@@ -846,6 +861,17 @@ const actions={
   christmas(){
     if(!christmasEnabled)return toast('현재 운영 중인 크리스마스 이벤트가 없습니다.');
     page='christmas';config.type='solo';shell();
+  },
+  async christmasStageCoop(id){
+    const stage=CHRISTMAS_STAGES.find(t=>t.id===id);
+    if(!stage)return;
+    await refreshPublicSiteSettings({strict:true});
+    if(!christmasEnabled)return toast('크리스마스 이벤트 기간이 종료되었습니다.');
+    if(!christmasStageUnlocked(profile,CHRISTMAS_STAGES.indexOf(stage)+1))
+      return toast('이전 크리스마스 단계를 클리어해야 합니다.');
+    if(!config.eventId)preEventConfig={...config,modes:[...config.modes]};
+    config={eventId:id,map:stage.map,difficulty:'normal',type:'coop',modes:[]};
+    special('coop');
   },
   async christmasStageSolo(id){
     const stage=CHRISTMAS_STAGES.find(t=>t.id===id);
