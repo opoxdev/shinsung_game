@@ -72,7 +72,7 @@ export function createMatch(config, players) {
   const s={version:1,config,players:{},fields:config.type==='pvp'?[startingHealth,startingHealth]:[startingHealth],towers:[],enemies:[],units:[],queue:[],events:[],wave:0,time:0,waveTime:0,spawnClock:0,nextId:1,status:'playing',votes:[],kills:0,winner:null};
   players.forEach((p,i)=>{
     const profile=p.profile||starterProfile();
-    s.players[p.id]={id:p.id,name:String(profile.name).slice(0,20),field:config.type==='pvp'?i:0,money:startMoney,loadout:[...profile.loadout],pack:profile.pack,cooldowns:{},seq:0,skins:profile.equippedSkins||{},ach:{places:0,upgrades:0}};
+    s.players[p.id]={id:p.id,name:String(profile.name).slice(0,20),field:config.type==='pvp'?i:0,money:startMoney,loadout:[...profile.loadout],pack:profile.pack,developer:profile.developer===true,cooldowns:{},seq:0,skins:profile.equippedSkins||{},ach:{places:0,upgrades:0}};
   });
   nextWave(s); return s;
 }
@@ -158,6 +158,7 @@ export function command(s,playerId,c) {
   if(c.kind==='place') {
     const d=Object.hasOwn(TOWERS,c.type)?TOWERS[c.type]:null;
     if(!d||!p.loadout.includes(c.type))return fail('장착한 타워만 배치할 수 있습니다.');
+    if(d.developerOnly&&p.developer!==true)return fail('개발자 전용 타워는 개발자 계정으로만 배치할 수 있습니다.');
     if(s.towers.filter(t=>t.field===p.field).length>=modifiers(s.config).cap)return fail('필드 전체 타워 한도에 도달했습니다.');
     if(s.towers.filter(t=>t.field===p.field&&t.type===c.type).length>=d.cap)return fail('이 타워의 배치 한도에 도달했습니다.');
     if(p.money<d.cost)return fail('전투 자금이 부족합니다.');
@@ -417,6 +418,17 @@ export function tick(s,dt=STEP) {
       }
       event(s,{kind:lane?'summon-march':'summon-launch',from:t.id,x:lane?path.at(-1)[0]:t.x,
         y:lane?path.at(-1)[1]:t.y,field:t.field,type:t.type,count,level:t.level});
+    }else if(stats.kind==='emperor'){
+      // One deterministic, bounded full-field execution per cooldown, rather
+      // than hundreds of individual network events / expensive particles.
+      // The developer flag comes from verified Worker room membership in co-op.
+      const victims=s.enemies.filter(a=>a.field===t.field&&a.hp>0);
+      for(const target of victims){
+        const boss=!!BOSS_ABILITIES[target.type]||ENEMIES[target.type].size>=35;
+        damage(s,target,stats.damage*power*(boss?(stats.bossBonus||3):1),t,true);
+      }
+      event(s,{kind:'emperor',from:t.id,x:t.x,y:t.y,tx:e.x,ty:e.y,
+        field:t.field,type:t.type,level:t.level,targets:victims.length});
     }else if(stats.kind==='judgement'){
       const hits=s.enemies.filter(a=>a.field===t.field&&a.hp>0&&dist(a,e)<=stats.splash);
       for(const target of hits){
