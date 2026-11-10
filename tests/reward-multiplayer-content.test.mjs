@@ -39,6 +39,37 @@ test('all six clear rewards become 8x coins and 3x XP, with completion bonuses s
  assert.equal(rewardFor(pvp,'a').coins,0);
 });
 
+test('defeat yields zero money and XP before halfway, then only a small graduated stipend',()=>{
+ for(const d of DIFFICULTIES){
+  for(const modes of [[],['elite','eclipse','laststand']]){
+   const match=make({difficulty:d.id,modes});
+   match.status='defeat';
+   const minimum=Math.ceil(d.waves.length/2);
+   for(const wave of [0,1,Math.max(1,minimum-1)]){
+    match.wave=wave;
+    const result=rewardFor(match,'a');
+    assert.equal(result.coins,0,d.id+' wave '+wave+' should never farm coins');
+    assert.equal(result.xp,0,d.id+' wave '+wave+' should never farm XP');
+    assert.equal(result.clearBonus,0);
+   }
+   match.wave=minimum;
+   const midpoint=rewardFor(match,'a');
+   assert.ok(midpoint.coins>=0&&midpoint.coins<d.reward,
+    d.id+' reaching the midpoint should only grant a minimal stipend');
+   assert.ok(midpoint.xp>0,'the midpoint unlocks participation XP');
+   match.wave=d.waves.length;
+   const finalLoss=rewardFor(match,'a');
+   assert.ok(finalLoss.coins>=midpoint.coins);
+   assert.ok(finalLoss.coins<rewardFor({...match,status:'victory'},'a').coins);
+  }
+ }
+ const raid=createMatch({type:'solo',map:'temple_ruin',difficulty:'normal',
+  modes:[],eventId:'temple_of_ruin'},[{id:'a',profile:starterProfile()}]);
+ raid.status='defeat';raid.wave=Math.ceil(30/2)-1;
+ assert.equal(rewardFor(raid,'a').coins,0);
+ assert.equal(rewardFor(raid,'a').xp,0);
+});
+
 test('solar lance pierces the complete line but does not damage off-axis targets',()=>{
  const s=make();s.queue=[];
  const direct=enemy(8001,300,240,300),behind=enemy(8002,380,241,250),
