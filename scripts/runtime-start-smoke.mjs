@@ -31,7 +31,7 @@ try {
  assert.equal(await page.locator('.map-picker').count(),1,'switching theme must NOT recreate the lobby');
  await page.locator('.theme-menu-button').click();
  assert.equal(await page.locator('.theme-option').count(),2);
- assert.equal(await page.locator('.theme-option[data-theme-option="classic"]').count(),1);
+ assert.equal(await page.locator('.theme-option[data-action="themeSelect"][data-id="classic"]').count(),1);
  await page.locator('[data-action="themeSelect"][data-id="christmas"]').click();
  assert.equal(await page.locator('html').getAttribute('data-theme'),'christmas');
  assert.equal(await page.locator('.modal').count(),0);
