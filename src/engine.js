@@ -1,4 +1,4 @@
-import { WORLD, MAPS, TOWERS, ENEMIES, MODES, DIFFICULTIES, PACKS, SKIN_STYLES, CRATES, BOSS_ABILITIES, COMBAT_SCALE, EVENTS, campaignOf, starterProfile, skinCandidates, availableCrateStyles } from './data.js';
+import { WORLD, MAPS, TOWERS, ENEMIES, MODES, DIFFICULTIES, PACKS, SKIN_STYLES, CRATES, BOSS_ABILITIES, COMBAT_SCALE, EVENTS, campaignOf, starterProfile, skinCandidates, availableCrateStyles, christmasClaimPass, christmasStageUnlocked, CHRISTMAS_STAGES } from './data.js';
 import { evolutionAt } from './evolutions.js';
 export const STEP = .05;
 // Damage earnings are reduced and tied to nominal enemy HP, not multiplied
@@ -274,6 +274,10 @@ function applyHit(s,e,n,t,stats,scale=1){
     if(!e.dotDps||dot>=e.dotDps){e.dotDps=dot;e.dotFrom=t.type;}
     e.dotUntil=Math.max(e.dotUntil||0,s.time+(def.dotTime||3));
   }
+  if(def.freezeTime&&ENEMIES[e.type].size<30&&!BOSS_ABILITIES[e.type]){
+    e.frozenUntil=Math.max(e.frozenUntil||0,s.time+def.freezeTime);
+    event(s,{kind:'christmas-freeze',x:e.x,y:e.y,field:e.field,type:t.type});
+  }
   if(def.slow){
     const factor=Math.max(.25,def.slow);
     if(!e.slowFactor||factor<e.slowFactor)e.slowFactor=factor;
@@ -332,21 +336,42 @@ export function tick(s,dt=STEP) {
   // Resolve tower evolution exactly once per 50ms step and reuse aura stats.
   // This avoids repeated allocations and evolution lookups for every shot.
   const resolvedTowers=s.towers.map(t=>({t,stats:towerStats(t)}));
-  const auras=resolvedTowers.filter(entry=>entry.stats.kind==='buff');
+  const auras=resolvedTowers.filter(entry=>['buff','festive'].includes(entry.stats.kind));
   for(const {t,stats} of resolvedTowers) {
     if(t.jammedUntil>s.time)continue;
     if(stats.kind==='buff')continue;
     t.cd-=dt;
-    if(stats.kind==='income'){
+    if(stats.kind==='income'||stats.kind==='festive'||stats.kind==='stocking'){
       if(t.cd<=0){
-        const owner=s.players[t.owner];if(owner)owner.money+=(stats.income||0);
+        const owner=s.players[t.owner];
+        let outcome='coins',amount=stats.income||0;
+        if(stats.kind==='stocking'){
+          // A deterministic four-outcome gift. Never Math.random() inside
+          // network-authoritative combat or after snapshot restoration.
+          const roll=(t.id*17+(t.shots||0)*29+s.wave*7)%4;
+          t.shots=(t.shots||0)+1;
+          if(roll===1){
+            outcome='heal';amount=Math.max(1,Math.floor(2+(t.level||0)*1.5));
+            s.fields[t.field]=Math.min(100,s.fields[t.field]+amount);
+          }else if(roll===2){
+            outcome='blessing';amount=8+(t.level||0)*2;
+            for(const ally of s.towers)if(ally.field===t.field&&ally.id!==t.id&&dist(ally,t)<=stats.range)
+              ally.festivalUntil=Math.max(ally.festivalUntil||0,s.time+amount);
+          }else if(roll===3){
+            outcome='candy-blast';amount=(stats.income||0)*1.2;
+            const near=s.enemies.filter(e=>e.hp>0&&e.field===t.field&&dist(e,t)<=stats.range);
+            if(!near.length){outcome='coins';amount=Math.floor((stats.income||0)*.7);}
+            else for(const enemy of near.slice(0,6))damage(s,enemy,amount,t);
+          }
+        }
+        if(outcome==='coins'&&owner)owner.money+=amount;
         t.cd=stats.interval;
-        event(s,{kind:'income',x:t.x,y:t.y,field:t.field,type:t.type});
+        event(s,{kind:'christmas-gift',x:t.x,y:t.y,field:t.field,type:t.type,outcome,amount});
       }
       continue;
     }
     if(t.cd>0)continue;
-    const candidates=s.enemies.filter(e=>e.field===t.field&&e.hp>0&&(stats.kind==='summon'&&stats.summonStyle==='lane'||(t.x-e.x)**2+(t.y-e.y)**2<=stats.range**2));
+    const candidates=s.enemies.filter(e=>e.field===t.field&&e.hp>0&&(stats.kind==='summon'&&['lane','cookie'].includes(stats.summonStyle)||(t.x-e.x)**2+(t.y-e.y)**2<=stats.range**2));
     const order=t.target==='strong'?(a,b)=>b.hp-a.hp:t.target==='near'?(a,b)=>(a.x-t.x)**2+(a.y-t.y)**2-(b.x-t.x)**2-(b.y-t.y)**2:(a,b)=>b.progress-a.progress;
     if(stats.kind==='melee'||(stats.multi||1)>1)candidates.sort(order);
     else {let best=0;for(let i=1;i<candidates.length;i++)if(order(candidates[i],candidates[best])<0)best=i;if(best)[candidates[0],candidates[best]]=[candidates[best],candidates[0]];}
@@ -357,15 +382,15 @@ export function tick(s,dt=STEP) {
     if(stats.kind==='summon'&&current>=Math.max(1,stats.summons||1)){t.cd=0;continue;}
     const buffs=auras.filter(({t:b,stats:bs})=>b.field===t.field&&dist(b,t)<=bs.range);
     // Strongest aura of each category wins; different kinds may coexist.
-    const power=buffs.reduce((a,{t:b,stats:bs})=>Math.max(a,1+(bs.power??(b.type==='workshop'?.2:0))),1);
-    const haste=buffs.reduce((a,{stats:bs})=>Math.max(a,1+(bs.haste||0)),1);
+    const power=buffs.reduce((a,{t:b,stats:bs})=>Math.max(a,1+(bs.power??(b.type==='workshop'?.2:0))),1)*(t.festivalUntil>s.time?1.22:1);
+    const haste=buffs.reduce((a,{stats:bs})=>Math.max(a,1+(bs.haste||0)),1)*(t.festivalUntil>s.time?1.12:1);
     t.cd=stats.interval/haste;t.shots=(t.shots||0)+1;
     t.angle=Math.atan2(e.y-t.y,e.x-t.x);
     event(s,{kind:stats.kind,from:t.id,x:t.x,y:t.y,tx:e.x,ty:e.y,field:t.field,type:t.type,level:t.level,
       ...(stats.kind==='beam'?{range:stats.range}:{})});
     if(stats.kind==='summon'){
       const count=Math.min((stats.summons||1)-current,80-s.units.length);
-      const lane=stats.summonStyle==='lane';
+      const lane=['lane','cookie'].includes(stats.summonStyle);
       const path=mapOf(s).path,baseProgress=lane?routeLength(path):0;
       // Long event maps must not exhaust a squad's timer before it can
       // physically reach the enemy front. Endurance is route-aware and bounded.
@@ -376,7 +401,7 @@ export function tick(s,dt=STEP) {
         const origin=lane?pointOnPath(path,progress):{x:t.x,y:t.y};
         s.units.push({
           id:s.nextId++,from:t.id,owner:t.owner,field:t.field,type:t.type,
-          level:t.level,role:lane?'lane':'orbit',target:e.id,
+          level:t.level,role:stats.summonStyle==='cookie'?'cookie':lane?'lane':'orbit',cookieVariant:stats.summonStyle==='cookie'?i%Math.min(4,t.level+1):0,target:e.id,
           x:origin.x,y:origin.y,progress,phase:lane?'march':'launch',
           hp:lane?stats.summonHp||120:1,maxHp:lane?stats.summonHp||120:1,
           life:lifetime,maxLife:lifetime,speed:stats.unitSpeed||(lane?130:550),
@@ -504,11 +529,20 @@ export function tick(s,dt=STEP) {
       }
       continue;
     }
-    if(u.role==='lane'){
+    if(u.role==='lane'||u.role==='cookie'){
       if(u.life<=0||u.hp<=0){u.life=0;continue;}
       const previous=u.progress??routeLength(road);
-      u.progress=Math.max(0,previous-(u.speed||580)*dt);
+      // Cookie soldiers halt to fire at range and resume ONLY when the
+      // nearest enemy is defeated or moves outside their engagement zone.
+      let engage=false;
+      if(u.role==='cookie')for(const foe of s.enemies){
+        if(foe.hp>0&&foe.field===u.field&&Math.abs(foe.progress-previous)<=(u.attackRange||170)){
+          engage=true;break;
+        }
+      }
+      if(!engage)u.progress=Math.max(0,previous-(u.speed||130)*dt);
       const point=pointOnPath(road,u.progress);u.x=point.x;u.y=point.y;
+      u.phase=engage?'firing':'march';
       let e=null,closest=Infinity;
       // Lane progress, rather than Euclidean distance, prevents soldiers
       // attacking enemies through the folds of a winding map.
@@ -519,12 +553,12 @@ export function tick(s,dt=STEP) {
       }
       if(e&&closest<=u.attackRange){
         u.attackCd=(u.attackCd||0)-dt;
-        if(u.attackCd<=0&&closest>28){
+        if(u.attackCd<=0&&(closest>28||u.role==='cookie')){
           u.attackCd=u.attackInterval||.85;
           const owner=ownerById.get(u.from)||u;
           event(s,{kind:'summon-shot',x:u.x,y:u.y,tx:e.x,ty:e.y,field:u.field,
             type:u.type,level:u.level,from:u.from});
-          applyHit(s,e,u.damage*.42,owner,towerStats(owner));
+          applyHit(s,e,u.damage*(u.role==='cookie'?1:.42)*(1+(u.cookieVariant||0)*.14),owner,towerStats(owner));
         }
         if(e.hp>0&&closest<=28){
           const owner=ownerById.get(u.from)||u;
@@ -537,7 +571,7 @@ export function tick(s,dt=STEP) {
           u.hp=Math.max(0,hpBefore-enemyEffectiveHP);
           event(s,{kind:'summon-clash',x:u.x,y:u.y,tx:e.x,ty:e.y,field:u.field,
             type:u.type,level:u.level,remaining:u.hp});
-          if(u.hp<=.0001)u.life=0;
+          if(u.hp<=.0001){u.life=0;if(u.role==='cookie')event(s,{kind:'cookie-shatter',x:u.x,y:u.y,field:u.field,type:u.type,variant:u.cookieVariant});}
           else u.attackCd=.35;
         }
       }
@@ -559,7 +593,7 @@ export function tick(s,dt=STEP) {
   s.units=s.units.filter(u=>u.life>0);
   s.enemies=s.enemies.filter(e=>e.hp>0);
   for(const e of s.enemies) {
-    e.progress+=e.speed*dt*(e.slowUntil>s.time?(e.slowFactor||1):1)*(e.rushUntil>s.time?(e.rushPower||1):1);const pos=pointOnPath(mapOf(s).path,e.progress);e.x=pos.x;e.y=pos.y;
+    e.progress+=e.speed*dt*(e.frozenUntil>s.time?0:1)*(e.slowUntil>s.time?(e.slowFactor||1):1)*(e.rushUntil>s.time?(e.rushPower||1):1);const pos=pointOnPath(mapOf(s).path,e.progress);e.x=pos.x;e.y=pos.y;
     if(pos.end){s.fields[e.field]=Math.max(0,s.fields[e.field]-ENEMIES[e.type].leak);e.hp=0;event(s,{kind:'leak',x:e.x,y:e.y,field:e.field});}
   }
   s.enemies=s.enemies.filter(e=>e.hp>0);
@@ -610,13 +644,26 @@ export function rewardFor(s,id) {
     aurora:!s.config.eventId&&win&&d.id==='ruin'&&s.config.modes.includes('elite'),
     voidwalker:!s.config.eventId&&win&&DIFFICULTIES.indexOf(d)>=3&&s.config.modes.includes('darkenergy'),
     meatlordPack:!s.config.eventId&&win&&DIFFICULTIES.indexOf(d)>=3&&s.config.modes.includes('tank'),
-    oldgod:!!s.config.eventId&&win,win};
+    oldgod:s.config.eventId==='temple_of_ruin'&&win,
+    christmasStage:win?(EVENTS[s.config.eventId]?.christmasStage||0):0,
+    christmasPassXP:win?(CHRISTMAS_STAGES.find(t=>t.id===s.config.eventId)?.passXp||0):0,win};
 }
 export function applyReward(profile,reward) {
   profile.coins+=reward.coins;profile.xp+=reward.xp;if(reward.win)profile.wins++;
   if(reward.sonic&&!profile.owned.includes('sonic'))profile.owned.push('sonic');if(reward.aurora&&!profile.owned.includes('aurora'))profile.owned.push('aurora');if(reward.oldgod&&!profile.owned.includes('oldgod'))profile.owned.push('oldgod');if(reward.voidwalker&&!profile.owned.includes('voidwalker'))profile.owned.push('voidwalker');
   // Challenge pack is granted once, to both local and server-backed profiles.
   if(reward.meatlordPack){profile.packs=Array.isArray(profile.packs)?profile.packs:['basic'];if(!profile.packs.includes('meatlord'))profile.packs.push('meatlord');}
+  if(Number.isSafeInteger(reward.christmasStage)&&reward.christmasStage>=1&&reward.christmasStage<=3){
+    const cleared=Array.isArray(profile.christmasCleared)?profile.christmasCleared:[];
+    // Prevent stage-3 unlock farming through a forged skip of stage 1/2.
+    if(christmasStageUnlocked(profile,reward.christmasStage)){
+      if(!cleared.includes(reward.christmasStage))profile.christmasCleared=[...cleared,reward.christmasStage];
+      const tower=CHRISTMAS_STAGES[reward.christmasStage-1].unlock;
+      if(!profile.owned.includes(tower))profile.owned.push(tower);
+      profile.christmasPassXP=Math.min(999999,Math.max(0,profile.christmasPassXP||0)+
+        Math.max(0,reward.christmasPassXP||0));
+    }
+  }
   return profile;
 }
 export function profileAction(profile,a) {
@@ -631,13 +678,15 @@ export function profileAction(profile,a) {
     if(!Number.isSafeInteger(profile.cratePities[id])||profile.cratePities[id]<0)
       profile.cratePities[id]=id==='wardrobe'?oldPity:0;
   profile.cratePity=profile.cratePities.wardrobe;
-  if(a.kind==='equip') {
+  if(a.kind==='christmasClaimPass'){
+    christmasClaimPass(profile,a.level);
+  } else if(a.kind==='equip') {
     if(!profile.owned.includes(a.id))throw Error('보유하지 않은 타워입니다.');
     if(profile.loadout.includes(a.id)){if(profile.loadout.length===1)throw Error('타워를 최소 1개 장착하세요.');profile.loadout=profile.loadout.filter(x=>x!==a.id);}
     else {if(profile.loadout.length>=5)throw Error('최대 5개까지 장착할 수 있습니다.');profile.loadout.push(a.id);}
   } else if(a.kind==='buyTower') {
     const t=Object.hasOwn(TOWERS,a.id)?TOWERS[a.id]:null;
-    if(!t||t.price===null)throw Error('상점에서 구매할 수 없습니다.');
+    if(!t||t.price===null||t.rarity==='limited')throw Error('한정 타워는 상점에서 구매할 수 없습니다.');
     if(profile.owned.includes(a.id))throw Error('이미 보유한 타워입니다.');
     if(profile.coins<t.price)throw Error('코인이 부족합니다.');profile.coins-=t.price;profile.owned.push(a.id);
   } else if(a.kind==='buyPack') {
