@@ -289,6 +289,20 @@ export class Renderer {
   tower(g,t,time,clock=time){const d=TOWERS[t.type],c=d.color,lev=t.level||0,stats=towerStats(t);g.save();g.translate(t.x,t.y);g.fillStyle='#18294b55';g.beginPath();g.ellipse(4,6,25,13,0,0,7);g.fill();g.strokeStyle=RARITIES[d.rarity].color;g.lineWidth=2;g.beginPath();g.ellipse(0,3,25,12,0,0,7);g.stroke();
     drawTowerPresence(g,t,time,stats,this.reducedEffects?0:1);
     if(['buff','summon','chain'].includes(stats.kind)||t.type==='sonic'){g.strokeStyle=c+'99';g.beginPath();g.ellipse(0,3,29+Math.sin(time*3)*5,14,0,0,7);g.stroke();}
+    if(t.type==='frieza'){
+      const phase=time*1.4,level=t.level||0;
+      g.save();g.shadowColor='#be6cff';g.shadowBlur=11+level*3;
+      for(let k=0;k<3;k++){
+        g.strokeStyle=k%2?'#f1beff':'#9042ed';g.lineWidth=2.3+level*.45;
+        g.beginPath();g.ellipse(0,-27,31+k*6+Math.sin(phase+k)*3,12+k*2.4,phase*.25+k*.4,0,Math.PI*2);g.stroke();
+      }
+      if(level>=2)for(let i=0;i<4+level;i++){
+        const a=phase*.64+i*Math.PI*2/(4+level);
+        g.fillStyle=i%2?'#f3baff':'#9150e9';
+        g.beginPath();g.arc(Math.cos(a)*(39+level*2),-30+Math.sin(a)*26,2+level*.45,0,Math.PI*2);g.fill();
+      }
+      g.restore();
+    }
     if(t.type==='oldgod'){
       const phase=time*1.2;g.save();g.shadowColor='#ffcf61';g.shadowBlur=15;g.lineWidth=3;
       for(let k=0;k<3;k++){g.strokeStyle=k%2?'#f1587cbb':'#ffde89cc';g.beginPath();
@@ -309,7 +323,7 @@ export class Renderer {
       g.strokeStyle='#ef9dff';g.lineWidth=3;g.beginPath();g.arc(0,-20,30,0,7);g.stroke();
       g.fillStyle='#fcceff';g.font='bold 20px sans-serif';g.fillText('⚡',-10,-54);
     }
-    const img=sprite(t.type,t.skin||'default',lev),size=(t.type==='oldgod'?132:75)+lev*3,bob=Math.sin(time*(t.type==='sonic'?5:2)+t.x)*1.6;
+    const img=sprite(t.type,t.skin||'default',lev),size=(t.type==='oldgod'?132:t.type==='frieza'?112:75)+lev*3,bob=Math.sin(time*(t.type==='sonic'?5:2)+t.x)*1.6;
     // sprite() returns a raster-cache entry, not the HTMLImageElement itself.
     if(img.ready&&img.source){
       // Keep tactical weapons pointing toward their actual targets, rather
