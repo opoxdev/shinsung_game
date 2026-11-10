@@ -40,7 +40,7 @@ test('normal maps and PvP cannot start an event or select its map or enemies',()
   assert.throws(()=>validateConfig({...solo,map:'plains'}),/이벤트/);
   assert.throws(()=>validateConfig({...solo,eventId:'unknown'}),/이벤트/);
   assert.throws(()=>validateConfig({...standard,map:'temple_ruin'}),/맵/);
-  assert.equal(MAPS.filter(m=>m.eventOnly).length,2);
+  assert.equal(MAPS.filter(m=>m.eventOnly).length,4);
   const exclusive=Object.entries(ENEMIES).filter(([,v])=>v.eventOnly===event.id).map(([id])=>id);
   assert.equal(exclusive.length,8);
   for(const w of event.waves)for(const [id,count] of w.groups){
