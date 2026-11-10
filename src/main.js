@@ -270,7 +270,8 @@ async function saveGlobalSiteSettings(payload){
     lastSiteCheck=Date.now();
     adminData.status='전역 운영 설정 저장 완료 · 이벤트 '+
       (saved.christmasEnabled?'진행 중':'종료')+' · 전체 테마 '+UI_THEMES[saved.theme].name;
-    adminData.audit=await online.call('adminAudit');
+    try{adminData.audit=await online.call('adminAudit');}
+    catch(e){console.warn('운영 로그 새로고침 실패:',e.message);}
   }catch(e){
     adminData.error='운영 설정 저장 실패: '+e.message;
     try{adminData.siteSettings=await online.call('adminSiteSettings');}catch{}
