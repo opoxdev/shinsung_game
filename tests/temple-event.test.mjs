@@ -23,7 +23,7 @@ function fakeDb(){
   };}},get:()=>value,writes:()=>writes};
 }
 test('event remains independent of six difficulties and five extra modes',()=>{
-  assert.equal(DIFFICULTIES.length,6);assert.equal(Object.keys(EVENTS).length,1);
+  assert.equal(DIFFICULTIES.length,6);assert.equal(Object.keys(EVENTS).length,4);
   assert.equal(event.waves.length,30);
   assert.equal(event.map,'temple_ruin');
   assert.equal(event.firstClearTower,'oldgod');
@@ -40,7 +40,7 @@ test('normal maps and PvP cannot start an event or select its map or enemies',()
   assert.throws(()=>validateConfig({...solo,map:'plains'}),/이벤트/);
   assert.throws(()=>validateConfig({...solo,eventId:'unknown'}),/이벤트/);
   assert.throws(()=>validateConfig({...standard,map:'temple_ruin'}),/맵/);
-  assert.equal(MAPS.filter(m=>m.eventOnly).length,1);
+  assert.equal(MAPS.filter(m=>m.eventOnly).length,2);
   const exclusive=Object.entries(ENEMIES).filter(([,v])=>v.eventOnly===event.id).map(([id])=>id);
   assert.equal(exclusive.length,8);
   for(const w of event.waves)for(const [id,count] of w.groups){
