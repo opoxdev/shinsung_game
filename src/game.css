@@ -1138,3 +1138,65 @@ body{background:#15203d;color:var(--text)}button{border:2px solid #101a35;border
 .christmas-stage-map[data-christmas-map="christmas_kingdom"]{border-color:#f4c190}
 .christmas-stage-card.locked .christmas-stage-map>svg{filter:saturate(.78) contrast(1.02)}
 @media(max-width:720px){.christmas-stage-map{aspect-ratio:16/8.6}.christmas-map-caption b{font-size:16px}}
+
+/* v1.3: Admin-only live operations and bounded, collapsible audit records.
+   The main admin content must have its OWN scroll viewport: the previously
+   hidden overflow clipped the panel and made the log look like an overlay. */
+.shell:has(.admin-console) .content{
+  min-width:0;min-height:0;overflow-x:hidden;overflow-y:auto;
+  overscroll-behavior-y:contain;scrollbar-width:thin;
+  scrollbar-color:#87bda7 #172d3c;scrollbar-gutter:stable;
+}
+.shell:has(.admin-console) .admin-console{min-width:0;max-width:1550px;margin:0 auto;padding:3px 4px 32px;align-content:start;gap:16px}
+.admin-site-settings{display:grid;gap:14px;min-width:0;position:relative;padding:23px 25px;border:2px solid #dfca96;
+  border-radius:16px;background:linear-gradient(130deg,#265953,#233d52 60%,#533e56);
+  box-shadow:inset 0 1px #fff4db4f,0 7px 24px #081a2b70}
+.admin-site-settings .admin-section-header{align-items:start;gap:15px;flex-wrap:wrap;margin:0}
+.admin-site-settings .admin-section-header span{color:#ffe1ab}
+.admin-site-settings h2{color:#fff6df;font-size:24px;margin:5px 0 8px}
+.admin-site-settings .admin-section-header p{font-size:12px;color:#d1e9de;line-height:1.65;margin:0}
+.admin-site-status{display:inline-flex;white-space:nowrap;font-size:11px;color:#e5f9e6;
+ border:1px solid #f4d7a2b3;padding:7px 10px;border-radius:30px;background:#234d48cc}
+.admin-site-form{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:12px;align-items:end}
+.admin-site-form label{min-width:0;display:grid;gap:8px;color:#fff3de;font-size:12px;font-weight:850}
+.admin-site-form select{display:block;width:100%;max-width:100%;min-width:0;height:45px;padding:10px 12px;border:1px solid #8fb8ad;
+ background:#173b45;border-radius:9px;color:#fff8e4;font-size:12px}
+.admin-site-save{height:45px;padding:10px 16px;border:1px solid #ffeaaf;border-radius:9px;
+  background:linear-gradient(#f2dbac,#d4af78);color:#4b3729;font-weight:900;white-space:nowrap}
+.admin-site-save:hover:not(:disabled){background:linear-gradient(#fff1ca,#e7c393)}
+.admin-site-note{color:#c9e0db;font-size:11px;line-height:1.75;margin:0;max-width:1050px}
+.admin-site-note b{color:#ffe6b7}
+.admin-audit{display:block;position:relative;min-width:0;min-height:0;max-height:none;overflow:hidden;
+ padding:0;border:1px solid #617f99;border-radius:14px;background:#1c3450;
+ box-shadow:0 3px 15px #091f3450}
+.admin-audit>summary{position:relative;display:flex;align-items:center;gap:12px;cursor:pointer;
+ padding:14px 18px;list-style:none;min-height:59px;background:linear-gradient(110deg,#294762,#1c354c);
+ border-bottom:1px solid transparent}
+.admin-audit>summary::-webkit-details-marker{display:none}
+.admin-audit>summary::before{content:'▸';display:inline-flex;font-size:15px;color:#f9ddb3}
+.admin-audit[open]>summary::before{content:'▾'}
+.admin-audit>summary:hover{background:linear-gradient(110deg,#39576b,#264459)}
+.admin-audit>summary:focus-visible{outline:2px solid #ffe9b0;outline-offset:-4px}
+.admin-audit>summary span{font-size:10px;color:#9cd9dd;font-weight:700;letter-spacing:.06em}
+.admin-audit>summary strong{font-size:16px;color:#f0f6f6}
+.admin-audit>summary small{margin-left:auto;font-size:11px;color:#b5ccdd}
+.admin-audit[open]>summary{border-bottom-color:#66869e}
+.admin-audit-list{margin:0;padding:12px;max-height:240px;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
+.admin-audit-list article{flex-wrap:wrap;min-width:0}
+.admin-audit-list article span{min-width:0;overflow-wrap:anywhere}
+.admin-workspace{min-width:0;align-items:start}
+.admin-users,.admin-detail{min-width:0;max-width:100%;overflow-wrap:anywhere}
+.admin-hero{min-width:0}.admin-hero>div{min-width:0}
+@media(max-width:1250px){.admin-site-form{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .admin-site-save{grid-column:1/-1;justify-self:start}
+ .admin-workspace{grid-template-columns:minmax(0,1fr) minmax(0,1.1fr)}
+}
+@media(max-width:1020px){.admin-workspace{grid-template-columns:1fr}
+ .admin-audit-list{max-height:210px}
+}
+@media(max-width:620px){.shell:has(.admin-console) .content{overflow-y:visible;scrollbar-gutter:auto}
+ .admin-site-settings{padding:17px 14px}.admin-site-form{grid-template-columns:1fr}
+ .admin-site-save{grid-column:auto;justify-self:stretch}
+ .admin-audit>summary{flex-wrap:wrap;gap:7px}.admin-audit>summary small{margin-left:0}
+ .admin-hero{padding:14px}.admin-site-form select{font-size:13px}
+}
