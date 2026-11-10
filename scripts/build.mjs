@@ -14,7 +14,7 @@ function stripModules(source){
     .replace(/^export\s+\{[^\n]*\}\s+from\s+['"][^'"\n]+['"];?\s*$/gm,'')
     .replace(/^export\s+(?=(const|let|var|function|class)\b)/gm,'');
 }
-const sources=['evolutions','christmas','data','engine','achievements','christmas-art','christmas-map-expansion','visual-design','meat-art','new-map-art','art','presentation','terrain','enemy-art','combat-fx','render','online','matchmaking','admin-panel','achievement-page','online-prediction','story','client-profile','ui-theme','main'];
+const sources=['evolutions','christmas','data','engine','achievements','christmas-art','christmas-map-expansion','visual-design','meat-art','new-map-art','art','presentation','terrain','enemy-art','combat-fx','render','online','matchmaking','ui-theme','admin-panel','achievement-page','online-prediction','story','client-profile','main'];
 const files=await Promise.all(sources.map(x=>read(`src/${x}.js`)));
 // Modules newly authored as ESM may use private helpers named like existing
 // legacy globals. Scope their helpers while explicitly exposing public bindings
