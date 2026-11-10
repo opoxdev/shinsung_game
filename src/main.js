@@ -238,18 +238,43 @@ async function adminLoad({selected=true}={}){
   if(!isAdminSession||!online.user)return;
   adminData.busy=true;adminData.error='';adminRender();
   try{
-    const [summary,listing,audit]=await Promise.all([
+    const [summary,listing,audit,settings]=await Promise.all([
       online.call('adminOverview'),
       online.call('adminUsers',{search:adminData.search,offset:adminData.offset}),
-      online.call('adminAudit')
+      online.call('adminAudit'),
+      online.call('adminSiteSettings')
     ]);
-    adminData.summary=summary;adminData.listing=listing;adminData.audit=audit;
+    adminData.summary=summary;adminData.listing=listing;adminData.audit=audit;adminData.siteSettings=settings;
     if(selected&&adminData.selected){
       const match=listing.items.find(u=>u.uid===adminData.selected.uid);
       adminData.selected=match?await online.call('adminUser',{uid:match.uid}):null;
     }
   }catch(e){adminData.error='관리자 정보 조회 실패: '+e.message;}
   finally{adminData.busy=false;adminRender();}
+}
+async function saveGlobalSiteSettings(payload){
+  if(!isAdminSession||adminData.busy||!adminData.siteSettings)return;
+  const prior=adminData.siteSettings;
+  const before=prior.christmasEnabled;
+  if(before&&!payload.christmasEnabled){
+    if(!window.confirm('크리스마스 이벤트를 모든 유저에게서 종료하고 신규 입장/보상을 중단합니다. 보유 데이터는 유지됩니다. 계속할까요?'))
+      return;
+  }
+  adminData.busy=true;adminData.error='';adminRender();
+  try{
+    const saved=await online.call('adminUpdateSiteSettings',{
+      christmasEnabled:payload.christmasEnabled,theme:payload.theme,version:prior.version
+    });
+    adminData.siteSettings=saved;
+    applyPublicSiteSettings(saved,{repaint:false});
+    lastSiteCheck=Date.now();
+    adminData.status='전역 운영 설정 저장 완료 · 이벤트 '+
+      (saved.christmasEnabled?'진행 중':'종료')+' · 전체 테마 '+UI_THEMES[saved.theme].name;
+    adminData.audit=await online.call('adminAudit');
+  }catch(e){
+    adminData.error='운영 설정 저장 실패: '+e.message;
+    try{adminData.siteSettings=await online.call('adminSiteSettings');}catch{}
+  }finally{adminData.busy=false;adminRender();}
 }
 async function adminSelect(uid){
   if(adminData.busy||!isAdminSession)return;
@@ -798,6 +823,16 @@ const actions={
   },
   async adminOpen(){if(!isAdminSession)return;page='admin';shell();await adminLoad({selected:false});},
   async adminReload(){await adminLoad();},
+  async adminSaveSiteSettings(){
+    if(!isAdminSession||!adminData.siteSettings)return;
+    const form=$('#admin-site-settings-form');
+    if(!form)return;
+    const data=new FormData(form);
+    await saveGlobalSiteSettings({
+      christmasEnabled:data.get('christmasEnabled')==='true',
+      theme:String(data.get('theme')||'classic')
+    });
+  },
   async adminSelect(uid){await adminSelect(uid);},
   async adminPrev(){adminData.offset=Math.max(0,adminData.offset-20);await adminLoad({selected:false});},
   async adminNext(){adminData.offset+=20;await adminLoad({selected:false});},
@@ -1003,6 +1038,8 @@ document.addEventListener('change',async e=>{
   if(e.target.id==='rarity-filter'){rarityFilter=e.target.value;collection();}else if(e.target.id==='lobby-map'&&MAPS.some(m=>m.id===e.target.value)){config.map=e.target.value;}else if(e.target.id==='lobby-difficulty'&&DIFFICULTIES.some(d=>d.id===e.target.value)){config.difficulty=e.target.value;}});
 document.addEventListener('submit',async e=>{e.preventDefault();const f=new FormData(e.target);if(e.target.id==='auth-form'){const buttons=e.target.querySelectorAll('button');buttons.forEach(b=>b.disabled=true);try{const credential=await online.signIn(f.get('email'),f.get('password'),e.submitter?.value==='signup');await switchAccountProfile(credential.user);await flushSoloClaims(credential.user);closeModal();shell();if(pendingLobbyMode){const mode=pendingLobbyMode,code=pendingJoinCode;pendingLobbyMode=null;pendingJoinCode=null;special(mode);if(code)await actions.joinListedRoom(code);}}catch(err){$('#auth-error').textContent=err.message;}finally{buttons.forEach(b=>b.disabled=false);}}else if(e.target.id==='join-form'){try{const code=f.get('code').toUpperCase();await online.call('join',{code,loadout:multiplayerLoadout(profile)});profile.activeRoom=code;await openRoom(code);}catch(err){toast('방 참가 실패: '+err.message);}}else if(e.target.id==='admin-search-form'){
   adminData.search=String(f.get('search')||'');adminData.offset=0;adminData.selected=null;await adminLoad({selected:false});
+}else if(e.target.id==='admin-site-settings-form'){
+  await actions.adminSaveSiteSettings();
 }else if(e.target.id==='admin-balance-form'){
   await adminChange(String(f.get('field')),{amount:Number(f.get('amount'))});
 }else if(e.target.id==='admin-tower-form'){
@@ -1057,6 +1094,16 @@ function frame(now){
   }
 }
 shell();requestAnimationFrame(frame);online.onError=e=>toast(e.message);
+// Site settings belong to the administrator. Read them for every visitor,
+// including guests; refresh on return to a tab without polling every frame.
+void refreshPublicSiteSettings();
+window.addEventListener('focus',()=>{
+  if(Date.now()-lastSiteCheck>60000)void refreshPublicSiteSettings();
+});
+document.addEventListener('visibilitychange',()=>{
+  if(!document.hidden&&Date.now()-lastSiteCheck>60000)
+    void refreshPublicSiteSettings();
+});
 online.init(async user=>{
   if(user){
     await switchAccountProfile(user);
