@@ -207,7 +207,17 @@ export function christmasTowerPortrait(id,skin='default'){
   +'<path d="M83 83q11 10 21 0" fill="none" stroke="#e68a95" stroke-width="4"/>'
   +'<path d="M132 172l-12-9 33-102q14-35-7-32-14 4-12 16" fill="none" stroke="#fff8ee" stroke-width="15"/>'
   +'<path d="M132 172l-12-9 33-102q14-35-7-32-14 4-12 16" fill="none" stroke="#e85d75" stroke-width="6" stroke-dasharray="10 10"/>'
-  +'<path d="M121 145l27 10" stroke="#f9d18c" stroke-width="6"/>';
+  +'<path d="M121 145l27 10" stroke="#f9d18c" stroke-width="6"/>'
+  // Wrapped peppermint battle coat, embroidered epaulettes and decorative candy crest.
+  +'<path d="M61 108l-21 70 35 17 18-40 18 40 31-17-23-70" fill="#fff2e5" stroke="#d86b7c" stroke-width="5"/>'
+  +'<path d="M46 154l25 9m43-2 18-10M62 118l58 0" stroke="#d96679" stroke-width="7" stroke-dasharray="8 8"/>'
+  +'<path d="M70 111 91 133l23-22-7-22H76Z" fill="#c75e72" stroke="#ffecb1" stroke-width="4"/>'
+  +'<circle cx="91" cy="122" r="10" fill="#ffecce" stroke="#ef9ea5" stroke-width="3"/>'
+  +'<path d="M87 120h8m-4-4v10" stroke="#e86a7b" stroke-width="3"/>'
+  +'<path d="M55 94l-13-16 23 7m50 9 13-16-23 7" fill="#ffe5a9" stroke="#e7ac7b" stroke-width="3"/>'
+  +'<circle cx="52" cy="98" r="5" fill="#ffb1bd"/><circle cx="126" cy="98" r="5" fill="#ffb1bd"/>'
+  +'<path d="M69 176l6-14m47 14-6-14" stroke="#ffe9b5" stroke-width="5"/>'
+  +'<path d="M34 170l-12-8 7-13 15 5m116 12 9-10-9-14-15 11" fill="#f7c2b7" stroke="#fff5df" stroke-width="3"/>';
  }else if(id==='scout'){
   // Hand-blown snow globe, miniature explorer and cast-brass collector pedestal.
   art='<g data-festival-model="snowglobe"><rect x="35" y="169" width="111" height="28" rx="8" fill="#c9a16d" stroke="#fff1c4" stroke-width="5"/>'
