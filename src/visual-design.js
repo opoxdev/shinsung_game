@@ -1,4 +1,5 @@
 import { TOWERS } from './data.js';
+import { christmasTowerPortrait } from './christmas-art.js';
 // Original Shinsung Defense silhouettes. No recolor filters or reused event costumes.
 // Everyday/common and craft/rare portraits use modest civilian jobs.
 // Epic/legendary/mythic gain progressively unique silhouettes; no military-uniform template.
@@ -781,6 +782,8 @@ function redesignedSummonPortrait(id,skin='default'){
 }
 
 export function redesignedPortrait(id,skin='default'){
+  const christmas=christmasTowerPortrait(id,skin);
+  if(christmas)return christmas;
   const summonArtwork=redesignedSummonPortrait(id,skin);
   if(summonArtwork)return summonArtwork;
   const expansion=expansionPortrait(id,skin);
