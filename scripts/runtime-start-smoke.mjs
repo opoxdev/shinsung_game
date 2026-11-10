@@ -118,6 +118,37 @@ try {
   assert.deepEqual(chapterErrors,[],'Christmas chapter '+chapter+' runtime errors: '+chapterErrors.join(' | '));
   await chapterPage.close();
  }
+ // Admin operations layout regression: render the real admin markup in
+ // isolation (no login bypass or privileged API call) to inspect its CSS.
+ await page.evaluate(()=>{
+   const target=document.querySelector('#content');
+   if(typeof adminPageMarkup!=='function')throw Error('Admin markup missing from live bundle');
+   target.innerHTML=adminPageMarkup({
+     siteSettings:{christmasEnabled:true,theme:'christmas',version:5,updatedAt:Date.now()},
+     summary:{users:3,banned:0,coins:10000,version:'0.12.1'},
+     listing:{items:[],total:0,offset:0},selected:null,
+     audit:Array.from({length:30},(_,i)=>({operation:'siteSettings',target_uid:'GLOBAL',created_at:Date.now()-i*1000}))
+   });
+ });
+ const adminLog=page.locator('.admin-audit');
+ assert.equal(await adminLog.count(),1);
+ assert.equal(await adminLog.evaluate(el=>el.open),false,'Admin logs must start collapsed');
+ assert.equal(await page.locator('.admin-site-settings select').count(),2);
+ const adminLayout=await page.evaluate(()=>{
+   const content=document.querySelector('.content'),log=document.querySelector('.admin-audit');
+   return {overflow:getComputedStyle(content).overflowY,
+    position:getComputedStyle(log).position,collapsedHeight:log.getBoundingClientRect().height,
+    scrollArea:content.scrollHeight>content.clientHeight};
+ });
+ assert.equal(adminLayout.overflow,'auto','Admin panel must have an independent scroll area');
+ assert.equal(adminLayout.position,'relative','Audit log must remain in document flow');
+ assert.ok(adminLayout.collapsedHeight<90,'Collapsed audit must not cover the workbench');
+ if(capture)await page.screenshot({path:path.join(shotsDir,'admin-global-season-settings.png'),animations:'disabled'});
+ await adminLog.locator('summary').click();
+ assert.equal(await adminLog.evaluate(el=>el.open),true);
+ assert.ok(await page.locator('.admin-audit-list').evaluate(el=>el.clientHeight<=245),
+   'Expanded logs must scroll within a bounded panel');
+ await page.locator('.sidebar [data-action="nav"][data-id="home"]').click();
  // Browser-level coverage for content, challenge combinations and render startup.
  await page.locator('.sidebar [data-action="nav"][data-id="towers"]').click();
  assert.equal(await page.locator('html').getAttribute('data-theme'),'christmas');
