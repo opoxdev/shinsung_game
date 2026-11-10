@@ -153,6 +153,33 @@ export class Renderer {
             g.beginPath();g.ellipse(e.x,e.y-17,20+p*60,30+p*75,0,0,Math.PI*2);g.stroke();
             g.fillStyle='#efe2ff';g.font='bold 18px sans-serif';
             g.fillText('☾ 월식 기습',e.x+32,e.y-65-p*18);g.restore();
+          }else if(e.kind==='cookie-shatter'){
+            // Burst baked gingerbread fragments, icing and candy sprinkles.
+            const p=Math.min(1,age/.45),colors=['#b97552','#fef0dc','#f38e9f','#a2efbc','#fff1a2'];
+            g.save();g.globalAlpha=1-p;
+            for(let i=0;i<14;i++){
+              const a=i*Math.PI*2/14+(e.variant||0)*.3,dist=(12+p*85)*(i%3+2)/4;
+              const x=e.x+Math.cos(a)*dist,y=e.y+Math.sin(a)*dist;
+              g.save();g.translate(x,y);g.rotate(p*7+i);
+              g.fillStyle=colors[i%colors.length];g.fillRect(-4,-4,8+(i%3)*3,6+(i%3)*2);g.restore();
+            }
+            g.restore();
+          }else if(e.kind==='christmas-gift'){
+            const p=Math.min(1,age/.45);
+            g.save();g.globalAlpha=1-p;
+            g.strokeStyle=e.outcome==='heal'?'#b9ffd0':e.outcome==='candy-blast'?'#ff9cae':'#ffe4a1';
+            g.lineWidth=6*(1-p)+1;g.beginPath();g.arc(e.x,e.y-18,16+p*68,0,7);g.stroke();
+            g.font='bold 22px sans-serif';g.fillStyle='#fff7e9';
+            g.fillText(e.outcome==='heal'?'♥':e.outcome==='blessing'?'✦':e.outcome==='candy-blast'?'✸':'🎁',e.x-10,e.y-49-p*30);
+            g.restore();
+          }else if(e.kind==='christmas-freeze'){
+            const p=Math.min(1,age/.45);
+            g.save();g.strokeStyle='#d8fbff';g.globalAlpha=1-p;g.lineWidth=4;
+            for(let i=0;i<6;i++){
+              const a=i*Math.PI/3;
+              g.beginPath();g.moveTo(e.x+Math.cos(a)*5,e.y+Math.sin(a)*5);
+              g.lineTo(e.x+Math.cos(a)*(12+p*42),e.y+Math.sin(a)*(12+p*42));g.stroke();
+            }g.restore();
           }else if(e.kind==='summon-clash'){
             const p=Math.min(1,age/.45);g.save();g.strokeStyle='#f6ffd4';g.lineWidth=4*(1-p)+1;
             g.beginPath();g.arc(e.x,e.y,12+p*44,0,7);g.stroke();
@@ -399,7 +426,54 @@ export class Renderer {
     if(level>0){g.fillStyle=tint;for(let i=0;i<Math.min(level,5);i++)glow(-15+i*7,-48,2.5,tint);}
     g.restore();
   }
+  christmasCookie(g,u,time){
+    const bob=u.phase==='firing'?0:Math.sin(time*8+u.id)*2;
+    const variant=u.cookieVariant||0,level=u.level||0;
+    g.save();g.translate(u.x,u.y+bob);g.scale(.85+level*.035,.85+level*.035);
+    g.fillStyle='#273a4d44';g.beginPath();g.ellipse(0,13,24,8,0,0,7);g.fill();
+    // Four genuinely different cookie silhouettes; newly introduced as
+    // the cookie house evolves. Frosted ginger / star / cocoa / peppermint.
+    const outline='#fff1db';g.lineJoin='round';
+    if(variant===1){
+      const pts=[];for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,r=i%2?12:28;pts.push([Math.cos(a)*r,Math.sin(a)*r-15]);}
+      g.beginPath();pts.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));g.closePath();
+      g.fillStyle='#dfb777';g.fill();g.strokeStyle=outline;g.lineWidth=4;g.stroke();
+    }else if(variant===2){
+      g.fillStyle='#80503d';g.beginPath();g.roundRect(-22,-41,44,56,10);g.fill();
+      g.strokeStyle='#d3a78f';g.lineWidth=4;g.stroke();
+      g.strokeStyle='#fff3e7';g.lineWidth=5;
+      g.beginPath();g.moveTo(-17,-33);g.lineTo(17,-33);g.moveTo(-16,8);g.lineTo(16,8);g.stroke();
+    }else if(variant===3){
+      g.fillStyle='#f6e1c9';g.beginPath();g.arc(0,-17,27,0,7);g.fill();
+      g.strokeStyle='#dc697c';g.lineWidth=8;for(let i=0;i<6;i++){
+        const a=i*Math.PI/3;g.beginPath();g.moveTo(0,-17);g.lineTo(Math.cos(a)*25,-17+Math.sin(a)*25);g.stroke();
+      }
+    }else{
+      // Traditional gingerbread soldier as in reference 3.
+      g.fillStyle='#bf8458';g.beginPath();
+      g.arc(0,-42,15,0,7);g.fill();
+      const pts=[[-15,-32],[-31,-25],[-27,-10],[-14,-14],[-12,13],[0,15],[11,13],[14,-15],[28,-9],[32,-24],[14,-32]];
+      g.beginPath();pts.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));g.closePath();g.fill();
+      g.strokeStyle=outline;g.lineWidth=3.6;g.stroke();
+      g.strokeStyle=outline;g.beginPath();g.arc(0,-42,15,0,7);g.stroke();
+      g.strokeStyle='#fff1e1';g.lineWidth=2.7;g.beginPath();
+      g.moveTo(-24,-23);g.lineTo(-19,-20);g.lineTo(-22,-16);g.moveTo(23,-24);g.lineTo(18,-21);g.lineTo(22,-17);g.stroke();
+    }
+    g.fillStyle='#fff8ed';for(const x of [-7,7]){g.beginPath();g.arc(x,-27,2.5,0,7);g.fill();}
+    g.strokeStyle='#fff1dc';g.lineWidth=2.5;g.beginPath();g.arc(0,-19,8,.2,Math.PI-.2);g.stroke();
+    for(const [x,y,c] of [[0,-8,'#fa8292'],[0,1,'#a1e3a2']]){g.fillStyle=c;g.beginPath();g.arc(x,y,3.5,0,7);g.fill();}
+    if(u.phase==='firing'){
+      g.strokeStyle='#ffedae';g.lineWidth=2;g.beginPath();g.arc(0,-20,30+Math.sin(time*5)*3,0,7);g.stroke();
+    }
+    if(u.maxHp>0){
+      const ratio=Math.max(0,Math.min(1,u.hp/u.maxHp));
+      g.fillStyle='#2e3345';g.fillRect(-23,22,46,6);
+      g.fillStyle=ratio>.5?'#abf5a5':'#ee929e';g.fillRect(-21,23,42*ratio,4);
+    }
+    g.restore();
+  }
   summon(g,u,time){
+    if(u.role==='cookie'){this.christmasCookie(g,u,time);return;}
     if(u.role==='orbit'||u.role==='lane'){this.summonReworked(g,u,time);return;}
     const bob=Math.sin(time*11+u.id)*3;
     g.save();g.translate(u.x,u.y+bob);
