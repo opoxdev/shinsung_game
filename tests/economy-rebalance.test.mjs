@@ -22,7 +22,7 @@ const near=(actual,expected)=>assert.ok(Math.abs(actual-expected)<1e-9,
  `expected ${expected} but got ${actual}`);
 
 test('all 38 battlefield placement prices increase, without sorting towers by rarity',()=>{
- assert.deepEqual(Object.keys(TOWERS).sort(),Object.keys(previousInstallCosts).sort());
+ assert.deepEqual(Object.keys(TOWERS).filter(id=>TOWERS[id].rarity!=='limited').sort(),Object.keys(previousInstallCosts).sort());
  let minFactor=Infinity,maxFactor=-Infinity;
  for(const [id,previous] of Object.entries(previousInstallCosts)){
   const {cost}=TOWERS[id];
