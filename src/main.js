@@ -1105,6 +1105,12 @@ document.addEventListener('visibilitychange',()=>{
   if(!document.hidden&&Date.now()-lastSiteCheck>60000)
     void refreshPublicSiteSettings();
 });
+// Low-frequency, read-only refresh lets already-open clients learn when a
+// seasonal event ends. Never issue a request per animation frame.
+if(configuredPublicSettings)setInterval(()=>{
+  if(!document.hidden&&Date.now()-lastSiteCheck>120000)
+    void refreshPublicSiteSettings();
+},120000);
 online.init(async user=>{
   if(user){
     await switchAccountProfile(user);
