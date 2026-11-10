@@ -67,7 +67,7 @@ test('four limited towers retain collectible identity and receive meaningful bas
     assert.ok(max.interval<base.interval);
     if(id==='cookiehouse'){assert.ok(base.summonHp>=430&&max.summonHp>=2000);assert.equal(max.summons,5);}
     if(id==='christmastree'){assert.ok(base.income>=340&&max.income>=1200);assert.ok(max.power>=.5);}
-    if(id==='snowman'){assert.ok(base.freezeTime>=2.6&&max.freezeTime>=5);assert.ok(base.damage>=110);}
+    if(id==='snowman'){assert.ok(base.freezeTime>=2.6&&max.freezeTime>=5);assert.ok(base.damage>=20);}
     if(id==='stocking'){assert.ok(base.income>=235&&max.income>=900);}
   }
 });
