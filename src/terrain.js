@@ -3,6 +3,7 @@ import { pathDistance } from './engine.js';
 import { TERRAIN_MARGIN } from './presentation.js';
 import { NEW_MAP_IDS, drawNewMapBackdrop, drawNewMapDecor } from './new-map-art.js';
 import {drawChristmasVillageBack,drawChristmasVillageDecor} from './christmas-art.js';
+import {drawHolidayMapBack,drawHolidayMapDecor} from './christmas-map-expansion.js';
 const noise=n=>{const v=Math.sin(n*127.1+311.7)*43758.5453;return v-Math.floor(v);};
 const poly=(g,p,c)=>{g.beginPath();p.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));g.closePath();g.fillStyle=c;g.fill();};
 const oval=(g,x,y,rx,ry,c)=>{g.fillStyle=c;g.beginPath();g.ellipse(x,y,rx,ry,0,0,7);g.fill();};
@@ -33,6 +34,7 @@ export function makeTerrain(map){
   for(let i=0;i<500;i++){const x=noise(i+90)*1800,y=noise(i+500)*1100;if(pathDistance(map.path,x,y)<70)continue;g.strokeStyle=map.id==='plains'?'#a4e27899':'#ffffff20';g.lineWidth=2;g.beginPath();g.moveTo(x-4,y);g.lineTo(x-7,y-7);g.moveTo(x,y);g.lineTo(x,y-10);g.moveTo(x+4,y);g.lineTo(x+7,y-5);g.stroke();if(i%9===0&&map.id==='plains')oval(g,x,y-8,3,3,i%2?'#fff0ad':'#ffacd1');}
   drawNewMapBackdrop(g,map);
   if(map.id==='christmas_village')drawChristmasVillageBack(g);
+  drawHolidayMapBack(g,map);
   if(map.biome==='temple'){
     // Deterministic carved-obsidian floor and altar ruins baked once per map.
     // There are no animated terrain draw calls or image/network dependencies.
@@ -104,6 +106,15 @@ export function makeTerrain(map){
     g.strokeStyle=map.id==='sakura'?'#ffebf2':map.id==='moonlake'?'#b3f3fe':map.id==='skyisles'?'#ffedb2':'#ffe2ba';
     g.lineWidth=3;g.setLineDash([19,20]);g.stroke();g.setLineDash([]);g.restore();
   }
+  if(map.eventOnly==='christmas'){
+    // Golden ice or piped royal icing follows the authored road surface.
+    // A route-specific inlay is baked once, never redrawn in the frame loop.
+    g.save();g.beginPath();map.path.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));
+    g.lineJoin='round';g.lineCap='round';
+    g.strokeStyle=map.id==='christmas_kingdom'?'#fff7e5a4':'#fff4d89e';
+    g.lineWidth=4;g.setLineDash(map.id==='christmas_kingdom'?[5,14]:[25,19]);g.stroke();
+    g.setLineDash([]);g.restore();
+  }
   if(map.biome==='temple'){
     // Inlaid luminous rails emphasize the exact playable path.
     g.save();g.beginPath();map.path.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));
@@ -129,9 +140,10 @@ export function makeTerrain(map){
   }
 
   for(let i=0;i<150;i++){const x=noise(i+1900)*1800,y=noise(i+2900)*1100;if(pathDistance(map.path,x,y)>27)continue;oval(g,x,y,5+i%4,2,'#ffffff26');}
-  if(!NEW_MAP_IDS.includes(map.id)&&map.id!=='christmas_village')for(let i=0;i<90;i++){const x=60+noise(i+4000)*1680,y=90+noise(i+5000)*940;if(pathDistance(map.path,x,y)<125)continue;if(map.id==='plains'&&Math.hypot((x-940)/1.4,y-488)<100)continue;prop(g,x,y,.65+noise(i+90)*.7,i%5===0&&!['crystal','volcano'].includes(map.id)?'rock':map.id);}
+  if(!NEW_MAP_IDS.includes(map.id)&&map.eventOnly!=='christmas')for(let i=0;i<90;i++){const x=60+noise(i+4000)*1680,y=90+noise(i+5000)*940;if(pathDistance(map.path,x,y)<125)continue;if(map.id==='plains'&&Math.hypot((x-940)/1.4,y-488)<100)continue;prop(g,x,y,.65+noise(i+90)*.7,i%5===0&&!['crystal','volcano'].includes(map.id)?'rock':map.id);}
   drawNewMapDecor(g,map,pathDistance);
   if(map.id==='christmas_village')drawChristmasVillageDecor(g,map,pathDistance);
+  drawHolidayMapDecor(g,map,pathDistance);
   const inset=(end,near,d)=>{const length=Math.hypot(near[0]-end[0],near[1]-end[1]);return [end[0]+(near[0]-end[0])*d/length,end[1]+(near[1]-end[1])*d/length];};
   const [sx,sy]=inset(map.path[0],map.path[1],35),[ex,ey]=inset(map.path.at(-1),map.path.at(-2),45);
   for(const [x,y,color]of [[sx,sy,'#ff7197'],[ex,ey,'#84f4ff']]){g.shadowColor=color;g.shadowBlur=22;g.strokeStyle=color;g.lineWidth=9;g.beginPath();g.ellipse(x,y-16,23,52,0,0,7);g.stroke();g.shadowBlur=0;oval(g,x,y+31,34,10,'#222d4644');}
