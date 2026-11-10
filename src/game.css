@@ -1044,6 +1044,8 @@ body{background:#15203d;color:var(--text)}button{border:2px solid #101a35;border
   .map-pick>b{display:block;font-size:10px}
 }
 
+.shell:has(.christmas-page) .content{overflow-y:auto;overflow-x:hidden;overscroll-behavior-y:contain;scrollbar-gutter:stable;scrollbar-width:thin;scrollbar-color:#a7cdd2 transparent}
+@media(max-width:620px){.shell:has(.christmas-page) .content{overflow:visible;padding-bottom:25px;scrollbar-gutter:auto}}
 /* Christmas Expedition • limited festival • 2026. Warm lanterns in a real
    frosted winter village, not a white recolor of the ordinary lobby. */
 .christmas-nav-group{display:grid;grid-template-columns:minmax(0,1fr) 43px;align-items:center;gap:4px;margin:5px 6px 9px}
