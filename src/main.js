@@ -241,6 +241,58 @@ function home(){
   resetRenderer();
   restore();
 }
+function christmasPage(){
+  const restore=preserveScroll(),cleared=Array.isArray(profile.christmasCleared)?profile.christmasCleared:[];
+  const claimed=Array.isArray(profile.christmasPassClaimed)?profile.christmasPassClaimed:[];
+  const level=christmasPassLevel(profile),earnedXp=Math.max(0,profile.christmasPassXP||0);
+  const winterMap=MAPS.find(m=>m.id==='christmas_village');
+  const holidayEnemies=Object.entries(ENEMIES).filter(([,m])=>m.eventOnly==='christmas');
+  resetRenderer();
+  $('#content').innerHTML=`<div class="christmas-page ${christmasEnabled?'enabled':'disabled'}">
+    <div class="christmas-hero">
+      <div class="christmas-scene">${landscape(winterMap)}</div>
+      <div class="christmas-hero-copy">
+        <span class="christmas-kicker">❄ SHINSUNG WINTER FESTIVAL · 2026</span>
+        <h1>영원한 크리스마스</h1>
+        <p>눈 내리는 북극의 마을, 사라진 선물과 깨어난 진저브레드 왕국. 총 50웨이브를 거쳐 크리스마스 한정 수호자들을 수집하세요.</p>
+        <div class="christmas-control"><button class="christmas-switch ${christmasEnabled?'is-on':'is-off'}" data-action="christmasToggle" aria-pressed="${christmasEnabled}">${christmasEnabled?'❄ 이벤트 ON · 끄기':'○ 이벤트 OFF · 켜기'}</button><span>${christmasEnabled?'이벤트 콘텐츠 활성화':'진행도는 보존됩니다. 다시 켜면 즉시 플레이 가능'}</span></div>
+      </div>
+    </div>
+    <section class="christmas-stages">
+      <div class="christmas-heading"><span class="eyebrow">THREE CHAPTERS · 10 + 15 + 25 WAVES</span><h2>크리스마스 원정 3단계</h2><p>각 스테이지는 크리스마스 전용 몬스터만 등장하며 5웨이브마다 중간보스, 마지막 웨이브에는 고유 최종보스가 출현합니다.</p></div>
+      <div class="christmas-stage-grid">${CHRISTMAS_STAGES.map((stage,i)=>{
+        const event=EVENTS[stage.id],unlocked=christmasStageUnlocked(profile,i+1),done=cleared.includes(i+1);
+        const boss=event.waves.at(-1).groups.at(-1)?.[0],tower=TOWERS[stage.unlock];
+        return `<article class="christmas-stage-card ${done?'cleared':''} ${unlocked?'':'locked'}">
+          <div class="christmas-stage-number">CHAPTER ${String(i+1).padStart(2,'0')} <span>${done?'✓ 클리어':unlocked?'도전 가능':'🔒 이전 단계 클리어 필요'}</span></div>
+          <h3>${stage.name}</h3><small>${stage.subtitle}</small>
+          <p>${stage.description}</p>
+          <div class="christmas-chapter-monster">${monsterPortrait(boss)}<div><b>마지막 보스</b><span>${ENEMIES[boss].name}</span></div></div>
+          <div class="christmas-stage-prize">${portrait(stage.unlock)}<div><small>최초 클리어 한정 보상</small><b>${tower.name}</b><span>◈ ${fmt(event.reward*8)} · 패스 경험치 +${stage.passXp} · ${stage.waves}웨이브</span></div></div>
+          <button class="christmas-start" data-action="christmasStageSolo" data-id="${stage.id}" ${christmasEnabled&&unlocked?'':'disabled'}>${done?'↻ 다시 도전':'❄ 단계 공략 시작'} →</button>
+        </article>`;
+      }).join('')}</div>
+    </section>
+    <section class="christmas-bestiary">
+      <div class="christmas-heading"><span class="eyebrow">THE NORTH POLE LEGION</span><h2>크리스마스 전용 몬스터 ${holidayEnemies.length}종</h2><p>일반 웨이브에 등장하지 않는 특별한 적들과 전용 보스입니다.</p></div>
+      <div class="christmas-monsters">${holidayEnemies.map(([id,e])=>`<div class="christmas-monster" title="${e.name}">${monsterPortrait(id)}<b>${e.name}</b></div>`).join('')}</div>
+    </section>
+    <section class="christmas-pass">
+      <div class="christmas-heading"><span class="eyebrow">WINTER FESTIVAL PASS · FREE REWARDS</span><h2>❄ 크리스마스 배틀패스</h2><p>이벤트 단계를 클리어할 때 패스 경험치를 획득합니다. 30레벨에서 한정판 「영원한 크리스마스 트리」를 얻습니다. 별도 결제는 없습니다.</p></div>
+      <div class="christmas-pass-progress"><b>LEVEL ${level} / ${CHRISTMAS_PASS_LEVELS}</b><span>${fmt(earnedXp)} / ${fmt(CHRISTMAS_PASS_LEVELS*CHRISTMAS_PASS_XP_PER_LEVEL)} FESTIVAL XP</span><div class="christmas-pass-meter"><i style="width:${Math.min(100,earnedXp/(CHRISTMAS_PASS_LEVELS*CHRISTMAS_PASS_XP_PER_LEVEL)*100)}%"></i></div></div>
+      <div class="christmas-pass-grid">${CHRISTMAS_PASS.map(tier=>{
+        const r=tier.reward,done=claimed.includes(tier.level),ready=tier.level<=level&&tier.level===claimed.length+1;
+        const prize=r.tower?TOWERS[r.tower].name:r.skin?SKIN_STYLES[r.skin[1]].name:r.xp?'◈ '+fmt(r.coins)+' · XP '+fmt(r.xp):'◈ '+fmt(r.coins);
+        const picture=r.tower?portrait(r.tower):r.skin?portrait(r.skin[0],r.skin[1]):'<span class="christmas-pass-coin">❄</span>';
+        return `<div class="christmas-pass-tier ${done?'claimed':ready?'ready':''} ${r.tower?'grand-prize':''}">
+          <span class="christmas-tier-num">LV. ${tier.level}</span><div class="christmas-tier-art">${picture}</div><b>${prize}</b>
+          <button data-action="christmasClaimPass" data-id="${tier.level}" ${ready?'':'disabled'}>${done?'✓ 획득':ready?'보상 받기':tier.level<=level?'이전 보상 수령':'잠김'}</button>
+        </div>`;
+      }).join('')}</div>
+    </section>
+  </div>`;
+  restore();
+}
 function templePage(){
   const ev=EVENTS.temple_of_ruin,map=MAPS.find(m=>m.id===ev.map);
   const owned=profile.owned.includes(ev.firstClearTower);
