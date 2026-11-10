@@ -56,11 +56,13 @@ export async function adminAction(db,user,action,p={},helpers={}){
   if(action==='adminUpdateSiteSettings'){
     const previous=await readSiteSettings(db);
     const next=await writeSiteSettings(db,p);
-    await audit(db,user.uid,'GLOBAL','siteSettings',{
-      before:{christmasEnabled:previous.christmasEnabled,theme:previous.theme},
-      after:{christmasEnabled:next.christmasEnabled,theme:next.theme},
-      version:next.version
-    });
+    try{
+      await audit(db,user.uid,'GLOBAL','siteSettings',{
+        before:{christmasEnabled:previous.christmasEnabled,theme:previous.theme},
+        after:{christmasEnabled:next.christmasEnabled,theme:next.theme},
+        version:next.version
+      });
+    }catch(e){console.error('Site settings audit recording failed:',e);}
     return next;
   }
   if(action==='adminOverview'){
