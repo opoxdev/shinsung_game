@@ -1043,3 +1043,82 @@ body{background:#15203d;color:var(--text)}button{border:2px solid #101a35;border
   .map-pick .map-mini{height:53px}
   .map-pick>b{display:block;font-size:10px}
 }
+
+/* Christmas Expedition • limited festival • 2026. Warm lanterns in a real
+   frosted winter village, not a white recolor of the ordinary lobby. */
+.christmas-nav-group{display:grid;grid-template-columns:minmax(0,1fr) 43px;align-items:center;gap:4px;margin:5px 6px 9px}
+.christmas-nav{margin:0!important;min-width:0;color:#fff0d3!important;background:linear-gradient(115deg,#693d60,#354c67)!important;border:1px solid #d3b28a85!important}
+.christmas-nav.active{border-color:#ffe5ad!important;box-shadow:0 0 16px #ffa58b35}
+.christmas-mini-toggle{height:40px;padding:2px 3px;border-radius:7px;border:1px solid #c5a2a4;background:#433953;color:#ffdca7;font:800 11px var(--display);cursor:pointer}
+.christmas-mini-toggle.on{background:#246952;border-color:#90e6b1;color:#f6ffe8}
+.christmas-mini-toggle.off{background:#543b48;color:#ffced7}
+.christmas-page{padding:0 0 36px;color:#f4f8ff;max-width:1580px;margin:0 auto;font-family:var(--body,system-ui)}
+.christmas-page section{min-width:0}
+.christmas-hero{position:relative;min-height:330px;overflow:hidden;border-radius:18px;border:2px solid #c4e1ed;background:linear-gradient(130deg,#56687e,#a9c9d1);box-shadow:0 12px 35px #10182988}
+.christmas-scene{position:absolute;inset:0;opacity:.97}
+.christmas-scene svg{display:block;width:100%;height:100%;object-fit:cover;filter:saturate(1.12)}
+.christmas-scene:after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#152d4dea 0%,#1a3550a9 42%,#13364e2c 85%),linear-gradient(0deg,#142c46b8,transparent 75%)}
+.christmas-hero-copy{position:relative;z-index:1;padding:38px 36px;max-width:610px;display:flex;flex-direction:column;gap:13px}
+.christmas-kicker{font-size:12px;letter-spacing:.16em;font-weight:900;color:#ffe4b5}
+.christmas-hero h1{font:900 clamp(29px,4vw,52px) var(--display);line-height:1.08;color:#fff9e9;text-shadow:0 3px 9px #111e38;letter-spacing:-.05em}
+.christmas-hero p{color:#eef7fa;line-height:1.6;font-size:14px;max-width:480px}
+.christmas-control{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.christmas-control span{font-size:12px;color:#dfefef}
+.christmas-switch,.christmas-start{cursor:pointer;border-radius:10px;padding:12px 17px;font-weight:900;background:linear-gradient(135deg,#b34862,#e87979);color:#fff7ef;border:1px solid #ffb7a6;box-shadow:0 4px #672a4666;transition:transform .18s,filter .18s}
+.christmas-switch:hover,.christmas-start:not(:disabled):hover{filter:brightness(1.12);transform:translateY(-2px)}
+.christmas-switch.is-off{background:#394b5b;border-color:#acc6cc}
+.christmas-start:disabled{background:#495263;color:#acb8c4;border-color:#637489;cursor:not-allowed;box-shadow:none}
+.christmas-heading{margin:25px 0 16px}
+.christmas-heading h2{font:900 clamp(23px,2.5vw,34px) var(--display);color:#ffe7bb;margin:5px 0 7px}
+.christmas-heading .eyebrow{color:#9ee1e2;letter-spacing:.15em;font-weight:800}
+.christmas-heading p{color:#bfcedf;line-height:1.7;font-size:13px}
+.christmas-stage-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.christmas-stage-card{display:flex;flex-direction:column;gap:11px;border:1px solid #b18fa4;border-radius:15px;padding:17px;background:linear-gradient(151deg,#39475a,#222f45 85%);box-shadow:inset 0 1px #bce1f635,0 8px 20px #111a3040;min-width:0}
+.christmas-stage-card:nth-child(2){border-color:#c89b73;background:linear-gradient(151deg,#514651,#282c42)}
+.christmas-stage-card:nth-child(3){border-color:#e8bc83;background:linear-gradient(151deg,#614a52,#313048)}
+.christmas-stage-card.cleared{box-shadow:inset 0 0 0 1px #aae9b37a,0 8px 22px #13212c}
+.christmas-stage-number{color:#f3ca95;font:900 12px var(--display);display:flex;justify-content:space-between;gap:6px;align-items:center}
+.christmas-stage-number span{font-family:inherit;color:#dce7ea;font-size:10px}
+.christmas-stage-card h3{font-size:22px;color:#fff8eb;line-height:1.17;margin:4px 0 0}
+.christmas-stage-card>small{color:#e6c4a1;letter-spacing:.1em;font-size:10px}
+.christmas-stage-card>p{line-height:1.65;font-size:12px;color:#c5d5e0;min-height:60px}
+.christmas-chapter-monster{display:flex;align-items:center;gap:8px;border-top:1px solid #c8c8d02c;padding:9px 0}
+.christmas-chapter-monster svg{width:56px;height:64px;flex:none}
+.christmas-chapter-monster div{display:flex;flex-direction:column;gap:5px}
+.christmas-chapter-monster b{font-size:10px;color:#ffbb9a}
+.christmas-chapter-monster span{font-size:13px;font-weight:850;color:#fff2e4}
+.christmas-stage-prize{display:flex;align-items:center;gap:11px;border-radius:10px;padding:9px;background:#182b4066;border:1px solid #dca98533}
+.christmas-stage-prize>svg{width:72px;height:80px;flex:none;filter:drop-shadow(0 3px 7px #130e2044)}
+.christmas-stage-prize>div{display:flex;flex-direction:column;gap:5px;min-width:0}
+.christmas-stage-prize small{color:#b7dbe2;font-size:11px}
+.christmas-stage-prize b{font-size:15px;color:#ffdb9a}
+.christmas-stage-prize span{font-size:11px;color:#e8cfb0}
+.christmas-start{margin-top:auto;display:block;width:100%;font-size:13px}
+.christmas-monsters{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:7px}
+.christmas-monster{border-radius:9px;border:1px solid #a2cdd051;background:#30455b;padding:8px 5px;text-align:center;min-width:0}
+.christmas-monster svg{display:block;width:100%;max-width:84px;height:96px;margin:0 auto}
+.christmas-monster b{font-size:10px;display:block;color:#e9f6f4;line-height:1.3}
+.christmas-pass{margin-top:28px;padding:16px;border:1px solid #b9d7da65;background:linear-gradient(145deg,#1f354b,#222c45);border-radius:16px}
+.christmas-pass .christmas-heading{margin-top:4px}
+.christmas-pass-progress{display:grid;grid-template-columns:1fr auto;gap:7px 10px;align-items:center;color:#f7ebd3;font-size:14px;margin:16px 0 19px}
+.christmas-pass-progress span{color:#b9d6dd;font-size:11px}
+.christmas-pass-meter{grid-column:1/-1;height:12px;border:1px solid #b3d7d789;border-radius:10px;overflow:hidden;background:#0d2638}
+.christmas-pass-meter i{display:block;height:100%;background:linear-gradient(90deg,#5fd6c8,#ffe09d,#ff8c98);box-shadow:0 0 9px #ffeab8}
+.christmas-pass-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.christmas-pass-tier{display:flex;flex-direction:column;align-items:center;gap:7px;min-width:0;border:1px solid #8eaec17a;border-radius:10px;background:linear-gradient(#38516a,#2b4057);padding:8px 5px 9px}
+.christmas-tier-num{font-size:12px;font-weight:900;color:#cde5eb}
+.christmas-tier-art{height:88px;display:grid;place-items:center;width:100%}
+.christmas-tier-art svg{height:88px;max-width:100%;filter:drop-shadow(0 3px 8px #101b2999)}
+.christmas-pass-coin{font-size:43px;color:#e9fffe;filter:drop-shadow(0 0 7px #e2faff)}
+.christmas-pass-tier>b{font-size:11px;color:#fff5df;line-height:1.3;text-align:center;min-height:30px}
+.christmas-pass-tier button{padding:7px 5px;width:100%;font-size:10px;font-weight:900;color:#153748;background:#e2efdf;border:1px solid #b8eed2;border-radius:6px;cursor:pointer}
+.christmas-pass-tier button:disabled{opacity:.65;cursor:not-allowed;background:#687d89;color:#e1e7eb;border-color:#8a9da3}
+.christmas-pass-tier.ready{border-color:#ffdc97;box-shadow:0 0 0 1px #ffdc9744,0 0 17px #ffc77d24}
+.christmas-pass-tier.claimed{border-color:#79d8b8;background:linear-gradient(#2f655f,#294e58)}
+.christmas-pass-tier.grand-prize{background:linear-gradient(135deg,#497353,#284e58);border:2px solid #ffdc92}
+.christmas-clear-prize{color:#ffe2b1!important;background:#526c6880;padding:10px;border-radius:9px}
+.tower-card.limited{border:2px solid #eed19d!important;background:linear-gradient(135deg,#5e454c,#345e5b 72%,#403950)!important;box-shadow:inset 0 0 15px #ffdc8b33,0 0 13px #ffe6bb1d}
+.tier-limited{border-color:#f9dc9d!important;background:linear-gradient(145deg,#443e5c,#2b5351)!important}
+@media(max-width:1120px){.christmas-stage-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.christmas-monsters{grid-template-columns:repeat(6,minmax(0,1fr))}.christmas-pass-grid{grid-template-columns:repeat(5,minmax(0,1fr))}}
+@media(max-width:720px){.christmas-hero{min-height:285px}.christmas-hero-copy{padding:24px 18px;max-width:none}.christmas-stage-grid{grid-template-columns:1fr}.christmas-monsters{grid-template-columns:repeat(4,minmax(0,1fr))}.christmas-pass-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.christmas-pass{padding:10px}.christmas-stage-card>p{min-height:0}}
+@media(max-width:420px){.christmas-pass-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.christmas-monsters{grid-template-columns:repeat(3,minmax(0,1fr))}.christmas-hero h1{font-size:29px}.christmas-stage-prize>svg{width:58px;height:67px}}
