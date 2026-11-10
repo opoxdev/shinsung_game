@@ -57,11 +57,11 @@ export class MotionView {
       let x=u.x,y=u.y;
       if(online&&active){
         const target=enemyById.get(u.target);
-        if(u.role==='lane'){
+        if(u.role==='lane'||u.role==='cookie'){
           // Reverse-marching allies must remain ON the road in multiplayer.
           // The old generic target chase made them visibly teleport across
           // map bends during the 3-second server snapshot interval.
-          const progress=Math.max(0,(u.progress||0)-(u.speed||130)*ahead);
+          const progress=Math.max(0,(u.progress||0)-((u.role==='cookie'&&u.phase==='firing')?0:(u.speed||130)*ahead));
           const point=pointOnPath(path,progress);
           x=point.x;y=point.y;
         }else if(u.role==='orbit'&&target){
