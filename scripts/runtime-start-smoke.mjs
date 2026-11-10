@@ -27,6 +27,12 @@ try {
  await christmasPage.locator('[data-action="christmas"]').click();
  await christmasPage.locator('.christmas-page').waitFor({timeout:15000});
  assert.equal(await christmasPage.locator('.christmas-stage-card').count(),3);
+ for(const id of ['christmas_village','christmas_station','christmas_kingdom']){
+  const thumbnail=christmasPage.locator('.christmas-stage-map[data-christmas-map="'+id+'"]');
+  assert.equal(await thumbnail.count(),1,'separate Christmas world preview: '+id);
+  assert.equal(await thumbnail.locator('svg[data-biome-art="'+id+'"]').count(),1,
+   'Chapter should show its own authored SVG route: '+id);
+ }
  assert.equal(await christmasPage.locator('.christmas-pass-tier').count(),30);
  assert.equal(await christmasPage.locator('.christmas-monster').count(),16);
  assert.equal(await christmasPage.locator('[data-action="christmasStageSolo"][data-id="christmas_1"]').isEnabled(),true);
@@ -51,6 +57,40 @@ try {
  if(capture)await christmasPage.screenshot({path:path.join(shotsDir,'christmas-battle.png'),animations:'disabled'});
  assert.deepEqual(christmasErrors,[],'Christmas event browser errors: '+christmasErrors.join(' | '));
  await christmasPage.close();
+ // Release gate: chapters 2/3 must each actually enter the intended
+ // battlefield, not only display different card artwork. Seed a valid LOCAL
+ // tester profile; no cloud or account data is modified.
+ for(const [chapter,mapId] of [[2,'christmas_station'],[3,'christmas_kingdom']]){
+  const chapterPage=await browser.newPage({viewport:{width:1280,height:800},deviceScaleFactor:1});
+  const chapterErrors=[];
+  chapterPage.on('pageerror',error=>chapterErrors.push(error.message));
+  await chapterPage.goto('file://'+path.join(root,'dist/index.html'),{waitUntil:'domcontentloaded'});
+  await chapterPage.evaluate(()=>{
+   const profile={name:'Christmas stage visual QA',schema:2,coins:99999,xp:0,wins:0,
+    owned:['scout','blade'],loadout:['scout','blade'],packs:['basic'],pack:'basic',
+    skins:{},equippedSkins:{},cratePity:0,cratePities:{wardrobe:0,forest:0,winter:0,cyber:0,astral:0},
+    lastCrate:null,christmasPassXP:0,christmasPassClaimed:[],christmasCleared:[1,2]};
+   localStorage.setItem('shinsung.profile.v1',JSON.stringify(profile));
+   localStorage.setItem('shinsung.christmas.enabled','true');
+  });
+  await chapterPage.reload({waitUntil:'domcontentloaded'});
+  await chapterPage.locator('[data-action="christmas"]').click();
+  const stage=chapterPage.locator('[data-action="christmasStageSolo"][data-id="christmas_'+chapter+'"]');
+  assert.equal(await stage.isEnabled(),true,'prerequisite clears must unlock chapter '+chapter);
+  assert.equal(await chapterPage.locator('.christmas-stage-map[data-christmas-map="'+mapId+'"] svg[data-biome-art="'+mapId+'"]').count(),1);
+  if(capture)await chapterPage.screenshot({
+   path:path.join(shotsDir,'christmas-chapter-'+chapter+'-selection.png'),animations:'disabled'});
+  await stage.click();
+  await chapterPage.locator('#battlefield').waitFor({timeout:15000});
+  await chapterPage.waitForFunction(()=>{
+   const label=document.querySelector('#wave-clock')?.textContent||'';
+   return Number(label.match(/적\\s+(\\d+)/)?.[1]||0)>0;
+  },null,{timeout:18000});
+  if(capture)await chapterPage.screenshot({
+   path:path.join(shotsDir,'christmas-chapter-'+chapter+'-battle.png'),animations:'disabled'});
+  assert.deepEqual(chapterErrors,[],'Christmas chapter '+chapter+' runtime errors: '+chapterErrors.join(' | '));
+  await chapterPage.close();
+ }
  // Browser-level coverage for content, challenge combinations and render startup.
  await page.locator('.sidebar [data-action="nav"][data-id="towers"]').click();
  for(const id of ['pulsekeeper','duskarcher','crystalspider','sunlancer','graviturge','thornkeeper']){
