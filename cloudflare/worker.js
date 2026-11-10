@@ -3,6 +3,7 @@ import {getProfile,updateProfile,claimProfile,claimSoloProfile,importV098Profile
 import {GameRoom} from './room.js';
 import {Core} from '../dist/cloudflare/core.js';
 import {isAdmin,adminAction,assertActiveProfile} from './admin.js';
+import {readSiteSettings} from './site-settings.js';
 export {GameRoom};
 const response=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json;charset=utf-8','cache-control':'no-store','access-control-allow-origin':'*'}});
 const cors={'access-control-allow-origin':'*','access-control-allow-methods':'POST,GET,OPTIONS','access-control-allow-headers':'authorization,content-type','access-control-max-age':'600'};
@@ -53,6 +54,8 @@ export async function applyAction(env,action,p,user){
   if(action==='diagnostic')return {name:(await getProfile(db,user)).value.name,serverTime:new Date().toISOString(),services:['Firebase Auth','Cloudflare Worker','D1','Durable Objects']};
   if(action==='claimAchievement')return claimAchievementProfile(db,user,p.id);
   if(action==='profileAction'){
+    if(p.kind==='christmasClaimPass'&&!(await readSiteSettings(db)).christmasEnabled)
+      throw Error('크리스마스 이벤트가 종료되어 패스 수령이 중단되었습니다.');
     return updateProfile(db,user,profile=>{
       if(profile.activeRoom)throw Error('게임방에서 나간 뒤 컬렉션을 변경하세요.');
       Core.profileAction(profile,p);return profile;
@@ -60,6 +63,8 @@ export async function applyAction(env,action,p,user){
   }
   if(action==='soloReward'){
     const cfg=Core.validateConfig(p.config);
+    if(cfg.eventId?.startsWith('christmas_')&&!(await readSiteSettings(db)).christmasEnabled)
+      throw Error('크리스마스 이벤트가 종료되어 보상 정산이 중단되었습니다.');
     if(cfg.type!=='solo')throw Error('솔로 전투 보상만 정산할 수 있습니다.');
     const diff=Core.campaignOf(cfg);
     if(!Number.isSafeInteger(p.wave)||p.wave<1||p.wave>diff.waves.length||typeof p.win!=='boolean')
@@ -83,6 +88,8 @@ export async function applyAction(env,action,p,user){
     const stored=(await getProfile(db,user)).value;
     if(stored.activeRoom)throw Error('기존 서버 방을 먼저 나가세요. 이전 버전에서 남은 방이라면 계정 메뉴에서 서버 방 정리를 실행하세요.');
     const cfg=Core.validateConfig(p.config);
+    if(cfg.eventId?.startsWith('christmas_')&&!(await readSiteSettings(db)).christmasEnabled)
+      throw Error('크리스마스 이벤트가 종료되었습니다.');
     if(!['pvp','coop'].includes(cfg.type))throw Error('솔로 전투는 브라우저에서만 실행됩니다.');
     const profile=roomLoadout(stored,p.loadout);
     for(let attempt=0;attempt<4;attempt++){
@@ -134,6 +141,13 @@ export default {
   async fetch(request,env){
     const url=new URL(request.url);
     if(url.pathname==='/health')return response({ok:true,service:'shinsung-cloudflare',version:'0.12.1'});
+    // Public read-only site-wide settings. No Firebase/login required, so
+    // guests get the same event schedule and theme as signed-in users.
+    if(url.pathname==='/settings'&&request.method==='GET'){
+      try{return response({ok:true,data:await readSiteSettings(env.DB)});}
+      catch(e){console.error('Global site settings unavailable',e);
+        return response({ok:false,error:'운영 설정을 불러오지 못했습니다.'},503);}
+    }
     // Browsing rooms is public; mutating a lobby still requires Firebase auth.
     if(url.pathname==='/rooms'&&request.method==='GET'){
       const mode=url.searchParams.get('mode');
