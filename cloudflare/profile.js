@@ -30,6 +30,8 @@ export async function claimProfile(db,user,code,reward){
     p.claimedRooms=p.claimedRooms||[];
     if(p.claimedRooms.includes(code))return p;
     if(p.claimedRooms.length>=1024)throw Error('정산 기록 한도입니다. 관리자에게 문의하세요.');
+    if(reward.christmasStage&&!Core.christmasStageUnlocked(p,reward.christmasStage))
+      throw Error('이전 크리스마스 원정 단계를 먼저 클리어해야 합니다.');
     if(reward.achievementRun)Core.recordAchievementRun(p,reward.achievementRun);
     Core.applyReward(p,reward);
     p.claimedRooms.push(code);
@@ -87,6 +89,8 @@ export async function claimSoloProfile(db,user,runId,reward,run=null){
     // Stale room pointers from pre-v0.9.8 solo rooms must never block solo rewards.
     p.claimedSoloRuns=Array.isArray(p.claimedSoloRuns)?p.claimedSoloRuns:[];
     if(p.claimedSoloRuns.includes(runId))return p; // D1 CAS: duplicate retries cannot duplicate rewards.
+    if(reward.christmasStage&&!Core.christmasStageUnlocked(p,reward.christmasStage))
+      throw Error('크리스마스 이벤트를 순서대로 클리어해야 보상을 받을 수 있습니다.');
     if(run)Core.recordAchievementRun(p,run);
     Core.applyReward(p,reward);
     p.claimedSoloRuns.push(runId);
