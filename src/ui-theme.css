@@ -1,3 +1,7 @@
+/* Operator-selected theme badge (display only, never interactive). */
+.site-theme-label{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:7px 10px;white-space:nowrap;flex-shrink:0;font-size:11px;font-weight:800;color:#d5eaf5;border:1px solid #7a9ba6;border-radius:9px;background:#1d3a4b8f}
+html[data-theme="christmas"] .site-theme-label{background:#24524799;border-color:#e8cb94;color:#fff2d6}
+@media(max-width:1150px){.site-theme-label{font-size:0;min-width:30px;padding:5px 8px}.site-theme-label::first-letter{font-size:15px}}
 /* Global theme layer, applied AFTER legacy UI styles. The palette lives in
    ui-theme.js; this file owns visual skins only. Add a registry entry plus a
    [data-theme="<id>"] section for future festivals, never rewrite game UI. */
