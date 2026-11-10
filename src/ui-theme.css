@@ -1,0 +1,184 @@
+/* Global theme layer, applied AFTER legacy UI styles. The palette lives in
+   ui-theme.js; this file owns visual skins only. Add a registry entry plus a
+   [data-theme="<id>"] section for future festivals, never rewrite game UI. */
+
+/* Theme controls belong to the common layout, not to a seasonal page. */
+.theme-cycle{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-width:116px;height:39px;padding:7px 10px;white-space:nowrap;background:linear-gradient(135deg,#324d74,#294263);color:#f3f8ff;border:1px solid #81b7e0;border-radius:10px;font-size:11px;font-weight:800;box-shadow:inset 0 1px #d9f6ff43,0 4px #10213c70;flex-shrink:0;transition:border-color .22s,background .22s,box-shadow .22s}
+.theme-cycle:hover:not(:disabled){border-color:#ffe7b5;box-shadow:0 0 0 2px #ffd8a72e;transform:none}
+.theme-cycle:focus-visible,.theme-menu-button:focus-visible,.theme-option:focus-visible,.battle-theme-cycle:focus-visible{outline:3px solid #ffe09b;outline-offset:2px}
+.theme-cycle-icon{font-size:22px;line-height:1;color:#d9edff;filter:drop-shadow(0 0 5px #aed4ef6b)}
+.theme-cycle-text{display:block;text-align:left;line-height:1.24}
+.theme-menu-button{display:block;text-align:center;padding:9px 8px!important;color:#d8e9f4!important;min-height:38px;border-radius:10px!important;border:1px solid #6884a2!important;background:#213952c9!important;font-weight:800}
+.theme-menu-button:hover{background:#32536d!important}
+.theme-choice-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:17px 0}
+.theme-option{display:flex;flex-direction:column;align-items:flex-start;gap:8px;text-align:left;min-height:151px;border:2px solid #7395af!important;border-radius:14px;padding:15px;background:linear-gradient(145deg,#294767,#1b2d4a)!important;color:#f6fafb!important;box-shadow:inset 0 1px #ffffff25!important;transition:transform .22s,border-color .22s}
+.theme-option:active{transform:translateY(1px)}
+.theme-option[data-theme-option="classic"]{background:linear-gradient(145deg,#41669b,#1b3053)!important}
+.theme-option[data-theme-option="christmas"]{background:linear-gradient(145deg,#34694f 0%,#1a4350 58%,#854553)!important}
+.theme-option[aria-pressed="true"]{border-color:#ffe5a5!important;box-shadow:inset 0 0 0 1px #fff0ce77,0 0 16px #ffe3ac45!important}
+.theme-option-icon{font-size:31px;color:#ffe3a4;text-shadow:0 0 13px #fff4d19c}
+.theme-option-name{font-weight:900;font-size:15px;color:#fff8e8}
+.theme-option-desc{font-size:11px;line-height:1.6;color:#d3e4e9}
+.theme-choice-footnote{font-size:11px!important;color:#bfd8d6!important;line-height:1.7!important}
+.battle-theme-cycle{display:inline-flex!important;align-items:center;justify-content:center;gap:4px;color:#e9f7f4;border-radius:8px;white-space:nowrap}
+.battle-theme-cycle .theme-cycle-icon{font-size:15px}
+
+/* The seasonal skin touches every major app surface. */
+html[data-theme="christmas"]{
+ color-scheme:dark;
+ --bg:var(--ui-background);--panel:var(--ui-panel);--text:var(--ui-ink);
+ --muted:var(--ui-muted);--gold:var(--ui-gold);--green:var(--ui-green);
+ --line:#d3bc9060;
+}
+html[data-theme="christmas"] body{background:radial-gradient(ellipse at 17% 0,#285953 0%,#0f2834 53%,#122b31 100%);color:var(--ui-ink)}
+/* Gentle snow outside combat. Pure CSS, no JS ticking or extra draw calls. */
+html[data-theme="christmas"] body::before{content:'';pointer-events:none;position:fixed;inset:-80px 0 0;z-index:22;background-image:radial-gradient(circle,#fffefdde 1px,transparent 1.9px),radial-gradient(circle,#d0fbffb0 1.3px,transparent 2px),radial-gradient(circle,#ffe5afbf 1px,transparent 2px);background-size:168px 196px,246px 292px,315px 235px;background-position:14px 30px,103px 98px,191px 52px;opacity:.26;animation:seasonal-snow-fall 37s linear infinite;contain:paint}
+@keyframes seasonal-snow-fall{to{background-position:14px 226px,103px 390px,191px 287px}}
+/* Battle is already animated: no particle animation over its Canvas. */
+html[data-theme="christmas"] body:has(.battle)::before{animation:none;opacity:.09}
+html[data-theme="christmas"] .shell{
+ background:radial-gradient(ellipse at 84% 0%,#456e6c5c,transparent 50%),
+ radial-gradient(ellipse at 12% 100%,#8d475056,transparent 58%),
+ repeating-linear-gradient(128deg,#ffffff05 0 1px,transparent 1px 34px),#102d39;
+ border-bottom-color:#c7a873;isolation:isolate;
+}
+html[data-theme="christmas"] .topbar{
+ position:relative;overflow:hidden;background:linear-gradient(112deg,#204d4b 5%,#265c55 54%,#6d414e 100%);
+ border-bottom:3px solid #e4c891;box-shadow:0 5px 25px #0c2b3199,inset 0 2px #d9fff01c;
+}
+/* Hanging golden fairy-light string along the entire header. */
+html[data-theme="christmas"] .topbar::after{content:'';position:absolute;left:0;right:0;bottom:0;height:14px;pointer-events:none;background:
+ radial-gradient(circle at 15px 8px,#ffe5a9 0 2.5px,#ffe5a933 3px,transparent 7px) 0 0/63px 13px repeat-x,
+ radial-gradient(circle at 48px 8px,#ffd5bd 0 2px,#ffd5bd40 3px,transparent 7px) 0 0/63px 13px repeat-x,
+ linear-gradient(90deg,transparent,#e3b7769c,transparent) 0 0/100% 1px no-repeat;opacity:.93}
+html[data-theme="christmas"] .brand{transform:rotate(-1deg);text-shadow:2px 3px #0f3139}
+html[data-theme="christmas"] .brand>div{color:#fff5d9}
+html[data-theme="christmas"] .brand small{color:#c9f9e7}
+html[data-theme="christmas"] .brand>div::before{content:'✦ ';font-size:16px;color:#ffe1a0}
+html[data-theme="christmas"] .build-label{color:#bcece1}
+html[data-theme="christmas"] .build-label span{color:#ffdf9d;background:#214a4b}
+html[data-theme="christmas"] .identity small{color:#b6d6d3}
+html[data-theme="christmas"] .insignia{background:linear-gradient(150deg,#c34e67,#813f54);border-color:#f5d29f;box-shadow:0 2px #102b39,0 0 10px #fa9e8866}
+html[data-theme="christmas"] .wallet{background:#153b46;border-color:#d7ae7b;color:#ffe0a0}
+html[data-theme="christmas"] .coin{color:#ffe39f}
+html[data-theme="christmas"] .account{background:linear-gradient(#357563,#24574f);border-color:#d5bd8e;color:#fdf4e5}
+html[data-theme="christmas"] .account span{color:#e9dfb0}
+html[data-theme="christmas"] .theme-cycle{background:linear-gradient(115deg,#a1445a,#7f414d);color:#fff9ed;border:1px solid #f1d3a1}
+html[data-theme="christmas"] .theme-cycle-icon{color:#f6faff;filter:drop-shadow(0 0 7px #e2f6fc)}
+html[data-theme="christmas"] .sidebar{position:relative;background:linear-gradient(180deg,#163f44a3,#122f3cc0);border-right:1px solid #caa97a78}
+html[data-theme="christmas"] .sidebar::before{content:'✧ ✦ ✧';display:block;text-align:center;color:#f9e3ab;letter-spacing:15px;font-size:12px;line-height:18px;white-space:nowrap;opacity:.9;pointer-events:none}
+html[data-theme="christmas"] .nav-item{background:linear-gradient(138deg,#32745f,#1b4b52);border-color:#103a41;color:#fff7ec;box-shadow:inset 0 1px #d6ffe135,0 3px #0d2632a0}
+html[data-theme="christmas"] .nav-item:hover:not(:disabled){background:linear-gradient(130deg,#498c73,#28616c);border-color:#ecdbad}
+html[data-theme="christmas"] .nav-item>span{color:#ffe2a4;text-shadow:0 0 8px #e2b76b8c}
+html[data-theme="christmas"] .nav-item.active{background:linear-gradient(135deg,#ad4a61,#703b4f);border-color:#ffe4af;box-shadow:inset 0 1px #ffeaca87,0 4px #102e38}
+html[data-theme="christmas"] .nav-item[data-action="pvp"]{background:linear-gradient(#bb576c,#7b394b)}
+html[data-theme="christmas"] .nav-item[data-action="coop"]{background:linear-gradient(#4a8d78,#275b60)}
+html[data-theme="christmas"] .nav-item[data-action="events"]{background:linear-gradient(#a77b8a,#684d77)}
+html[data-theme="christmas"] .nav-item.christmas-nav{background:linear-gradient(135deg,#bc5875,#673e5b)!important;border-color:#f5d69a!important;box-shadow:0 0 14px #fac29d36}
+html[data-theme="christmas"] .sidebar-bottom{color:#c9e4dc;border-top:1px solid #bdc3a347;margin-top:auto}
+html[data-theme="christmas"] .sidebar-bottom small{color:#b2d8cd}
+html[data-theme="christmas"] .sidebar-bottom button{background:#224d52;color:#fff2dc}
+html[data-theme="christmas"] .theme-menu-button{background:linear-gradient(120deg,#734651,#346b5e)!important;border-color:#dfc594!important;color:#fff4dd!important}
+html[data-theme="christmas"] .status-dot{background:#a5ebc2;box-shadow:0 0 10px #9df6d0a8}
+html[data-theme="christmas"] .content{color:#f2f8f1}
+html[data-theme="christmas"] .page-heading h1{color:#fff6df;text-shadow:0 3px #102e3b}
+html[data-theme="christmas"] .eyebrow{color:#afe9dd}
+html[data-theme="christmas"] .edition,html[data-theme="christmas"] .edition b{color:#c9e6dc}
+html[data-theme="christmas"] .map-stage{border-color:#dec18b;box-shadow:inset 0 2px #ffefca,0 6px 20px #0c2734b0}
+html[data-theme="christmas"] .map-stage::after{content:'';position:absolute;inset:6px 11px auto;z-index:3;height:8px;pointer-events:none;background:radial-gradient(circle,#ffdba1 2px,transparent 3px) 0 0/33px 7px repeat-x,linear-gradient(#ffffff60,#ffffff60) 0 0/100% 1px no-repeat;opacity:.72}
+html[data-theme="christmas"] .world-art:after{background:linear-gradient(transparent 42%,#173b3960 73%,#142d3df2 100%)}
+html[data-theme="christmas"] .tag{background:#ffeac0;border-color:#a78165;color:#624a3d}
+html[data-theme="christmas"] .stage-index{background:#214e52d9;border-color:#c3efcf;color:#fff9de}
+html[data-theme="christmas"] .map-copy h2{color:#fff1cc;text-shadow:0 3px #163743}
+html[data-theme="christmas"] .map-pick{background:#21494d;border-color:#163b44}
+html[data-theme="christmas"] .map-pick>b{color:#e4eee2}
+html[data-theme="christmas"] .map-pick.selected{border-color:#ffe5ad;box-shadow:0 0 0 1px #ffe5ad,0 0 14px #ffe0a447}
+html[data-theme="christmas"] .map-pick.selected>b{background:#82525a;color:#fff6ce}
+html[data-theme="christmas"] .briefing{background:linear-gradient(151deg,#315f59,#1d424a);border-color:#d6ba8f;box-shadow:inset 0 2px #e4ffec28,0 6px 20px #0d25359c}
+html[data-theme="christmas"] .panel-title,html[data-theme="christmas"] .panel-title span+span{color:#ffe0a2}
+html[data-theme="christmas"] .field-label{color:#9dd6cb}
+html[data-theme="christmas"] .field-label b{color:#f7f6e9}
+html[data-theme="christmas"] .field-label>span{color:#c8ebde}
+html[data-theme="christmas"] .difficulty{background:#173d46;border-color:#0f313d}
+html[data-theme="christmas"] .difficulty.selected{background:color-mix(in srgb,var(--diff) 33%,#23564c);border-color:var(--diff)}
+html[data-theme="christmas"] .mode{background:#1c444c;color:#e8f6ee;border-color:#508d86}
+html[data-theme="christmas"] .mode.selected{background:#924761;border-color:#f1a2a1;color:#fff9e8}
+html[data-theme="christmas"] .checkbox{background:#163342;border-color:#acd6c7}
+html[data-theme="christmas"] .mode.selected .checkbox{background:#ffe1ad;border-color:#ffe1ad;color:#694351}
+html[data-theme="christmas"] .reward-preview{border-color:#b9bb907d}
+html[data-theme="christmas"] .reward-preview>b,html[data-theme="christmas"] .reward-preview i{color:#ffe5a2}
+html[data-theme="christmas"] .reward-preview small{color:#bae3d8}
+html[data-theme="christmas"] .deploy{background:linear-gradient(#f7d7aa,#c9a36b);color:#48382d;border-color:#725b49;box-shadow:inset 0 2px #fff6e2,0 4px #5c473d}
+html[data-theme="christmas"] .deploy:hover:not(:disabled){background:linear-gradient(#ffebbf,#e5bb81);border-color:#fff3cc}
+html[data-theme="christmas"] .deploy span{color:#745a3c}
+html[data-theme="christmas"] .deploy-note{color:#b9dcd3}
+html[data-theme="christmas"] .loadout-bar{background:linear-gradient(#244a4f,#182f3f);border-top-color:#d0ad77}
+html[data-theme="christmas"] .loadout-label>span{color:#9ee3d3}
+html[data-theme="christmas"] .loadout-label>b{color:#fff4d9}
+html[data-theme="christmas"] .loadout-label>small{color:#acd0c9}
+html[data-theme="christmas"] .loadout-slot{background:radial-gradient(ellipse at 50% 0,color-mix(in srgb,var(--rarity,#bdd8b3) 33%,transparent),transparent 86%),#21464a;box-shadow:inset 0 1px #fff3e046,0 4px #0f2936}
+html[data-theme="christmas"] .loadout-slot.empty{background:#163b46;border-color:#759a91;color:#add6c8}
+html[data-theme="christmas"] .footer-note,html[data-theme="christmas"] .footer-note>span{color:#b9d3cb}
+html[data-theme="christmas"] .collection-switch{background:#163d48;border-color:#779e87}
+html[data-theme="christmas"] .collection-switch button:not(.selected){color:#d5ece6}
+html[data-theme="christmas"] .collection-switch button.selected{background:linear-gradient(135deg,#a64c60,#614c62);border-color:#ffd49e}
+html[data-theme="christmas"] .tower-card:not(.limited):not(.mythic){background:radial-gradient(ellipse at 45% 32%,color-mix(in srgb,var(--rarity,#b0cfb6) 31%,transparent),transparent 78%),linear-gradient(#31585b,#193948);border-color:color-mix(in srgb,var(--rarity,#d5c496) 65%,#29534f);box-shadow:inset 0 1px #fffae240,0 4px #102a37}
+html[data-theme="christmas"] .tower-detail{background:radial-gradient(ellipse at 50% 32%,color-mix(in srgb,var(--rarity,#a6dfcb) 20%,transparent),transparent 62%),linear-gradient(#2c5958,#183745);border-color:#a88f70}
+html[data-theme="christmas"] .tower-detail h2,html[data-theme="christmas"] .stat-grid b{color:#fff7e9}
+html[data-theme="christmas"] .stat-grid>div{color:#b5d8d2}
+html[data-theme="christmas"] .collection-toolbar>span{color:#b9dcd2}
+html[data-theme="christmas"] .tier-hint{background:#173d48;border-color:#d5ba8b;color:#e6f3e8}
+html[data-theme="christmas"] .primary{background:linear-gradient(#b8e7d1,#75bca9);border-color:#27635a;color:#184e45}
+html[data-theme="christmas"] .primary:hover:not(:disabled){background:linear-gradient(#e7fae7,#9de0cb);border-color:#fff9e4}
+html[data-theme="christmas"] .shop-tabs{border-color:#cfba86}
+html[data-theme="christmas"] .shop-tabs button{background:#24494b;color:#d9f0e7}
+html[data-theme="christmas"] .shop-tabs button.selected{background:#9e4a5e;border-color:#ffd7a3;color:#fff7e3}
+html[data-theme="christmas"] .feature-card{background:radial-gradient(ellipse at 75% 48%,color-mix(in srgb,var(--rarity,#ffc796) 22%,transparent),transparent 77%),linear-gradient(130deg,#3a5c54,#263f4e);border-color:color-mix(in srgb,var(--rarity,#b9c9ab) 55%,#e6c28d)}
+html[data-theme="christmas"] .feature-card p{color:#d0e6dd}
+html[data-theme="christmas"] .buy{background:linear-gradient(#ffeac0,#dfb97b);color:#513c2d;border-color:#9a784e}
+html[data-theme="christmas"] .buy:hover:not(:disabled){background:#fff0ca;border-color:#fff8e6}
+html[data-theme="christmas"] .supply-card,html[data-theme="christmas"] .pack-card,html[data-theme="christmas"] .skin-banner{background:linear-gradient(148deg,#355b56,#263e4e);border-color:#adac85}
+html[data-theme="christmas"] .supply-card p,html[data-theme="christmas"] .pack-card p{color:#c6e1da}
+html[data-theme="christmas"] .pack-config-screen{background:linear-gradient(#23484c,#142f40);border-color:#b9b18d}
+html[data-theme="christmas"] .pack-choice{background:linear-gradient(#346b61,#1d414b);border-color:#589d8e}
+html[data-theme="christmas"] .pack-choice.selected{background:linear-gradient(#9b5360,#61485a);border-color:#f4d7a7}
+html[data-theme="christmas"] .pack-detail-panel,html[data-theme="christmas"] .pack-choice-panel{background:#163846;border-color:#608c82}
+html[data-theme="christmas"] .pack-monster-card,html[data-theme="christmas"] .monster-portrait{background:linear-gradient(#325d5e,#1c3c49);border-color:#8eaf93}
+html[data-theme="christmas"] .crate-hero,.theme-seasonal .achievement-page{background:linear-gradient(138deg,#315953,#234454);border-color:#c1b38c}
+html[data-theme="christmas"] .story-preview,html[data-theme="christmas"] .story-journal,html[data-theme="christmas"] .achievement-card{background-color:#244951;border-color:#83ad9d}
+html[data-theme="christmas"] input,html[data-theme="christmas"] select,html[data-theme="christmas"] textarea{background:#153743;color:#fff8e7;border-color:#77a99e}
+html[data-theme="christmas"] input::placeholder{color:#b9d5d0}
+/* Combat HUD, placement deck, wave info and battle menus also respond to the
+   same root token. The battlefield itself remains the chosen playable map. */
+html[data-theme="christmas"] .battle{background:#142f3d}
+html[data-theme="christmas"] .battle::after{content:'❄    ✦    ❄';position:absolute;left:50%;top:0;transform:translateX(-50%);font-size:13px;letter-spacing:15px;color:#fff4d4;opacity:.66;pointer-events:none}
+html[data-theme="christmas"] .battle-brand,html[data-theme="christmas"] .battle-stats,html[data-theme="christmas"] .wave-panel{background:linear-gradient(#2c665ddf,#1b3f4add);border:2px solid #e3c590;box-shadow:inset 0 1px #e6ffe835,0 3px 14px #10273889}
+html[data-theme="christmas"] .battle-brand>span{color:#ffefcf}
+html[data-theme="christmas"] .battle-stats small{color:#bfe5d9}
+html[data-theme="christmas"] .wave-panel>small{color:#ffedbb}
+html[data-theme="christmas"] .wave-panel>span{color:#d0e6dd}
+html[data-theme="christmas"] .battle-hints{color:#e4f6ec}
+html[data-theme="christmas"] .battle-hints button,html[data-theme="christmas"] .battle-tools>button{background:#24544fdd;border-color:#c4b68b;color:#fff8eb}
+html[data-theme="christmas"] .battle .loadout-slot{background:radial-gradient(ellipse at top,#5c846544,transparent),#173c48ec;border-color:color-mix(in srgb,var(--rarity,#bfdfa4) 66%,#93bdaf)}
+html[data-theme="christmas"] .skip-button{background:linear-gradient(#b45465,#783e51);border-color:#ffdb9d;color:#fff5e2}
+html[data-theme="christmas"] .battle-inspector{background:linear-gradient(#2b5955ef,#183d4aed);border:2px solid #d7b783;box-shadow:0 8px 28px #102a3790}
+html[data-theme="christmas"] .evo-next{background:linear-gradient(115deg,#30595a,#244552);border-color:#97cbb7}
+html[data-theme="christmas"] .wave-notice{color:#ffe7ae;text-shadow:0 0 27px #e9ac7c,0 4px 20px #102d38}
+html[data-theme="christmas"] .monster-tray{background:#1c4147ef;border-color:#d4b58b}
+html[data-theme="christmas"] .monster-tray>span{color:#dbede5}
+html[data-theme="christmas"] .placement-hint{background:#24434bec;color:#ffe2ad;border:1px solid #c6ad7b}
+html[data-theme="christmas"] .scrim{background:#092c2bdd}
+html[data-theme="christmas"] .modal{background:linear-gradient(147deg,#315b54,#1e3b4d 74%,#674354);border:2px solid #f2d0a0;box-shadow:inset 0 1px #ffffff40,0 20px 90px #071f2ed6}
+html[data-theme="christmas"] .modal::before{content:'✦    ❄    ✦';display:block;font-size:11px;letter-spacing:10px;color:#fce4ad;opacity:.85;text-align:center;border-bottom:1px solid #e9c99f61;padding-bottom:9px;margin:-13px 24px 11px}
+html[data-theme="christmas"] .modal h2{color:#fff0d5}
+html[data-theme="christmas"] .modal p{color:#cce6da}
+html[data-theme="christmas"] .modal label{color:#cce6dd}
+html[data-theme="christmas"] .modal .close{background:#aa4b63;border-color:#f4d29e;color:#fff}
+html[data-theme="christmas"] #toast{background:#214745f2;border:1px solid #ffe0a2;color:#fff0ce}
+html[data-theme="christmas"] .christmas-page .christmas-hero{box-shadow:0 0 22px #e9cf9861,0 12px 35px #10182988}
+/* Respect reduced-motion and keep login forms, desktop navigation, canvas
+   mouse input and modal controls completely unobscured. */
+@media(max-width:1150px){.theme-cycle{min-width:39px;padding:6px 8px}.theme-cycle-text{display:none}}
+@media(max-width:850px){.theme-cycle{height:34px;min-width:34px;padding:4px}.theme-cycle-icon{font-size:20px}html[data-theme="christmas"] .sidebar::before{font-size:10px;letter-spacing:1px}}
+@media(max-width:620px){.theme-choice-list{grid-template-columns:1fr}.theme-option{min-height:113px}.theme-cycle{margin-left:auto}html[data-theme="christmas"] .sidebar::before{display:none}html[data-theme="christmas"] .topbar::after{height:6px}.battle-theme-cycle .theme-cycle-text{display:none}}
+@media(prefers-reduced-motion:reduce){html[data-theme="christmas"] body::before{animation:none!important}.theme-cycle,.theme-option{transition:none!important}}
