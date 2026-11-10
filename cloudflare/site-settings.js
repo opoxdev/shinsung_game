@@ -7,8 +7,16 @@ export const DEFAULT_SITE_SETTINGS=Object.freeze({
 export const SITE_THEMES=Object.freeze(['classic','christmas']);
 const tableReady=db=>db.prepare("CREATE TABLE IF NOT EXISTS site_settings (id TEXT PRIMARY KEY, json TEXT NOT NULL, updated_at INTEGER NOT NULL)").run();
 export async function readSiteSettings(db){
- await tableReady(db);
- const row=await db.prepare("SELECT json,updated_at FROM site_settings WHERE id='global'").first();
+ // Avoid executing CREATE TABLE on every anonymous settings read. Existing
+ // deployments without the table are migrated on their first request.
+ let row;
+ try{
+   row=await db.prepare("SELECT json,updated_at FROM site_settings WHERE id='global'").first();
+ }catch(e){
+   if(!/no such table[^\n]*site_settings/i.test(String(e.message)))throw e;
+   await tableReady(db);
+   row=await db.prepare("SELECT json,updated_at FROM site_settings WHERE id='global'").first();
+ }
  if(!row)return {...DEFAULT_SITE_SETTINGS};
  let value;
  try{value=JSON.parse(row.json);}catch{throw Error('운영 설정 데이터가 손상되었습니다.');}
