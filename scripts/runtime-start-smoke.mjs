@@ -18,6 +18,39 @@ try {
  page.on('pageerror',error=>errors.push(error.message));
  await page.goto('file://'+path.join(root,'dist/index.html'),{waitUntil:'domcontentloaded'});
  await page.locator('[data-action="start"]').waitFor({timeout:15000});
+ // Release gate: the seasonal event page must render, remain scrollable, and
+ // launch its own dedicated Christmas-only battle without JS exceptions.
+ const christmasPage=await browser.newPage({viewport:{width:1280,height:800},deviceScaleFactor:1});
+ const christmasErrors=[];
+ christmasPage.on('pageerror',error=>christmasErrors.push(error.message));
+ await christmasPage.goto('file://'+path.join(root,'dist/index.html'),{waitUntil:'domcontentloaded'});
+ await christmasPage.locator('[data-action="christmas"]').click();
+ await christmasPage.locator('.christmas-page').waitFor({timeout:15000});
+ assert.equal(await christmasPage.locator('.christmas-stage-card').count(),3);
+ assert.equal(await christmasPage.locator('.christmas-pass-tier').count(),30);
+ assert.equal(await christmasPage.locator('.christmas-monster').count(),16);
+ assert.equal(await christmasPage.locator('[data-action="christmasStageSolo"][data-id="christmas_1"]').isEnabled(),true);
+ assert.equal(await christmasPage.locator('[data-action="christmasStageSolo"][data-id="christmas_2"]').isEnabled(),false);
+ const scroll=await christmasPage.locator('.content').evaluate(el=>({
+  height:el.clientHeight,whole:el.scrollHeight,overflow:getComputedStyle(el).overflowY
+ }));
+ assert.ok(scroll.whole>scroll.height+250&&scroll.overflow==='auto',
+  '30-level event pass must scroll inside the proper content panel');
+ if(capture)await christmasPage.screenshot({path:path.join(shotsDir,'christmas-event.png'),animations:'disabled'});
+ await christmasPage.locator('.christmas-switch').click();
+ assert.equal(await christmasPage.locator('[data-action="christmasStageSolo"][data-id="christmas_1"]').isEnabled(),false,
+  'Christmas toggle OFF must disable stage starts');
+ await christmasPage.locator('.christmas-switch').click();
+ assert.equal(await christmasPage.locator('[data-action="christmasStageSolo"][data-id="christmas_1"]').isEnabled(),true);
+ await christmasPage.locator('[data-action="christmasStageSolo"][data-id="christmas_1"]').click();
+ await christmasPage.locator('#battlefield').waitFor({timeout:15000});
+ await christmasPage.waitForFunction(()=>{
+  const label=document.querySelector('#wave-clock')?.textContent||'';
+  return Number(label.match(/적\s+(\d+)/)?.[1]||0)>0;
+ },null,{timeout:15000});
+ if(capture)await christmasPage.screenshot({path:path.join(shotsDir,'christmas-battle.png'),animations:'disabled'});
+ assert.deepEqual(christmasErrors,[],'Christmas event browser errors: '+christmasErrors.join(' | '));
+ await christmasPage.close();
  // Browser-level coverage for content, challenge combinations and render startup.
  await page.locator('.sidebar [data-action="nav"][data-id="towers"]').click();
  for(const id of ['pulsekeeper','duskarcher','crystalspider','sunlancer','graviturge','thornkeeper']){
