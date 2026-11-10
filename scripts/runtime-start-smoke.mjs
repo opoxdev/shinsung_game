@@ -3,6 +3,7 @@
 // Run against the actual inline browser bundle, not the individual ESM sources.
 import assert from 'node:assert/strict';
 import {chromium} from 'playwright';
+import {adminPageMarkup} from '../src/admin-panel.js';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import {mkdirSync} from 'node:fs';
@@ -120,16 +121,13 @@ try {
  }
  // Admin operations layout regression: render the real admin markup in
  // isolation (no login bypass or privileged API call) to inspect its CSS.
- await page.evaluate(()=>{
-   const target=document.querySelector('#content');
-   if(typeof adminPageMarkup!=='function')throw Error('Admin markup missing from live bundle');
-   target.innerHTML=adminPageMarkup({
-     siteSettings:{christmasEnabled:true,theme:'christmas',version:5,updatedAt:Date.now()},
-     summary:{users:3,banned:0,coins:10000,version:'0.12.1'},
-     listing:{items:[],total:0,offset:0},selected:null,
-     audit:Array.from({length:30},(_,i)=>({operation:'siteSettings',target_uid:'GLOBAL',created_at:Date.now()-i*1000}))
-   });
+ const adminPreview=adminPageMarkup({
+   siteSettings:{christmasEnabled:true,theme:'christmas',version:5,updatedAt:Date.now()},
+   summary:{users:3,banned:0,coins:10000,version:'0.12.1'},
+   listing:{items:[],total:0,offset:0},selected:null,
+   audit:Array.from({length:30},(_,i)=>({operation:'siteSettings',target_uid:'GLOBAL',created_at:Date.now()-i*1000}))
  });
+ await page.locator('#content').evaluate((target,markup)=>{target.innerHTML=markup;},adminPreview);
  const adminLog=page.locator('.admin-audit');
  assert.equal(await adminLog.count(),1);
  assert.equal(await adminLog.evaluate(el=>el.open),false,'Admin logs must start collapsed');
