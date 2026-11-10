@@ -1,11 +1,11 @@
 // Christmas Expedition: immutable event stages and a server-validated 30-tier
 // battle pass. The event has no paid currency, real-world payment or randomness.
 export const CHRISTMAS_STAGES=Object.freeze([
- Object.freeze({id:'christmas_1',name:'눈 내리는 첫 번째 밤',subtitle:'FROSTBOUND EVE',waves:10,unlock:'snowman',passXp:190,
+ Object.freeze({id:'christmas_1',map:'christmas_village',name:'눈 내리는 첫 번째 밤',subtitle:'FROSTBOUND EVE',waves:10,unlock:'snowman',passXp:190,
   description:'설원 마을을 덮친 눈사람 군단. 5웨이브의 중간보스와 마지막 설원 마녀를 격파하라.'}),
- Object.freeze({id:'christmas_2',name:'잃어버린 선물 열차',subtitle:'GIFT TRAIN SIEGE',waves:15,unlock:'stocking',passXp:320,
+ Object.freeze({id:'christmas_2',map:'christmas_station',name:'잃어버린 선물 열차',subtitle:'GIFT TRAIN SIEGE',waves:15,unlock:'stocking',passXp:320,
   description:'장난감 병사와 뒤틀린 선물 상자가 몰려온다. 5·10웨이브 정예 지휘관과 열차 기관장을 막아라.'}),
- Object.freeze({id:'christmas_3',name:'진저브레드의 마지막 왕국',subtitle:'GINGERBREAD FINALE',waves:25,unlock:'cookiehouse',passXp:560,
+ Object.freeze({id:'christmas_3',map:'christmas_kingdom',name:'진저브레드의 마지막 왕국',subtitle:'GINGERBREAD FINALE',waves:25,unlock:'cookiehouse',passXp:560,
   description:'쿠키의 왕이 마을 전체를 침공한다. 5웨이브 간격의 정예 보스를 넘어 마지막 과자 왕을 물리쳐라.'})
 ]);
 export const CHRISTMAS_PASS_LEVELS=30;
