@@ -1,4 +1,5 @@
 import { EVOLUTIONS } from './evolutions.js';
+import {CHRISTMAS_STAGES,CHRISTMAS_PASS,CHRISTMAS_PASS_LEVELS,CHRISTMAS_PASS_XP_PER_LEVEL,christmasPassLevel,christmasStageUnlocked,christmasClaimPass} from './christmas.js';
 export const VERSION = '0.12.1';
 // All combat health and damage numbers use a 1/6 display scale. Economy, ranges,
 // movement and relative time-to-kill are deliberately unchanged.
@@ -23,7 +24,8 @@ export const formatAttackInterval=seconds=>{
 export const WORLD = { width: 1800, height: 1100, road: 76 };
 export const RARITIES = {
   common: { name: '일반', color: '#a8b8b0' }, rare: { name: '희귀', color: '#65c8f3' },
-  epic: { name: '에픽', color: '#b08aff' }, legendary: { name: '전설', color: '#ffc558' }, mythic: { name: '신화', color: '#fa6b80' }
+  epic: { name: '에픽', color: '#b08aff' }, legendary: { name: '전설', color: '#ffc558' }, mythic: { name: '신화', color: '#fa6b80' },
+  limited:{name:'한정',color:'#f3d08a'}
 };
 // Attack classifications share rules; presentation is chosen independently by each tower's id.
 export const TOWERS = {
@@ -65,6 +67,10 @@ export const TOWERS = {
   sunlancer:{name:'태양 창기사',role:'직선 관통 · 광휘 광선',rarity:'legendary',cost:2250,price:8200,color:'#ffe39a',damage:230,interval:1.85,range:380,kind:'beam',beamWidth:48,beamTargets:7,pierce:true,cap:6,upgrades:[],desc:'태양창에서 일직선으로 관통 광선을 쏴 그 경로의 적을 한꺼번에 태운다. 적이 길게 늘어설수록 강력해진다.'},
   graviturge:{name:'중력 조율사',role:'중력 사슬 · 군중 제어',rarity:'epic',cost:1030,price:3600,color:'#bf99ff',damage:77,interval:1.8,range:310,kind:'chain',chain:5,chainRange:165,slow:.66,slowTime:1.8,cap:9,upgrades:[],desc:'자주색 중력 고리를 엮어 다섯 적에게 연쇄 피해를 주고 이동을 늦춘다.'},
   thornkeeper:{name:'가시 정원사',role:'포자 폭발 · 독 감속',rarity:'rare',cost:680,price:1550,color:'#80e6a6',damage:55,interval:1.95,range:235,splash:86,kind:'splash',dot:24,dotTime:3,slow:.84,slowTime:1.2,cap:12,upgrades:[],desc:'가시 씨앗을 던져 넓은 포자 구름을 만들고, 적을 중독시키며 잠시 느리게 만든다.'},
+  cookiehouse:{name:'진저브레드 과자집',role:'한정 · 쿠키 소환 공성대',rarity:'limited',cost:3150,price:null,color:'#f2bc89',damage:135,interval:3.4,range:340,kind:'summon',summonStyle:'cookie',summons:2,summonHp:300,unitSpeed:116,unitLife:52,unitAttackInterval:.85,unitAttackRange:165,cap:4,upgrades:[],desc:'크리스마스 이벤트 3단계 클리어 보상. 과자집에서 쿠키 전사들이 기지부터 출격한다. 적과 가까우면 멈춰 사격하고, 처치하면 계속 전진한다. 진화마다 새 쿠키 병종 추가.'},
+  christmastree:{name:'영원한 크리스마스 트리',role:'한정 · 경제+축복 오라',rarity:'limited',cost:2700,price:null,color:'#adffcd',damage:0,interval:12,range:280,kind:'festive',income:245,power:.18,haste:.07,cap:3,upgrades:[],desc:'크리스마스 배틀패스 30레벨 보상. 일정 주기마다 전투 코인을 생산하며 근처 타워에 공격력·공격 속도 버프를 제공한다.'},
+  snowman:{name:'눈사람 수호자',role:'한정 · 비보스 빙결',rarity:'limited',cost:1370,price:null,color:'#bdeaff',damage:70,interval:2.4,range:245,kind:'ranged',freezeTime:2.1,cap:7,upgrades:[],desc:'크리스마스 이벤트 1단계 보상. 눈덩이 공격으로 일반 몬스터를 완전히 빙결시킨다. 보스는 빙결 면역이다.'},
+  stocking:{name:'산타의 마법 양말',role:'한정 · 무작위 경제/지원',rarity:'limited',cost:1600,price:null,color:'#ff8b98',damage:0,interval:12,range:240,kind:'stocking',income:165,cap:4,upgrades:[],desc:'크리스마스 이벤트 2단계 보상. 일정 시간마다 코인, 기지 회복, 주위 타워의 활력, 적에게 사탕 폭격 중 하나를 확정적으로 발동한다.'},
   marker: {name:'관측원',role:'중후반 · 표식 지원',rarity:'rare',cost:680,price:1700,color:'#c7a4f2',damage:20,interval:1.75,range:260,kind:'mark',markAmp:1.22,markTime:3.5,cap:14,upgrades:[],desc:'망원경과 표식 깃발을 지닌 평범한 관측원. 적의 약점을 찾아 아군 집중 공격을 돕는다.'},
 };
 // Evolution costs are authoritative and belong to each installed tower instance.
@@ -197,6 +203,7 @@ export const MODES = {
   laststand:{name:'최후의 방어선',reward:2.1,hp:1,speed:1,baseHp:55,desc:'기지 체력이 55로 시작한다. 회복 없이 정예 웨이브를 버텨라'}
 };
 export const MAPS = [
+  {id:'christmas_village',name:'설원의 크리스마스 마을',tag:'THE NORTH POLE VILLAGE',biome:'christmas',eventOnly:'christmas',color:'#bce7eb',ground:'#adcbd0',roadColor:'#e5d5b9',desc:'설원 산맥의 두 터널 사이로 꼬불꼬불 이어지는 따뜻한 전등빛 마을. 눈 덮인 통나무집과 솔숲 사이를 방어하라.',path:[[0,230],[280,230],[420,370],[630,280],[790,425],[570,560],[320,520],[190,690],[330,930],[610,960],[780,735],[1040,650],[1250,850],[1590,770],[1650,510],[1450,340],[1180,260],[1390,130],[1800,150]]},
   { id:'temple_ruin',name:'파멸의 신전',tag:'TEMPLE OF RUIN',biome:'temple',eventOnly:'temple_of_ruin',color:'#e8b45f',ground:'#352c40',roadColor:'#b79a73',desc:'붉은 균열과 금빛 제단이 공존하는 신전. 서로 이웃한 긴 통로가 광역·장거리 타워에 유리하다.',path:[[0,100],[1650,100],[1650,245],[190,245],[190,390],[1650,390],[1650,535],[190,535],[190,680],[1650,680],[1650,825],[190,825],[190,970],[1800,970]] },
   { id: 'plains', name: '평야', tag: 'GREEN MEADOWS', biome: 'plains', color: '#93ed76', ground: '#68b965', roadColor: '#e7c694', desc: '완만한 S자 오솔길과 넓은 배치 공간. 기본기를 익히기 좋은 평야.', path: [[0,560],[430,560],[630,180],[1100,180],[1320,820],[1800,820]] },
   { id: 'mountains', name: '어두운 산맥', tag: 'SHADOW PEAKS', biome: 'mountains', color: '#b49bfc', ground: '#444362', roadColor: '#87809d', desc: '봉우리를 오르내리는 사선 고갯길. 굽이마다 교차 사격을 준비하라.', path: [[0,820],[220,820],[520,590],[260,310],[650,140],[1040,420],[800,740],[1260,920],[1550,620],[1800,620]] },
@@ -317,13 +324,35 @@ export const DIFFICULTIES = [
   {id:'ruin',name:'파멸',color:'#b491ea',reward:3000,startMoney:16000,hp:1.8,waves:compileWaves(WAVE_SCRIPTS.ruin,60,.58,270,'ruin')}
 ];
 // Independent event, deliberately NOT a difficulty, mode, or regular map.
+const christmasWaveScript=(stage,count)=>{
+ const roster=stage===1?['snow_sprite','candy_imp','snow_golem','ornament_wisp']:
+   stage===2?['snow_golem','gift_mimic','toy_soldier','candy_imp','reindeer_guard']:
+   ['ginger_warrior','peppermint_wraith','cookie_knight','gift_mimic','reindeer_guard'];
+ const miniboss=stage===1?'frost_bell':stage===2?'gift_guardian':'ginger_general';
+ const finalBoss=stage===1?'winter_witch':stage===2?'gift_conductor':'ginger_king';
+ return Array.from({length:count},(_,i)=>{
+  const wave=i+1,step=Math.min(roster.length-1,Math.floor((i/count)*roster.length));
+  const groups=[[roster[step],Math.min(48,9+wave*2+stage*2)]];
+  if(step>=1)groups.push([roster[Math.max(0,step-1)],Math.min(45,5+wave+stage)]);
+  if(step>=2&&wave%3===0)groups.push([roster[0],Math.min(35,wave+stage*3)]);
+  if(wave===count)groups.push([finalBoss,1]);
+  else if(wave%5===0)groups.push([miniboss,1+Math.floor(wave/10)]);
+  return groups.map(([id,n])=>id+':'+n).join(',');
+ }).join('|');
+};
 export const EVENTS={
   temple_of_ruin:{
     id:'temple_of_ruin',name:'파멸의 신전',map:'temple_ruin',startMoney:4200,hp:1,
     reward:2300,firstClearTower:'oldgod',
     description:'봉인된 제단에서 파멸의 군세가 깨어난다. 길고 접힌 신전 회랑을 이용해 최후의 30웨이브를 버텨라.',
     waves:compileWaves(`temple_acolyte:16|temple_acolyte:24,temple_knight:3|temple_acolyte:26,temple_spore:6|temple_knight:9,temple_acolyte:18|temple_spore:10,temple_priest:2,temple_acolyte:18|temple_knight:13,temple_spore:12|temple_priest:6,temple_acolyte:28|temple_knight:16,temple_spore:15,temple_priest:3|temple_oracle:2,temple_acolyte:35|temple_guardian:1,temple_knight:12,temple_priest:4|temple_acolyte:40,temple_oracle:4|temple_spore:20,temple_knight:22|temple_priest:8,temple_oracle:7|temple_guardian:2,temple_spore:20|temple_knight:26,temple_oracle:9,temple_priest:9|temple_colossus:1,temple_acolyte:42|temple_oracle:13,temple_knight:29|temple_guardian:3,temple_priest:12,temple_spore:20|temple_colossus:2,temple_oracle:10|temple_colossus:2,temple_guardian:3,temple_priest:14|temple_knight:36,temple_oracle:20|temple_guardian:4,temple_spore:32,temple_priest:15|temple_colossus:3,temple_knight:31|temple_guardian:5,temple_oracle:23|temple_colossus:4,temple_priest:18,temple_knight:30|temple_colossus:4,temple_guardian:5,temple_oracle:20|temple_spore:50,temple_priest:22,temple_guardian:6|temple_colossus:5,temple_oracle:26,temple_guardian:7|temple_colossus:6,temple_guardian:8,temple_priest:24|temple_deity:1,temple_colossus:2,temple_oracle:12`,61,.74,380)
-  }
+  },
+  ...Object.fromEntries(CHRISTMAS_STAGES.map((stage,i)=>[stage.id,{
+    id:stage.id,name:stage.name,map:'christmas_village',christmasStage:i+1,
+    startMoney:[2700,5200,10500][i],hp:[1.18,1.4,1.7][i],
+    reward:[700,1600,4300][i],firstClearTower:stage.unlock,description:stage.description,
+    waves:compileWaves(christmasWaveScript(i+1,stage.waves),[49,52,55][i],[1.12,.9,.72][i],[150,240,430][i])
+  }]))
 };
 export const eventOf=config=>config?.eventId?EVENTS[config.eventId]:null;
 export const campaignOf=config=>eventOf(config)||DIFFICULTIES.find(d=>d.id===config?.difficulty);
@@ -334,7 +363,7 @@ export const SKIN_RARITIES={
   rare:{name:'희귀',color:'#65c8f3'},
   epic:{name:'에픽',color:'#bf94ff'},
   legendary:{name:'전설',color:'#ffc558'},
-  mythic:{name:'신화',color:'#ff6484'}
+  mythic:{name:'신화',color:'#ff6484'},limited:{name:'한정',color:'#ffcf8e'}
 };
 export const SKIN_STYLES={
   meadow:{name:'초록 산책',rarity:'common',color:'#9ae69e',refund:30,targets:['scout','archer','chef','hunter']},
@@ -351,7 +380,11 @@ export const SKIN_STYLES={
   void:{name:'디지털 심연',rarity:'mythic',color:'#dc7aff',refund:540,targets:['blade','marker','prism','reaper','aurora']},
   celestial:{name:'천상의 성운',rarity:'mythic',color:'#ffb7dc',refund:680,targets:['blade','rail','starseed','phoenix','aurora']},
   donut:{name:'도넛 요리사',rarity:'legendary',color:'#ffba9e',refund:320,targets:['chef']},
-  kitsune:{name:'구미호 가면검객',rarity:'mythic',color:'#ff8cba',refund:650,targets:['blade']}
+  kitsune:{name:'구미호 가면검객',rarity:'mythic',color:'#ff8cba',refund:650,targets:['blade']},
+  candyblade:{name:'사탕검 검객',rarity:'limited',color:'#ff9ab7',refund:0,targets:['blade'],eventOnly:true},
+  snowglobe:{name:'눈꽃 유리구슬',rarity:'limited',color:'#b2ebff',refund:0,targets:['scout'],eventOnly:true},
+  candycane:{name:'사탕 지팡이',rarity:'limited',color:'#ffad8a',refund:0,targets:['icewitch'],eventOnly:true},
+  hollyknight:{name:'겨우살이 수호자',rarity:'limited',color:'#b1efa7',refund:0,targets:['knight'],eventOnly:true}
 };
 // All 5 boxes use game-earned coins only. odds sum to exactly 100 for each.
 // A box chooses a style by its own published probability, then uniformly
@@ -383,5 +416,5 @@ export function skinOdds(crate,owned){
 }
 
 export function starterProfile(name='새로운 모험가') {
-  return { name, coins:600, xp:0, wins:0, owned:['scout','blade'], loadout:['scout','blade'], packs:['basic'], pack:'basic', skins:{}, equippedSkins:{}, cratePity:0, cratePities:{wardrobe:0,forest:0,winter:0,cyber:0,astral:0}, lastCrate:null, schema:2 };
+  return { name, coins:600, xp:0, wins:0, christmasPassXP:0,christmasPassClaimed:[],christmasCleared:[],owned:['scout','blade'], loadout:['scout','blade'], packs:['basic'], pack:'basic', skins:{}, equippedSkins:{}, cratePity:0, cratePities:{wardrobe:0,forest:0,winter:0,cyber:0,astral:0}, lastCrate:null, schema:2 };
 }
