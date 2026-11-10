@@ -5,25 +5,25 @@ const v=(name,cost,damageMult,rateMult,rangeMult,look,desc,traits={})=>
   ({name,cost,damageMult,rateMult,rangeMult,look,desc,...traits});
 export const EVOLUTIONS = {
   cookiehouse:[
-    v('진저브레드 행군',1750,1.4,1.08,1.08,'ginger','기본 진저브레드 쿠키에게 진저 방패를 지급한다.',{summons:2,summonHp:390,unitSpeed:124,unitAttackInterval:.78,unitAttackRange:170,unitLife:60}),
-    v('별설탕 부대',3800,2.15,1.16,1.16,'cookie-star','별모양 사탕 쿠키가 새롭게 합류한다.',{summons:3,summonHp:590,unitSpeed:130,unitAttackInterval:.68,unitAttackRange:184,unitLife:67}),
-    v('초코 군단',8300,3.2,1.27,1.25,'cookie-choco','초코 장갑 쿠키가 대열에 합류해 적진을 감싼다.',{summons:4,summonHp:910,unitSpeed:138,unitAttackInterval:.60,unitAttackRange:195,unitLife:72}),
-    v('북극의 쿠키 왕국',17500,4.8,1.39,1.36,'cookie-candy','페퍼민트 사탕 쿠키가 편대에 합류해 네 종의 과자 군단 완성.',{summons:5,summonHp:1400,unitSpeed:145,unitAttackInterval:.51,unitAttackRange:210,unitLife:78})],
+    v('진저브레드 행군',1750,1.55,1.16,1.13,'ginger','기본 진저브레드 쿠키에게 진저 방패를 지급한다.',{summons:2,summonHp:570,unitSpeed:134,unitAttackInterval:.65,unitAttackRange:185,unitLife:69}),
+    v('별설탕 부대',3800,2.4,1.28,1.24,'cookie-star','별모양 사탕 쿠키가 새롭게 합류한다.',{summons:3,summonHp:880,unitSpeed:142,unitAttackInterval:.56,unitAttackRange:200,unitLife:76}),
+    v('초코 군단',8300,3.6,1.40,1.34,'cookie-choco','초코 장갑 쿠키가 대열에 합류해 적진을 감싼다.',{summons:4,summonHp:1370,unitSpeed:152,unitAttackInterval:.5,unitAttackRange:214,unitLife:83}),
+    v('북극의 쿠키 왕국',17500,5.3,1.55,1.46,'cookie-candy','페퍼민트 사탕 쿠키가 편대에 합류해 네 종의 과자 군단 완성.',{summons:5,summonHp:2150,unitSpeed:163,unitAttackInterval:.43,unitAttackRange:235,unitLife:94})],
   christmastree:[
-    v('별 전구 장식',1800,1,1.15,1.13,'tree-lights','빛나는 전구가 전투 자금과 축복 범위를 늘린다.',{income:330,power:.22,haste:.09}),
-    v('따뜻한 선물',4200,1,1.25,1.22,'tree-gifts','트리 아래 선물 꾸러미에서 추가 코인을 생산한다.',{income:470,power:.27,haste:.11}),
-    v('오로라 리본',9800,1,1.35,1.32,'tree-aurora','오로라 리본이 주위 공격력을 크게 높인다.',{income:650,power:.34,haste:.15}),
-    v('영원한 성탄의 별',20000,1,1.5,1.46,'tree-eternal','황금 별의 은총으로 경제와 공격·연사 버프를 극대화한다.',{income:980,power:.43,haste:.2})],
+    v('별 전구 장식',1800,1,1.18,1.18,'tree-lights','빛나는 전구가 전투 자금과 축복 범위를 늘린다.',{income:470,power:.27,haste:.12}),
+    v('따뜻한 선물',4200,1,1.3,1.27,'tree-gifts','트리 아래 선물 꾸러미에서 추가 코인을 생산한다.',{income:660,power:.32,haste:.15}),
+    v('오로라 리본',9800,1,1.42,1.39,'tree-aurora','오로라 리본이 주위 공격력을 크게 높인다.',{income:880,power:.40,haste:.19}),
+    v('영원한 성탄의 별',20000,1,1.6,1.55,'tree-eternal','황금 별의 은총으로 경제와 공격·연사 버프를 극대화한다.',{income:1270,power:.50,haste:.24})],
   snowman:[
-    v('한겨울 눈덩이',900,1.45,1.1,1.09,'snow-shot','작은 얼음 파편이 더 오래 얼어붙게 만든다.',{freezeTime:2.5}),
-    v('쌍둥이 눈보라',2100,2.2,1.2,1.2,'snow-twins','눈보라가 빨라지고 다수의 비보스를 차례로 얼린다.',{freezeTime:3.0,multi:2}),
-    v('얼어붙은 광장',4400,3.15,1.35,1.34,'snow-dome','눈덩이의 넓은 충격으로 여러 일반 적을 얼려 세운다.',{freezeTime:3.6,multi:3}),
-    v('절대영도의 서약',9800,4.4,1.5,1.46,'snow-absolute','북극의 절대 영도로 일반 적을 장시간 빙결시킨다.',{freezeTime:4.6,multi:4})],
+    v('한겨울 눈덩이',900,1.55,1.16,1.15,'snow-shot','작은 얼음 파편이 더 오래 얼어붙게 만든다.',{freezeTime:3.0}),
+    v('쌍둥이 눈보라',2100,2.45,1.28,1.29,'snow-twins','눈보라가 빨라지고 다수의 비보스를 차례로 얼린다.',{freezeTime:3.55,multi:2}),
+    v('얼어붙은 광장',4400,3.55,1.45,1.43,'snow-dome','눈덩이의 넓은 충격으로 여러 일반 적을 얼려 세운다.',{freezeTime:4.2,multi:3}),
+    v('절대영도의 서약',9800,4.9,1.62,1.55,'snow-absolute','북극의 절대 영도로 일반 적을 장시간 빙결시킨다.',{freezeTime:5.2,multi:4})],
   stocking:[
-    v('빨간 털실',1300,1,1.1,1.05,'sock-wool','양말 주머니의 보상이 커지고 발동 주기가 짧아진다.',{income:230}),
-    v('산타의 마법 자루',3200,1,1.22,1.14,'sock-magic','산타가 더 많은 선물과 전투 자금을 내린다.',{income:340}),
-    v('행운의 방울',6900,1,1.36,1.23,'sock-bell','네 가지 행운 효과가 더 자주 발동한다.',{income:490}),
-    v('크리스마스의 기적',13500,1,1.52,1.34,'sock-miracle','행운의 양말에서 특대 선물과 강력한 전투 효과를 얻는다.',{income:720})],
+    v('빨간 털실',1300,1,1.2,1.13,'sock-wool','양말 주머니의 보상이 커지고 발동 주기가 짧아진다.',{income:330}),
+    v('산타의 마법 자루',3200,1,1.32,1.23,'sock-magic','산타가 더 많은 선물과 전투 자금을 내린다.',{income:465}),
+    v('행운의 방울',6900,1,1.47,1.34,'sock-bell','네 가지 행운 효과가 더 자주 발동한다.',{income:660}),
+    v('크리스마스의 기적',13500,1,1.65,1.46,'sock-miracle','행운의 양말에서 특대 선물과 강력한 전투 효과를 얻는다.',{income:920})],
   sunlancer:[
     v('해뜰녘의 검',1550,1.55,1.12,1.12,'solar-blade','창끝에 일출의 빛이 맺혀 광선 폭을 넓힌다.',{beamWidth:58,beamTargets:8}),
     v('쌍태양 창술',3200,2.2,1.25,1.22,'double-sun','직선 투과력을 높여 두꺼운 적진을 꿰뚫는다.',{beamWidth:68,beamTargets:9}),
