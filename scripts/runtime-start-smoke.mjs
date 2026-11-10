@@ -18,6 +18,28 @@ try {
  page.on('pageerror',error=>errors.push(error.message));
  await page.goto('file://'+path.join(root,'dist/index.html'),{waitUntil:'domcontentloaded'});
  await page.locator('[data-action="start"]').waitFor({timeout:15000});
+ // A real browser must see the Christmas skin on ALL screens by default,
+ // toggle instantly without remounting or simulation changes, and persist a
+ // manual selection independent of event ON/OFF.
+ assert.equal(await page.locator('html').getAttribute('data-theme'),'christmas');
+ const holidayHeader=await page.locator('.topbar').evaluate(el=>getComputedStyle(el).backgroundImage);
+ assert.match(holidayHeader,/gradient/i);
+ await page.locator('.theme-cycle').click();
+ assert.equal(await page.locator('html').getAttribute('data-theme'),'classic');
+ const normalHeader=await page.locator('.topbar').evaluate(el=>getComputedStyle(el).backgroundImage);
+ assert.notEqual(normalHeader,holidayHeader,'theme switch must change real topbar CSS');
+ assert.equal(await page.locator('.map-picker').count(),1,'switching theme must NOT recreate the lobby');
+ await page.locator('.theme-menu-button').click();
+ assert.equal(await page.locator('.theme-option').count(),2);
+ assert.equal(await page.locator('.theme-option[data-theme-option="classic"]').count(),1);
+ await page.locator('[data-action="themeSelect"][data-id="christmas"]').click();
+ assert.equal(await page.locator('html').getAttribute('data-theme'),'christmas');
+ assert.equal(await page.locator('.modal').count(),0);
+ await page.reload({waitUntil:'domcontentloaded'});
+ await page.locator('[data-action="start"]').waitFor({timeout:15000});
+ assert.equal(await page.locator('html').getAttribute('data-theme'),'christmas',
+  'selected theme must persist after reload');
+ if(capture)await page.screenshot({path:path.join(shotsDir,'christmas-global-lobby.png'),animations:'disabled'});
  // Release gate: the seasonal event page must render, remain scrollable, and
  // launch its own dedicated Christmas-only battle without JS exceptions.
  const christmasPage=await browser.newPage({viewport:{width:1280,height:800},deviceScaleFactor:1});
@@ -26,6 +48,17 @@ try {
  await christmasPage.goto('file://'+path.join(root,'dist/index.html'),{waitUntil:'domcontentloaded'});
  await christmasPage.locator('[data-action="christmas"]').click();
  await christmasPage.locator('.christmas-page').waitFor({timeout:15000});
+ assert.equal(await christmasPage.locator('html').getAttribute('data-theme'),'christmas');
+ // Make sure changing visual themes from a long scrolling battle pass does
+ // not jump to top, discard already-rendered rewards, or cancel the event.
+ await christmasPage.locator('.content').evaluate(el=>{el.scrollTop=450;});
+ const eventScrollBefore=await christmasPage.locator('.content').evaluate(el=>el.scrollTop);
+ await christmasPage.locator('.theme-cycle').click();
+ assert.equal(await christmasPage.locator('html').getAttribute('data-theme'),'classic');
+ assert.equal(await christmasPage.locator('.christmas-pass-tier').count(),30);
+ assert.ok(Math.abs((await christmasPage.locator('.content').evaluate(el=>el.scrollTop))-eventScrollBefore)<8);
+ await christmasPage.locator('.theme-cycle').click();
+ assert.equal(await christmasPage.locator('html').getAttribute('data-theme'),'christmas');
  assert.equal(await christmasPage.locator('.christmas-stage-card').count(),3);
  for(const id of ['christmas_village','christmas_station','christmas_kingdom']){
   const thumbnail=christmasPage.locator('.christmas-stage-map[data-christmas-map="'+id+'"]');
@@ -44,6 +77,8 @@ try {
   '30-level event pass must scroll inside the proper content panel');
  if(capture)await christmasPage.screenshot({path:path.join(shotsDir,'christmas-event.png'),animations:'disabled'});
  await christmasPage.locator('.christmas-switch').click();
+ assert.equal(await christmasPage.locator('html').getAttribute('data-theme'),'christmas',
+  'disabling holiday event must NOT forcibly change a saved visual theme');
  assert.equal(await christmasPage.locator('[data-action="christmasStageSolo"][data-id="christmas_1"]').isEnabled(),false,
   'Christmas toggle OFF must disable stage starts');
  await christmasPage.locator('.christmas-switch').click();
@@ -93,11 +128,16 @@ try {
  }
  // Browser-level coverage for content, challenge combinations and render startup.
  await page.locator('.sidebar [data-action="nav"][data-id="towers"]').click();
+ assert.equal(await page.locator('html').getAttribute('data-theme'),'christmas');
+ if(capture)await page.screenshot({path:path.join(shotsDir,'christmas-global-towers.png'),animations:'disabled'});
  for(const id of ['pulsekeeper','duskarcher','crystalspider','sunlancer','graviturge','thornkeeper']){
   const card=page.locator('.tower-card[data-id="'+id+'"]');
   assert.equal(await card.count(),1,'new tower missing from collection: '+id);
   assert.equal(await card.locator('svg[data-base="'+id+'"]').count(),1,'new tower portrait missing: '+id);
  }
+ await page.locator('.sidebar [data-action="nav"][data-id="shop"]').click();
+ assert.equal(await page.locator('html').getAttribute('data-theme'),'christmas');
+ if(capture)await page.screenshot({path:path.join(shotsDir,'christmas-global-shop.png'),animations:'disabled'});
  await page.locator('.sidebar [data-action="nav"][data-id="home"]').click();
  // Map selection must NOT replace the horizontal scroll rail or reset its
  // horizontal position. Previously home() rebuilt the entire mission layout.
@@ -139,13 +179,24 @@ try {
  }
  await page.locator('[data-action="start"]').click();
  await page.locator('#battlefield').waitFor({timeout:15000});
+ assert.equal(await page.locator('html').getAttribute('data-theme'),'christmas');
+ assert.equal(await page.locator('.battle-theme-cycle').count(),1);
+ await page.locator('.battle-theme-cycle').click();
+ assert.equal(await page.locator('html').getAttribute('data-theme'),'classic');
+ assert.equal(await page.locator('#battlefield').count(),1,
+  'theme switching in live combat must NEVER restart or unmount the Canvas');
+ await page.locator('.battle-theme-cycle').click();
+ assert.equal(await page.locator('html').getAttribute('data-theme'),'christmas');
  // The first enemy should enter within a few seconds. If a ReferenceError
  // stops requestAnimationFrame, this assertion catches it reliably.
  await page.waitForFunction(()=>{
    const label=document.querySelector('#wave-clock')?.textContent||'';
    return Number(label.match(/적\s+(\d+)/)?.[1]||0)>0;
  },null,{timeout:15000});
- if(capture)await page.screenshot({path:path.join(shotsDir,'skyisles-battle.png'),animations:'disabled'});
+ if(capture){
+  await page.screenshot({path:path.join(shotsDir,'skyisles-battle.png'),animations:'disabled'});
+  await page.screenshot({path:path.join(shotsDir,'christmas-global-battle.png'),animations:'disabled'});
+ }
  const first=await page.locator('#wave-clock').textContent();
  const progress=await page.locator('#wave-progress-fill').evaluate(el=>getComputedStyle(el).transform);
  assert.notEqual(progress,'none','wave progress element must be rendered');
