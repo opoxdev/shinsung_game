@@ -154,11 +154,15 @@ function closeModal(){if(room&&!state)return;$('#modal-root').innerHTML='';if(!i
 // Keep both the viewport and nested scroll areas steady when a tab, tower,
 // filter or purchase re-renders its markup. Never resurrect focus-induced jumps.
 function preserveScroll(){
-  const selectors=['.content','.briefing','.tower-groups','.tower-detail','.shop-scroll','.pack-config-screen','.collection-list','.admin-user-list'];
-  const positions=selectors.map(selector=>[selector,$(selector)?.scrollTop??0]);
+  const selectors=['.content','.briefing','.map-picker','.tower-groups','.tower-detail','.shop-scroll','.pack-config-screen','.collection-list','.admin-user-list'];
+  // Preserve horizontal map scrolling as well as vertical panel positions.
+  // Difficulty/mode selections replace the lobby markup, so both axes matter.
+  const positions=selectors.map(selector=>[selector,$(selector)?.scrollTop??0,$(selector)?.scrollLeft??0]);
   const x=window.scrollX,y=window.scrollY;
   return ()=>{
-    for(const [selector,top] of positions){const el=$(selector);if(el)el.scrollTop=top;}
+    for(const [selector,top,left] of positions){
+      const el=$(selector);if(el){el.scrollTop=top;el.scrollLeft=left;}
+    }
     if(window.scrollX!==x||window.scrollY!==y)window.scrollTo(x,y);
   };
 }
@@ -230,7 +234,7 @@ async function adminChange(operation,details={},uid=adminData.selected?.uid){
 function home(){
   const restore=preserveScroll();
   const map=MAPS.find(m=>m.id===config.map),diff=DIFFICULTIES.find(d=>d.id===config.difficulty),mods=modifiers(config);
-  $('#content').innerHTML=`<div class="page-heading lobby-heading"><div><span class="eyebrow">모험을 떠날 시간!</span><h1>어디부터 지켜볼까?</h1></div><div class="edition">${MAPS.filter(m=>!m.eventOnly).length}개의 세계 · ${DIFFICULTIES.length}개의 난이도<b>너만의 최강 팀을 만들어봐!</b></div></div><div class="mission-layout"><section class="map-stage biome-${map.id}"><div class="world-art">${landscape(map)}</div><div class="floating-motes"><i></i><i></i><i></i><i></i><i></i></div><div class="hero-team"><div>${portrait('summoner')}</div><div>${portrait('blade')}</div><div>${portrait('scout')}</div></div><div class="stage-top"><span class="tag">${config.type==='solo'?'★ 모험 모드':config.type==='pvp'?'⚔ 대전':'친구와 함께'}</span><button class="stage-index" data-action="mapPreview">실제 맵 보기 ↗</button></div><div class="map-copy"><span class="eyebrow">${map.tag}</span><h2>${map.name}</h2><p>${map.desc}</p></div><div class="map-picker">${MAPS.filter(m=>!m.eventOnly).map((m,i)=>`<button class="map-pick ${m.id===map.id?'selected':''}" style="--map:${m.color}" data-action="map" data-id="${m.id}"><span>${String(i+1).padStart(2,'0')}</span><div class="map-mini">${landscape(m)}</div><b>${m.name}</b></button>`).join('')}</div></section><section class="briefing"><div class="panel-title"><span>⚑ 도전 준비!</span><span>★</span></div><h2>게임 설정</h2><div class="field-label">01 <b>난이도</b><span>${diff.waves.length} WAVES</span></div><div class="difficulties">${DIFFICULTIES.map(d=>`<button class="difficulty ${d.id===diff.id?'selected':''}" style="--diff:${d.color}" data-action="difficulty" data-id="${d.id}" title="시작 자금 ₩ ${fmt(d.startMoney)}">${d.name}<span>${'Ⅰ'.repeat(Math.min(3,DIFFICULTIES.indexOf(d)+1))}</span></button>`).join('')}</div><div class="field-label">02 <b>추가 모드</b><span>중복 선택 가능</span></div><div class="modes">${Object.entries(MODES).map(([id,m])=>`<button title="${m.desc}" class="mode ${config.modes.includes(id)?'selected':''}" data-action="mode" data-id="${id}"><span class="checkbox">${config.modes.includes(id)?'✓':''}</span>${m.name}<b>×${m.reward}</b></button>`).join('')}</div>${storyPreviewMarkup(config.difficulty,storyArchive[config.difficulty]||0)}<div class="reward-preview"><span>클리어 보상<small>모드 배수 ×${mods.reward.toFixed(2)}</small></span><b><i>◈</i> ${fmt(diff.reward*mods.reward)}</b></div><p class="defeat-reward-note">방어 실패 시 클리어 보너스를 제외한 보상 × 50% × 도달 웨이브 비율 지급</p><button class="deploy" data-action="start">게임 시작 <span>→</span></button><div class="deploy-note">${online.user?'서버 검증 솔로':'로컬 플레이'} · 시작 자금 ₩ ${fmt(diff.startMoney)} · 최대 ${mods.cap}기</div></section></div>`;
+  $('#content').innerHTML=`<div class="page-heading lobby-heading"><div><span class="eyebrow">모험을 떠날 시간!</span><h1>어디부터 지켜볼까?</h1></div><div class="edition">${MAPS.filter(m=>!m.eventOnly).length}개의 세계 · ${DIFFICULTIES.length}개의 난이도<b>너만의 최강 팀을 만들어봐!</b></div></div><div class="mission-layout"><section class="map-stage biome-${map.id}"><div class="world-art">${landscape(map)}</div><div class="floating-motes"><i></i><i></i><i></i><i></i><i></i></div><div class="hero-team"><div>${portrait('summoner')}</div><div>${portrait('blade')}</div><div>${portrait('scout')}</div></div><div class="stage-top"><span class="tag">${config.type==='solo'?'★ 모험 모드':config.type==='pvp'?'⚔ 대전':'친구와 함께'}</span><button class="stage-index" data-action="mapPreview">실제 맵 보기 ↗</button></div><div class="map-copy"><span class="eyebrow">${map.tag}</span><h2>${map.name}</h2><p>${map.desc}</p></div><div class="map-picker">${MAPS.filter(m=>!m.eventOnly).map((m,i)=>`<button class="map-pick ${m.id===map.id?'selected':''}" style="--map:${m.color}" data-action="map" data-id="${m.id}"><span>${String(i+1).padStart(2,'0')}</span><div class="map-mini">${landscape(m)}</div><b>${m.name}</b></button>`).join('')}</div></section><section class="briefing"><div class="panel-title"><span>⚑ 도전 준비!</span><span>★</span></div><h2>게임 설정</h2><div class="field-label">01 <b>난이도</b><span>${diff.waves.length} WAVES</span></div><div class="difficulties">${DIFFICULTIES.map(d=>`<button class="difficulty ${d.id===diff.id?'selected':''}" style="--diff:${d.color}" data-action="difficulty" data-id="${d.id}" title="시작 자금 ₩ ${fmt(d.startMoney)}">${d.name}<span>${'Ⅰ'.repeat(Math.min(3,DIFFICULTIES.indexOf(d)+1))}</span></button>`).join('')}</div><div class="field-label">02 <b>추가 모드</b><span>중복 선택 가능</span></div><div class="modes">${Object.entries(MODES).map(([id,m])=>`<button title="${m.desc}" class="mode ${config.modes.includes(id)?'selected':''}" data-action="mode" data-id="${id}"><span class="checkbox">${config.modes.includes(id)?'✓':''}</span>${m.name}<b>×${m.reward}</b></button>`).join('')}</div>${storyPreviewMarkup(config.difficulty,storyArchive[config.difficulty]||0)}<div class="reward-preview"><span>클리어 보상<small>모드 배수 ×${mods.reward.toFixed(2)}</small></span><b><i>◈</i> ${fmt(Math.floor(diff.reward*mods.reward)*8)}</b></div><p class="defeat-reward-note">패배 보상은 ${Math.ceil(diff.waves.length/2)}웨이브부터 지급 · 그전에는 코인과 경험치 0 · 완주 시 전체 보상</p><button class="deploy" data-action="start">게임 시작 <span>→</span></button><div class="deploy-note">${online.user?'서버 검증 솔로':'로컬 플레이'} · 시작 자금 ₩ ${fmt(diff.startMoney)} · 최대 ${mods.cap}기</div></section></div>`;
   resetRenderer();
   restore();
 }
@@ -702,7 +706,30 @@ const actions={
   temple(){page='temple';config.type='solo';shell();},
   templeSolo(){config=templeConfig('solo');try{startLocal('solo');}catch(e){toast(e.message);}},
   templeCoop(){config=templeConfig('coop');special('coop');},
-  nav(id){normalConfig();page=id;config.type='solo';shell();},setCollectionTab(id){if(!['towers','packs'].includes(id))return;collectionTab=id;collection();},previewPack(id){if(!Object.hasOwn(PACKS,id))return;selectedPack=id;collection();},visitPackShop(id){if(!Object.hasOwn(PACKS,id))return;shopTab='packs';page='shop';shell();},map(id){normalConfig();if(!MAPS.some(m=>m.id===id&&!m.eventOnly))return;config.map=id;home();},difficulty(id){normalConfig();config.difficulty=id;home();},mode(id){normalConfig();if(!Object.hasOwn(MODES,id))return;config.modes=config.modes.includes(id)?config.modes.filter(x=>x!==id):[...config.modes,id];home();},
+  nav(id){normalConfig();page=id;config.type='solo';shell();},setCollectionTab(id){if(!['towers','packs'].includes(id))return;collectionTab=id;collection();},previewPack(id){if(!Object.hasOwn(PACKS,id))return;selectedPack=id;collection();},visitPackShop(id){if(!Object.hasOwn(PACKS,id))return;shopTab='packs';page='shop';shell();},map(id){
+    normalConfig();
+    const map=MAPS.find(m=>m.id===id&&!m.eventOnly);
+    if(!map)return;
+    config.map=id;
+    // Repainting the entire lobby replaces the scrolling map rail and
+    // resets its position. Update ONLY the selected map's artwork and copy;
+    // preserve the original scroll container, briefing and page viewport.
+    const stage=$('.map-stage');
+    if(!stage){home();return;}
+    stage.className='map-stage biome-'+id;
+    const art=stage.querySelector('.world-art');
+    if(art)art.innerHTML=landscape(map);
+    for(const [selector,value] of [
+      ['.map-copy .eyebrow',map.tag],
+      ['.map-copy h2',map.name],
+      ['.map-copy p',map.desc]
+    ]){
+      const node=stage.querySelector(selector);
+      if(node)node.textContent=value;
+    }
+    for(const button of stage.querySelectorAll('.map-picker .map-pick'))
+      button.classList.toggle('selected',button.dataset.id===id);
+  },difficulty(id){normalConfig();config.difficulty=id;home();},mode(id){normalConfig();if(!Object.hasOwn(MODES,id))return;config.modes=config.modes.includes(id)?config.modes.filter(x=>x!==id):[...config.modes,id];home();},
   inspect(id){selectedTower=id;page='towers';collectionTab='towers';shell();},equip(id){mutate({kind:'equip',id});},shopTab(id){shopTab=id;shop();},buyTower(id){mutate({kind:'buyTower',id});},buyPack(id){mutate({kind:'buyPack',id});},pack(id){mutate({kind:'pack',id});},
   skin(id){
     const styles=['default',...Object.keys(SKIN_STYLES).filter(style=>SKIN_STYLES[style].targets.includes(id)||profile.skins?.[id+':'+style])];
