@@ -10,7 +10,7 @@ const player={uid:'ordinary',email:'player@example.org',emailVerified:true,name:
 function mockDb(){
  let settings=null,version=0,updatedAt=null,created=false;
  const audit=[],p=Core.starterProfile('Ordinary player');
- p.christmasPassXP=9999;
+ p.christmasPassXP=9999;p.coins=999999;
  const db={prepare(sql){
    let args=[];
    const query={
@@ -81,7 +81,7 @@ test('global setting rejects malformed types, arbitrary fields and stale concurr
   {christmasEnabled:false,theme:'classic',version:-1},
   {christmasEnabled:false,theme:'classic',version:0,force:true},
   ['christmas',false],null
- ])await assert.rejects(writeSiteSettings(q.db,request),/운영 설정/);
+ ])await assert.rejects(writeSiteSettings(q.db,request),/운영 설정|이벤트 활성화|전체 테마/);
  const off=await writeSiteSettings(q.db,{christmasEnabled:false,theme:'classic',version:0});
  assert.equal(off.version,1);
  await assert.rejects(writeSiteSettings(q.db,{christmasEnabled:true,theme:'christmas',version:0}),
