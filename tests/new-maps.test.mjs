@@ -21,7 +21,7 @@ function spyCanvas(){
 test('four novel, unlocked maps have named biomes and unique, playable roads',()=>{
  assert.deepEqual(NEW_MAP_IDS,['sakura','moonlake','skyisles','stardune']);
  assert.equal(MAPS.filter(m=>!m.eventOnly).length,9);
- assert.equal(MAPS.filter(m=>m.eventOnly).length,2,'Temple and Christmas are both separate challenges');
+ assert.equal(MAPS.filter(m=>m.eventOnly).length,4,'Temple plus three separately authored Christmas chapter maps');
  const roads=new Set();
  for(const id of NEW_MAP_IDS){
   const map=MAPS.find(m=>m.id===id);
