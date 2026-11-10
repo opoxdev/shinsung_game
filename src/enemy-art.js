@@ -1,10 +1,12 @@
 import { ENEMIES } from './data.js';
 import { MEAT_MONSTERS, drawMeatPlate } from './meat-art.js';
+import { drawChristmasEnemyPlate } from './christmas-art.js';
 
 // Static, outlined character plates are baked once per species, not per enemy/frame.
 const enemyPlates=new Map();
 export function enemyStyle(type){
   const d=ENEMIES[type];
+  if(d.eventOnly==='christmas')return 'christmas';
   if(d.eventOnly)return 'temple';
   if(MEAT_MONSTERS.includes(type))return 'flesh';
   if(['mk1','mk2','chain','mecha','sentinel','overload'].includes(type))return 'machine';
@@ -21,7 +23,7 @@ export function enemyPlate(type){
   const g=c.getContext('2d');g.scale(2,2);g.translate(72,124);
   g.lineJoin='round';g.lineCap='round';g.lineWidth=2.5;g.strokeStyle='#172237';
   // Use unique, hand-drawn silhouettes; do not apply the generic zombie template.
-  if(drawMeatPlate(g,type)){
+  if(drawMeatPlate(g,type)||drawChristmasEnemyPlate(g,type)){
     const plate=typeof c.transferToImageBitmap==='function'?c.transferToImageBitmap():c;
     enemyPlates.set(type,plate);return plate;
   }
@@ -110,6 +112,7 @@ export function drawEnemyOverlay(g,e,clock){
   const ring=(color,radius)=>{g.strokeStyle=color;g.lineWidth=2;g.beginPath();g.ellipse(e.x,e.y-15*scale,radius,radius*1.25,0,0,Math.PI*2);g.stroke();};
   if(e.shield>0)ring('#9adfffbb',r+7);
   if(e.slowUntil>clock)ring('#95e8ffa0',r+10);
+  if(e.frozenUntil>clock)ring('#d7faff',r+14);
   if(e.markUntil>clock)ring('#ee9bdf',r+13);
   if(e.rushUntil>clock)ring('#ffc37e',r+16);
   if(e.hp<e.maxHp||r>=21){
