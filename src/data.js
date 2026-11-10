@@ -30,6 +30,12 @@ export const RARITIES = {
 };
 // Attack classifications share rules; presentation is chosen independently by each tower's id.
 export const TOWERS = {
+  // Never offer this unit in ordinary loot, the public collection or unverified
+  // multiplayer loadouts. The Worker is the authority for developer access.
+  frieza:{name:'프리져',role:'개발자 전용 · 제왕의 절대소멸',rarity:'mythic',developerOnly:true,
+    cost:150,price:null,color:'#b77cff',damage:4800000,interval:1.65,range:2200,
+    kind:'emperor',pierce:true,bossBonus:3,cap:1,upgrades:[],
+    desc:'개발자 전용 비공개 타워. 제왕의 보랏빛 시선이 전장 전체를 포착하고, 모든 적의 방어를 무시하는 초고위력 절대소멸을 사용한다. 네 번 진화하면 현실붕괴로 각성한다.'},
   scout: { name:'새총잡이', role: '원거리', rarity: 'common', cost: 150, price: 0, color: '#ffb74e', damage: 6, interval: .7, range: 175, kind: 'ranged', cap: 20, upgrades: [180,380,760], desc:'평범한 여행용 조끼와 낡은 새총을 가진 초보 방어자. 초반에 부담 없이 배치한다.' },
   soldier: { name:'전기공', role: '전기 · 연사', rarity: 'rare', cost: 260, price: 750, color: '#62e7f4', damage: 9, interval: .35, range: 195, kind: 'ranged', cap: 18, upgrades: [350,700,1500], desc:'공구 벨트와 작은 전지팩을 갖춘 전기 수리공. 저렴한 코일 충격기로 빠르게 공격한다.' },
   blade: { name:'검객', role: '근접 · 관통', rarity: 'rare', cost: 230, price: 0, color: '#ff6a92', damage: 25, interval: .9, range: 100, kind: 'melee', cap: 18, upgrades: [260,600,1200], desc:'무명 도복과 연습용 칼집을 가진 떠돌이 검객. 화려한 가면은 특별 스킨의 몫이다.' },
