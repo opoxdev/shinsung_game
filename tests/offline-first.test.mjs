@@ -96,7 +96,7 @@ test('multiplayer only accepts equipped towers and packs genuinely owned in D1',
   assert.throws(()=>roomLoadout(p,{loadout:['rail'],pack:'basic'}),/보유한 타워/);
   assert.throws(()=>roomLoadout(p,{loadout:['scout'],pack:'ghost'}),/몬스터 팩/);
   assert.throws(()=>roomLoadout(p,{loadout:['scout','scout'],pack:'basic'}),/보유한 타워/);
-  assert.equal(roomLoadout(p,null),p);
+  assert.deepEqual(roomLoadout(p,null),{...p,developer:false});
 });
 test('signed-in solo entry has no room, WebSocket, pulse or periodic worker calls',()=>{
   const source=readFileSync(new URL('../src/main.js',import.meta.url),'utf8');
