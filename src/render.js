@@ -323,7 +323,7 @@ export class Renderer {
       g.strokeStyle='#ef9dff';g.lineWidth=3;g.beginPath();g.arc(0,-20,30,0,7);g.stroke();
       g.fillStyle='#fcceff';g.font='bold 20px sans-serif';g.fillText('⚡',-10,-54);
     }
-    const img=sprite(t.type,t.skin||'default',lev),size=(t.type==='oldgod'?132:t.type==='frieza'?112:75)+lev*3,bob=Math.sin(time*(t.type==='sonic'?5:2)+t.x)*1.6;
+    const img=sprite(t.type,t.skin||'default',lev),size=(t.type==='oldgod'?132:75)+lev*3+(t.type==='frieza'?37:0),bob=Math.sin(time*(t.type==='sonic'?5:2)+t.x)*1.6;
     // sprite() returns a raster-cache entry, not the HTMLImageElement itself.
     if(img.ready&&img.source){
       // Keep tactical weapons pointing toward their actual targets, rather
