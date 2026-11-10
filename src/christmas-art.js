@@ -208,21 +208,57 @@ export function christmasTowerPortrait(id,skin='default'){
   +'<path d="M132 172l-12-9 33-102q14-35-7-32-14 4-12 16" fill="none" stroke="#fff8ee" stroke-width="15"/>'
   +'<path d="M132 172l-12-9 33-102q14-35-7-32-14 4-12 16" fill="none" stroke="#e85d75" stroke-width="6" stroke-dasharray="10 10"/>'
   +'<path d="M121 145l27 10" stroke="#f9d18c" stroke-width="6"/>';
+ }else if(id==='scout'){
+  // Hand-blown snow globe, miniature explorer and cast-brass collector pedestal.
+  art='<g data-festival-model="snowglobe"><rect x="35" y="169" width="111" height="28" rx="8" fill="#c9a16d" stroke="#fff1c4" stroke-width="5"/>'
+    +'<path d="M52 155h80l13 19H37Z" fill="#5a89a5" stroke="#e3faff" stroke-width="4"/>'
+    +'<circle cx="91" cy="95" r="64" fill="#d3f6ff" fill-opacity=".25" stroke="#f1ffff" stroke-width="7"/>'
+    +'<circle cx="91" cy="95" r="56" fill="none" stroke="#82d7ea" stroke-width="2" stroke-dasharray="3 7"/>'
+    +'<path d="M40 142q52-22 101 0v18H40Z" fill="#ecfbff"/>'
+    +'<path d="M66 111 57 150h67l-10-39-17-13H82Z" fill="#4a8598" stroke="#c7f8ff" stroke-width="4"/>'
+    +'<circle cx="91" cy="83" r="21" fill="#ffe2d0" stroke="#e0f5f6" stroke-width="4"/>'
+    +'<path d="M70 75q21-34 44 0l-7 10H78Z" fill="#d75e77" stroke="#fff7e3" stroke-width="4"/>'
+    +'<path d="M60 116l-17 13m75-12 17 12" stroke="#f5e6ba" stroke-width="6"/>'
+    +'<circle cx="83" cy="85" r="3" fill="#36566a"/><circle cx="99" cy="85" r="3" fill="#36566a"/>'
+    +'<path d="M68 183h48" stroke="#ffedbd" stroke-width="4"/>'
+    +Array.from({length:23},(_,i)=>'<circle cx="'+(43+(i*31)%94)+'" cy="'+(37+(i*43)%111)+'" r="'+(i%3+1)+'" fill="#fff" opacity=".9"/>').join('')+'</g>';
+ }else if(id==='icewitch'){
+  // Peppermint sorceress with an oversized candy spire, lace-edged robe and cane-staff.
+  art='<g data-festival-model="candycane"><path d="M45 181 57 95l26-14h30l22 100-43 11Z" fill="#e8f6ee" stroke="#9ac6c1" stroke-width="6"/>'
+    +'<path d="M58 102 38 174l44 14 6-77Z" fill="#8ddbd5" stroke="#fff3e1" stroke-width="4"/>'
+    +'<path d="M112 102 146 176l-43 12-11-76Z" fill="#db6684" stroke="#ffebda" stroke-width="4"/>'
+    +'<circle cx="92" cy="73" r="25" fill="#ffe3d0" stroke="#b5d3cf" stroke-width="4"/>'
+    +'<path d="M39 66 89 6l49 60-52-9Z" fill="#d95e7e" stroke="#fff3de" stroke-width="5"/>'
+    +'<path d="M62 39l55 11M75 26l24 8" stroke="#fff9e6" stroke-width="10"/>'
+    +'<path d="M44 67q45 11 92 0" stroke="#f8e9ae" stroke-width="9"/>'
+    +'<path d="M137 176 158 45q5-28-15-25-20 2-18 25" fill="none" stroke="#fff9e4" stroke-width="15" stroke-linecap="round"/>'
+    +'<path d="M137 176 158 45q5-28-15-25-20 2-18 25" fill="none" stroke="#db647c" stroke-width="7" stroke-dasharray="12 12" stroke-linecap="round"/>'
+    +'<path d="M59 145q34 19 68 0" fill="none" stroke="#ffe1a5" stroke-width="5"/>'
+    +'<circle cx="92" cy="52" r="8" fill="#ffe9af"/></g>';
  }else{
-  // Three battle-pass cosmetic silhouettes carry their own seasonal gear.
-  art='<path d="M53 83L79 44H113L138 81 128 185H49Z" fill="'+(id==='knight'?'#4b8e77':id==='icewitch'?'#b3e5e9':'#9cbbc8')+'" stroke="#57718b" stroke-width="7"/>'
-    +'<circle cx="93" cy="62" r="27" fill="#f5e4d1" stroke="#8ba3ad" stroke-width="5"/>'
-    +'<path d="M63 42q30-34 62 0l-10 11H74Z" fill="'+(id==='knight'?'#7bab78':'#f6faff')+'" stroke="#7295a7" stroke-width="5"/>'
-    +'<path d="M124 162l31-103" stroke="#fff6ef" stroke-width="13"/>'
-    +'<path d="M124 162l31-103" stroke="#ed697f" stroke-width="6" stroke-dasharray="11 11"/>'
-    +'<circle cx="87" cy="63" r="3" fill="#36576a"/><circle cx="103" cy="63" r="3" fill="#36576a"/>';
+  // Holly knight, fully armored with fir-crest helmet and a separate wreath shield.
+  art='<g data-festival-model="hollyknight"><path d="M48 181 57 98l25-16h27l25 16 8 83-48 13Z" fill="#397665" stroke="#f7dea4" stroke-width="6"/>'
+    +'<path d="M70 107 93 117l23-10-6 61-17 16-17-16Z" fill="#dcebd5" stroke="#9dcba3" stroke-width="4"/>'
+    +'<path d="M65 86 58 56l34-18 34 18-11 30-23 15Z" fill="#c9d7bc" stroke="#fff0be" stroke-width="5"/>'
+    +'<path d="M73 56 90 11l10 13 18 32" fill="#2e765d" stroke="#e4d99a" stroke-width="5"/>'
+    +'<path d="M59 69h67v15H59Z" fill="#305c57" stroke="#f9dda7" stroke-width="4"/>'
+    +'<path d="M76 75h36" stroke="#fff0ac" stroke-width="3"/>'
+    +'<path d="M145 187 137 72l11-22 11 22-7 115Z" fill="#f8e8c2" stroke="#c5a47c" stroke-width="5"/>'
+    +'<path d="M134 112h29" stroke="#89b88a" stroke-width="6"/>'
+    +'<circle cx="44" cy="132" r="37" fill="#e5edd1" stroke="#b9a46d" stroke-width="6"/>'
+    +'<circle cx="44" cy="132" r="28" fill="none" stroke="#45976c" stroke-width="11" stroke-dasharray="7 6"/>'
+    +'<path d="M29 131 44 109l15 22-15 24Z" fill="#ffde85" stroke="#fff5cb" stroke-width="3"/>'
+    +'<circle cx="28" cy="116" r="7" fill="#d75c67"/><circle cx="59" cy="149" r="6" fill="#d75c67"/></g>';
  }
  if(isTower){
   art+='<g data-ornaments="'+id+'"><path d="M22 202h138" stroke="#e7f8fd" stroke-width="8"/>';
   for(let i=0;i<4;i++)art+='<circle cx="'+(42+i*29)+'" cy="'+(196-i%2*6)+'" r="3" fill="#eff8ff"/>';
   art+='</g>';
  }
- return s+shadow+art+'</svg>';
+ const aura='<g data-festival-aura="'+id+'" opacity=".7"><circle cx="90" cy="110" r="79" fill="none" stroke="#b7f6e9" stroke-width="2" stroke-dasharray="4 13"/></g>';
+ const sparkle='<g data-festival-spark="true"><path d="M24 26v16m-8-8h16M155 114v16m-8-8h16M127 10v10m-5-5h10" stroke="#fff5d8" stroke-width="3" stroke-linecap="round"/>'+
+   '<circle cx="36" cy="157" r="3" fill="#b6f8ff"/><circle cx="144" cy="178" r="3" fill="#ffe6a5"/></g>';
+ return s+shadow+aura+art+sparkle+'</svg>';
 }
 export function drawChristmasEnemyPlate(g,type){
  if(!CHRISTMAS_ENEMY_IDS.includes(type))return false;
