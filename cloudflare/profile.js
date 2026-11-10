@@ -49,7 +49,7 @@ export async function importV098Profile(db,user,local){
      !Number.isSafeInteger(local.wins)||local.wins<0||local.wins>1000000000)
     throw Error('진행도 수치가 올바르지 않습니다.');
   if(!Array.isArray(local.owned)||local.owned.length>Object.keys(Core.TOWERS).length||
-     local.owned.some(id=>typeof id!=='string'||!Object.hasOwn(Core.TOWERS,id))||
+     local.owned.some(id=>typeof id!=='string'||!Object.hasOwn(Core.TOWERS,id)||Core.TOWERS[id].developerOnly)||
      !Array.isArray(local.packs)||local.packs.length>Object.keys(Core.PACKS).length||
      local.packs.some(id=>typeof id!=='string'||!Object.hasOwn(Core.PACKS,id)))
     throw Error('타워 또는 팩 데이터가 올바르지 않습니다.');
