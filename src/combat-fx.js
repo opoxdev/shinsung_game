@@ -26,14 +26,15 @@ const COLORS={
  stocking:['#f77e9a','#ffe2ad','gift'],
  sunlancer:['#ffce75','#fff5cc','sunbeam'],
  graviturge:['#b48aff','#f4e8ff','gravity'],
- thornkeeper:['#8df5ae','#efffd4','thorn']
+ thornkeeper:['#8df5ae','#efffd4','thorn'],
+ frieza:['#a667fb','#fff2ff','emperor']
 };
 const PROFILES=Object.freeze(Object.fromEntries(Object.entries(COLORS).map(([id,[primary,core,shape]])=>
  [id,Object.freeze({primary,core,shape})])));
 export const towerEffectProfile=type=>PROFILES[type]||Object.freeze({primary:'#aee4ff',core:'#fff',shape:'bolt'});
 export const EFFECT_TYPES=Object.freeze(Object.keys(PROFILES));
 export const isTowerAttackEffect=e=>!!e&&(
- ['ranged','melee','splash','pulse','beam','chain','summon','mark','judgement','divine','arc','income','buff','charged'].includes(e.kind)
+ ['ranged','melee','splash','pulse','beam','chain','summon','mark','judgement','divine','arc','income','buff','charged','emperor'].includes(e.kind)
  &&!!PROFILES[e.type]);
 const TAU=Math.PI*2;
 const clamp=n=>Math.max(0,Math.min(1,n));
@@ -317,6 +318,30 @@ function charged(g,e,age,profile,quality){
  for(let j=0;j<2;j++)circle(g,x,y-20,17+p*(55+j*20),profile.primary,false,4*q+1);
  star(g,x,y-20,22+p*40,8,profile.core,3*q+1,age*4);
 }
+// One constant-cost visual per Frieza execution, not one effect per victim.
+function emperorBurst(g,e,age,profile,quality){
+  const p=clamp(age/.45),fade=1-p,level=Math.max(0,Math.min(4,e.level||0));
+  const ox=e.x,oy=e.y-25,tx=e.tx??e.x,ty=e.ty??e.y;
+  g.save();g.globalAlpha*=fade*.94;
+  const radius=24+p*(65+level*27);
+  circle(g,tx,ty,radius,'#9240f5',false,10*fade+2);
+  circle(g,tx,ty,radius*.72,'#f8ddff',false,4*fade+1);
+  const n=Math.min(12,6+level*2);
+  for(let i=0;i<n;i++){
+    const a=i*TAU/n+age*(level+1)*3;
+    diamond(g,tx+Math.cos(a)*radius,ty+Math.sin(a)*radius,3+level*.75,i%2?'#f4c6ff':'#a866fc');
+  }
+  line(g,ox,oy,tx,ty,'#a75cff',14*fade+2);
+  line(g,ox,oy,tx,ty,'#fff2ff',6*fade+1);
+  if(level>=3&&quality>0){
+    for(let i=0;i<4;i++){
+      const a=i*TAU/4+p*2,r=radius*.55;
+      line(g,tx+Math.cos(a)*r,ty+Math.sin(a)*r,
+        tx-Math.cos(a)*r,ty-Math.sin(a)*r,'#e5b5ff',2+level);
+    }
+  }
+  g.restore();
+}
 // quality 0 = reduced effects, 1 = normal, 2 = high rarity spotlight
 export function drawTowerAttackEffect(g,e,age,quality=1){
  if(!isTowerAttackEffect(e))return false;
@@ -327,7 +352,8 @@ export function drawTowerAttackEffect(g,e,age,quality=1){
  g.globalAlpha*=Math.max(.12,fade);
  // Only elite effects get small shadows; never trigger a giant full-screen blur.
  if(q>=2){g.shadowColor=profile.primary;g.shadowBlur=8;}
- if(e.kind==='divine'||e.kind==='judgement')divine(g,e,age,profile,q);
+ if(e.kind==='emperor')emperorBurst(g,e,age,profile,q);
+  else if(e.kind==='divine'||e.kind==='judgement')divine(g,e,age,profile,q);
  else if(e.kind==='charged')charged(g,e,age,profile,q);
  else if(e.kind==='beam'){
   const x=e.x,y=e.y-22,dx=(e.tx??e.x)-e.x,dy=(e.ty??e.y)-e.y+22;
@@ -405,7 +431,15 @@ export function drawTowerPresence(g,t,time,stats,quality=1){
    diamond(g,Math.cos(a)*26,-29+Math.sin(a)*13,3,profile.core);
   }
  }
- if(quality&&t.type==='starseed'){
+ if(t.type==='frieza'){
+    const n=quality?8:4;
+    for(let i=0;i<n;i++){
+      const a=phase*.62+i*TAU/n;
+      diamond(g,Math.cos(a)*(size+8),-32+Math.sin(a)*23,
+        2.5+lvl*.5,i%2?'#f1c4ff':'#a963ff');
+    }
+  }
+  if(quality&&t.type==='starseed'){
   star(g,0,-31,12+lvl+2*Math.sin(phase*2),5,profile.core,1.8,phase*.3);
  }
  if(quality&&strong&&(t.type==='aurora'||t.type==='voidwalker'||t.type==='phoenix'||t.type==='sonic')){
