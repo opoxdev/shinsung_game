@@ -75,7 +75,9 @@ let uiTheme=configuredPublicSettings?'classic':'christmas';
 let siteSettings={christmasEnabled,theme:uiTheme,version:0};
 let lastSiteCheck=0;
 applyUiTheme(document.documentElement,uiTheme);
-const visibleTowerIds=()=>Object.keys(TOWERS).filter(id=>TOWERS[id].rarity!=='limited'||profile.owned.includes(id));
+const developerAccess=()=>!!online.user&&isAdminSession===true&&profile?.developer===true;
+const towerVisible=id=>!!TOWERS[id]&&(!TOWERS[id].developerOnly||developerAccess());
+const visibleTowerIds=()=>Object.keys(TOWERS).filter(id=>towerVisible(id)&&(TOWERS[id].rarity!=='limited'||profile.owned.includes(id)));
 let collectionTab='towers',selectedPack=null,achievementFilter='all',achievementBusy=false;
 let isAdminSession=false;
 let adminData={summary:null,listing:null,selected:null,audit:null,diagnostics:null,siteSettings:null,search:'',offset:0,busy:false,error:'',status:''};
@@ -177,7 +179,7 @@ function preserveScroll(){
   };
 }
 function profileBar(){return `<div class="identity"><div class="insignia">S<span>D</span></div><div><b>${esc(profile.name)}</b><small>LV. ${Math.floor(profile.xp/400)+1} · ${online.user?'연결된 계정':'로컬 모험가'}</small></div></div><div class="wallet"><span class="coin">◈</span> ${fmt(profile.coins)} <small>COINS</small></div><button class="account" data-action="account">${online.user?'계정 관리':'계정 연결'} <span>↗</span></button>`;}
-function loadout(inGame=false){return Array.from({length:5},(_,i)=>{const id=(inGame?state.players[playerId].loadout:profile.loadout)[i];return id?`<button class="loadout-slot ${placement===id?'selected':''}" data-action="${inGame?'selectPlace':'inspect'}" data-id="${id}" style="--rarity:${RARITIES[TOWERS[id].rarity].color}"><span class="slot-number">0${i+1}</span>${portrait(id,profile.equippedSkins[id])}<span class="slot-name">${TOWERS[id].name}</span><strong>₩ ${TOWERS[id].cost}</strong></button>`:`<button class="loadout-slot empty" data-action="${inGame?'noop':'nav'}" data-id="towers"><span class="slot-number">0${i+1}</span><span>＋</span><small>빈 슬롯</small></button>`;}).join('');}
+function loadout(inGame=false){return Array.from({length:5},(_,i)=>{const raw=(inGame?state.players[playerId].loadout:profile.loadout)[i],id=towerVisible(raw)?raw:null;return id?`<button class="loadout-slot ${placement===id?'selected':''}" data-action="${inGame?'selectPlace':'inspect'}" data-id="${id}" style="--rarity:${RARITIES[TOWERS[id].rarity].color}"><span class="slot-number">0${i+1}</span>${portrait(id,profile.equippedSkins[id])}<span class="slot-name">${TOWERS[id].name}</span><strong>₩ ${TOWERS[id].cost}</strong></button>`:`<button class="loadout-slot empty" data-action="${inGame?'noop':'nav'}" data-id="towers"><span class="slot-number">0${i+1}</span><span>＋</span><small>빈 슬롯</small></button>`;}).join('');}
 // Apply a server announcement without recreating a live game or moving
 // an existing scroll viewport. Never store a player-specific theme choice.
 function applyPublicSiteSettings(settings,{repaint=true}={}){
@@ -401,9 +403,9 @@ function templePage(){
       <small>일반 PvP에서 신전 이벤트를 선택하거나 이벤트 몬스터를 소환할 수 없습니다.</small></section></div></section>`;
   resetRenderer();restore();
 }
-function towerCard(id){const t=TOWERS[id],owned=profile.owned.includes(id);return `<button class="tower-card ${id===selectedTower?'selected':''} ${owned?'':'locked'} ${t.rarity}" style="--rarity:${RARITIES[t.rarity].color}" data-action="inspect" data-id="${id}"><div class="card-top"><span>${owned?profile.loadout.includes(id)?'장착 중':'보유':'미보유'}</span><b>${owned?'◇':'⊘'}</b></div>${portrait(id,profile.equippedSkins[id])}<b class="card-name">${t.name}</b><small>${t.role} · 설치 ₩ ${fmt(t.cost)}</small><div class="card-line"></div></button>`;}
+function towerCard(id){const t=TOWERS[id],owned=profile.owned.includes(id);return `<button class="tower-card ${id===selectedTower?'selected':''} ${owned?'':'locked'} ${t.rarity} ${t.developerOnly?'tower-developer':''}" style="--rarity:${RARITIES[t.rarity].color}" data-action="inspect" data-id="${id}"><div class="card-top"><span>${t.developerOnly?'👑 개발자 전용':owned?profile.loadout.includes(id)?'장착 중':'보유':'미보유'}</span><b>${owned?'◇':'⊘'}</b></div>${portrait(id,profile.equippedSkins[id])}<b class="card-name">${t.name}</b><small>${t.role} · 설치 ₩ ${fmt(t.cost)}</small><div class="card-line"></div></button>`;}
 function collectionHeader(){
-  return `<div class="page-heading"><div><span class="eyebrow">TEAM / LOADOUT</span><h1>타워 구성</h1></div><div class="edition">COLLECTED <b>${profile.owned.length} / ${visibleTowerIds().length}</b></div></div>
+  return `<div class="page-heading"><div><span class="eyebrow">TEAM / LOADOUT</span><h1>타워 구성</h1></div><div class="edition">COLLECTED <b>${profile.owned.filter(towerVisible).length} / ${visibleTowerIds().length}</b></div></div>
     <div class="collection-switch" role="group" aria-label="타워 구성 종류">
       <button type="button" class="${collectionTab==='towers'?'selected':''}" data-action="setCollectionTab" data-id="towers" aria-pressed="${collectionTab==='towers'}">✦ 타워 컬렉션 <small>${profile.loadout.length}/5 장착</small></button>
       <button type="button" class="${collectionTab==='packs'?'selected':''}" data-action="setCollectionTab" data-id="packs" aria-pressed="${collectionTab==='packs'}">☣ 몬스터 팩 <small>${PACKS[profile.pack]?.name||PACKS.basic.name}</small></button>
@@ -418,7 +420,7 @@ function collection(){
     restore();
     return;
   }
-  if(!visibleTowerIds().includes(selectedTower))selectedTower=profile.owned.find(id=>Object.hasOwn(TOWERS,id))||'scout';
+  if(!visibleTowerIds().includes(selectedTower))selectedTower=profile.owned.find(towerVisible)||'scout';
   const t=TOWERS[selectedTower],owned=profile.owned.includes(selectedTower);
   $('#content').innerHTML=collectionHeader()+`<div class="collection-layout"><section class="collection-list"><div class="collection-toolbar"><input id="tower-search" placeholder="타워 이름으로 검색" value="${esc(filter)}" aria-label="타워 검색"><select id="rarity-filter" aria-label="등급 필터"><option value="all">모든 등급</option>${Object.entries(RARITIES).map(([id,r])=>`<option value="${id}" ${id===rarityFilter?'selected':''}>${r.name}</option>`).join('')}</select><span>장착 ${profile.loadout.length}/5</span></div><div class="tower-groups">${Object.entries(RARITIES).map(([r,v])=>{const ids=visibleTowerIds().filter(id=>TOWERS[id].rarity===r&&(rarityFilter==='all'||rarityFilter===r)&&TOWERS[id].name.includes(filter));return ids.length?`<div class="rarity-title" style="color:${v.color}">${v.name}<span></span><small>${ids.length}</small></div><div class="tower-grid">${ids.map(towerCard).join('')}</div>`:'';}).join('')||'<p class="empty-message">검색 결과가 없습니다.</p>'}</div></section><section class="tower-detail tier-${t.rarity}" style="--rarity:${RARITIES[t.rarity].color}"><span class="eyebrow">${RARITIES[t.rarity].name} / ${t.role}</span><h2>${t.name}</h2><div class="detail-art">${portrait(selectedTower,profile.equippedSkins[selectedTower])}<span class="art-ring"></span></div><div class="stat-grid"><div>배치 비용<b>₩ ${fmt(t.cost)}</b></div><div>피해량<b>${t.damage>0?formatDamage(t.damage):(t.income?'수입 +'+fmt(t.income):'지원')}</b></div><div>공격 간격<b>${formatAttackInterval(t.interval)}</b></div><div>사거리<b>${formatWholeStat(t.range)}</b></div></div><p>${t.desc}</p><p class="tier-hint">등급은 배치 비용이나 사용 시기를 결정하지 않습니다. 각 타워의 역할과 강화 경로를 확인하세요.</p><div class="detail-actions"><button class="primary" data-action="equip" data-id="${selectedTower}" ${owned?'':'disabled'}>${profile.loadout.includes(selectedTower)?'장착 해제':'장착하기'}</button><button data-action="skin" data-id="${selectedTower}" ${owned?'':'disabled'}>스킨</button></div>${!owned?`<small class="unlock-note">${t.price===null?(selectedTower==='aurora'?'파멸 + 엘리트 모드 클리어로 획득':selectedTower==='oldgod'?'파멸의 신전 이벤트 30웨이브 클리어로 획득':selectedTower==='voidwalker'?'익스트림 이상 + 암흑 에너지 모드 클리어로 획득':'익스트림 이상 + 슈퍼소닉 클리어로 획득'):'상점에서 '+fmt(t.price)+' 코인으로 획득'}</small>`:''}</section></div>`;
   restore();
@@ -854,6 +856,7 @@ const actions={
   async adminNext(){adminData.offset+=20;await adminLoad({selected:false});},
   async adminQuickCoins(){if(isAdminSession)await adminChange('coins',{amount:50000},online.user?.uid);},
   async adminQuickTowers(){if(isAdminSession)await adminChange('grantAllSelf',{},online.user?.uid);},
+  async adminQuickFrieza(){if(isAdminSession)await adminChange('grantTower',{tower:'frieza'},online.user?.uid);},
   async adminDiagnostics(){try{adminData.diagnostics=await online.call('adminDiagnostics');adminData.error='';}catch(e){adminData.error=e.message;}adminRender();},
   async adminBan(){const reason=$('#admin-ban-reason')?.value.trim();if(!reason){adminData.error='제재 사유를 입력하세요.';adminRender();return;}await adminChange('ban',{reason});},
   async adminUnban(){await adminChange('unban');},
@@ -916,8 +919,10 @@ const actions={
     for(const button of stage.querySelectorAll('.map-picker .map-pick'))
       button.classList.toggle('selected',button.dataset.id===id);
   },difficulty(id){normalConfig();config.difficulty=id;home();},mode(id){normalConfig();if(!Object.hasOwn(MODES,id))return;config.modes=config.modes.includes(id)?config.modes.filter(x=>x!==id):[...config.modes,id];home();},
-  inspect(id){selectedTower=id;page='towers';collectionTab='towers';shell();},equip(id){mutate({kind:'equip',id});},shopTab(id){shopTab=id;shop();},buyTower(id){mutate({kind:'buyTower',id});},buyPack(id){mutate({kind:'buyPack',id});},pack(id){mutate({kind:'pack',id});},
+  inspect(id){if(!towerVisible(id))return;selectedTower=id;page='towers';collectionTab='towers';shell();},
+  equip(id){if(!towerVisible(id))return;mutate({kind:'equip',id});},shopTab(id){shopTab=id;shop();},buyTower(id){mutate({kind:'buyTower',id});},buyPack(id){mutate({kind:'buyPack',id});},pack(id){mutate({kind:'pack',id});},
   skin(id){
+    if(!towerVisible(id))return;
     const styles=['default',...Object.keys(SKIN_STYLES).filter(style=>SKIN_STYLES[style].targets.includes(id)||profile.skins?.[id+':'+style])];
     const options=styles.map(style=>{
       const owned=style==='default'||profile.skins?.[id+':'+style];
