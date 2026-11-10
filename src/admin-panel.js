@@ -1,4 +1,5 @@
 import {TOWERS} from './data.js';
+import {UI_THEMES} from './ui-theme.js';
 
 const escAdmin=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmtAdmin=n=>Math.floor(Number(n)||0).toLocaleString('ko-KR');
@@ -7,7 +8,7 @@ export const adminTowerOptions=()=>Object.entries(TOWERS)
   .map(([id,t])=>'<option value="'+escAdmin(id)+'">'+escAdmin(t.name)+' ('+escAdmin(id)+')</option>').join('');
 
 export function adminPageMarkup(data){
-  const {summary,listing,selected,audit,diagnostics,search='',busy=false,error='',status=''}=data;
+  const {summary,listing,selected,audit,diagnostics,siteSettings,search='',busy=false,error='',status=''}=data;
   const users=listing?.items||[],total=listing?.total||0,offset=listing?.offset||0;
   const stats=[
     ['등록 프로필',summary?.users,'users'],
@@ -24,6 +25,17 @@ export function adminPageMarkup(data){
     (status?'<div class="admin-message" role="status">'+escAdmin(status)+'</div>':'')+
     '<section class="admin-stats">'+stats.map(([title,value,type])=>'<article><small>'+title+'</small><strong>'+
       (value===undefined||value===null?'—':type==='version'?escAdmin(value):fmtAdmin(value))+'</strong></article>').join('')+'</section>'+
+    '<section class="admin-site-settings"><div class="admin-section-header"><div><span>GLOBAL LIVE OPERATIONS</span><h2>이벤트 · 전체 테마 운영</h2><p>모든 플레이어에게 공통 적용됩니다. 일반 이용자에게는 변경 권한이 없습니다.</p></div>'+
+      '<span class="admin-site-status">'+(siteSettings?('운영 설정 v'+fmtAdmin(siteSettings.version)):'서버 확인 중')+'</span></div>'+
+      '<form id="admin-site-settings-form" class="admin-site-form">'+
+      '<label>❄ 크리스마스 이벤트<select name="christmasEnabled" aria-label="크리스마스 이벤트 운영 상태" '+(!siteSettings||busy?'disabled':'')+'>'+
+       '<option value="true" '+(siteSettings?.christmasEnabled?'selected':'')+'>진행 중 · 모든 유저에게 공개</option>'+
+       '<option value="false" '+(siteSettings&&!siteSettings.christmasEnabled?'selected':'')+'>종료 · 입장 및 신규 보상 중단</option></select></label>'+
+      '<label>🎨 게임 전체 테마<select name="theme" aria-label="전체 사용자 화면 테마" '+(!siteSettings||busy?'disabled':'')+'>'+
+        Object.entries(UI_THEMES).map(([id,theme])=>'<option value="'+escAdmin(id)+'" '+(siteSettings?.theme===id?'selected':'')+'>'+escAdmin(theme.icon+' '+theme.name)+'</option>').join('')+
+      '</select></label>'+
+      '<button type="submit" class="admin-site-save" '+(!siteSettings||busy?'disabled':'')+'>전체 운영 설정 저장</button></form>'+
+      '<p class="admin-site-note">이벤트 종료 시 사이드바·이벤트 페이지가 숨겨지고 신규 진입과 보상 수령이 중지됩니다. <b>보유 타워, 스킨, 배틀패스 경험치와 클리어 이력은 삭제하지 않습니다.</b> 다시 켜면 기존 기록으로 재개됩니다. 테마는 모든 사용자의 다음 설정 동기화 시 반영됩니다.</p></section>'+
     '<section class="admin-utilities"><div><h2>개발 · 점검 도구</h2><p>내 계정 테스트 자금 지급, 전체 타워 해금, 서버 상태 점검</p></div>'+
       '<div class="admin-tool-buttons"><button data-action="adminQuickCoins">＋ 내 코인 50,000</button>'+
       '<button data-action="adminQuickTowers">✦ 내 타워 전체 해금</button>'+
@@ -49,11 +61,11 @@ export function adminPageMarkup(data){
       '<section class="admin-detail">'+(selected?adminUserDetailMarkup(selected,busy):
         '<div class="admin-empty detail-empty"><strong>유저를 선택하세요</strong><p>좌측 목록에서 계정을 선택하면 보유 재화, 타워, 제재 상태를 관리할 수 있습니다.</p></div>')+
       '</section></div>'+
-    '<section class="admin-audit"><div class="admin-section-header"><div><span>CHANGE HISTORY</span><h2>최근 관리 기록</h2></div></div>'+
+    '<details class="admin-audit"><summary><span>CHANGE HISTORY</span><strong>최근 관리 기록</strong><small>최근 30개 · 클릭해서 펼치기 / 접기</small></summary>'+
       '<div class="admin-audit-list">'+(audit?.length?audit.map(row=>
         '<article><b>'+escAdmin(row.operation)+'</b><span>'+escAdmin(row.target_uid)+'</span>'+
         '<small>'+dateAdmin(row.created_at)+'</small></article>').join(''):
-      '<div class="admin-empty">아직 관리 기록이 없습니다.</div>')+'</div></section>'+
+      '<div class="admin-empty">아직 관리 기록이 없습니다.</div>')+'</div></details>'+
     '</div>';
 }
 function adminUserDetailMarkup(u,busy){
