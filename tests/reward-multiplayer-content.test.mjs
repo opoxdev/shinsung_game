@@ -99,7 +99,7 @@ test('gravity mage chains slow and venom gardener applies splash, poison and slo
 
 test('new roster contains three independently illustrated specialists with four evolutions',()=>{
  const ids=['sunlancer','graviturge','thornkeeper'];
- assert.equal(Object.keys(TOWERS).length,38);
+ assert.equal(Object.keys(TOWERS).length,42);
  for(const id of ids){
   assert.equal(EVOLUTIONS[id].length,4);
   assert.equal(TOWERS[id].upgrades.length,4);
