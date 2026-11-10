@@ -12,7 +12,7 @@ import {STORIES,sceneForWave,storySceneIndex,storyPreviewMarkup,storyGuideMarkup
 import {loadClientProfile,saveClientProfile,multiplayerLoadout,validProfile,exportSave,importSave} from './client-profile.js';
 import {achievementView,achievementSummary,recordAchievementRun,claimAchievementReward} from './achievements.js';
 import {achievementPageMarkup} from './achievement-page.js';
-import {UI_THEMES,loadUiTheme,applyUiTheme,nextUiTheme} from './ui-theme.js';
+import {UI_THEMES,applyUiTheme} from './ui-theme.js';
 import {EVENTS,campaignOf} from './data.js';
 const $=s=>document.querySelector(s), app=$('#app'), online=new Online();
 const fmt=n=>Number.isFinite(Number(n))?Math.round(Number(n)).toLocaleString('ko-KR'):'0';
@@ -67,16 +67,18 @@ async function flushSoloClaims(user){
   try{await pending;}finally{if(claimSync===pending)claimSync=null;}
 }
 let profile=localProfile,page='home',selectedTower='scout',shopTab='towers',filter='',rarityFilter='all';
-let christmasEnabled=true;
-try{christmasEnabled=localStorage.getItem('shinsung.christmas.enabled')!=='false';}catch{}
-// Seasonal visual styling is independent from the event's ON/OFF state.
-// A saved theme wins; new guests see the Christmas festival by default.
-let uiTheme=loadUiTheme(playerStorage,christmasEnabled?'christmas':'classic');
+// Site-wide settings are published by the Worker, not controlled per device.
+// If a public Worker is configured, fail closed until its policy arrives.
+const configuredPublicSettings=/^https:\/\//.test(online.api);
+let christmasEnabled=!configuredPublicSettings;
+let uiTheme=configuredPublicSettings?'classic':'christmas';
+let siteSettings={christmasEnabled,theme:uiTheme,version:0};
+let lastSiteCheck=0;
 applyUiTheme(document.documentElement,uiTheme);
 const visibleTowerIds=()=>Object.keys(TOWERS).filter(id=>TOWERS[id].rarity!=='limited'||profile.owned.includes(id));
 let collectionTab='towers',selectedPack=null,achievementFilter='all',achievementBusy=false;
 let isAdminSession=false;
-let adminData={summary:null,listing:null,selected:null,audit:null,diagnostics:null,search:'',offset:0,busy:false,error:'',status:''};
+let adminData={summary:null,listing:null,selected:null,audit:null,diagnostics:null,siteSettings:null,search:'',offset:0,busy:false,error:'',status:''};
 let openCrateBusy=false,roomListBusy=false,roomListNext=0,hoverVisual=null;
 let motion=new MotionView(),placementRevision=0;
 function resetRenderer(){renderer?.dispose();renderer=null;}
@@ -176,27 +178,45 @@ function preserveScroll(){
 }
 function profileBar(){return `<div class="identity"><div class="insignia">S<span>D</span></div><div><b>${esc(profile.name)}</b><small>LV. ${Math.floor(profile.xp/400)+1} · ${online.user?'연결된 계정':'로컬 모험가'}</small></div></div><div class="wallet"><span class="coin">◈</span> ${fmt(profile.coins)} <small>COINS</small></div><button class="account" data-action="account">${online.user?'계정 관리':'계정 연결'} <span>↗</span></button>`;}
 function loadout(inGame=false){return Array.from({length:5},(_,i)=>{const id=(inGame?state.players[playerId].loadout:profile.loadout)[i];return id?`<button class="loadout-slot ${placement===id?'selected':''}" data-action="${inGame?'selectPlace':'inspect'}" data-id="${id}" style="--rarity:${RARITIES[TOWERS[id].rarity].color}"><span class="slot-number">0${i+1}</span>${portrait(id,profile.equippedSkins[id])}<span class="slot-name">${TOWERS[id].name}</span><strong>₩ ${TOWERS[id].cost}</strong></button>`:`<button class="loadout-slot empty" data-action="${inGame?'noop':'nav'}" data-id="towers"><span class="slot-number">0${i+1}</span><span>＋</span><small>빈 슬롯</small></button>`;}).join('');}
-function syncThemeControls(){
-  const theme=UI_THEMES[uiTheme];
-  for(const button of document.querySelectorAll('[data-action="themeCycle"]')){
-    button.setAttribute('aria-label','화면 테마 변경 · 현재 '+theme.name);
-    button.setAttribute('title','현재 '+theme.name+' · 눌러서 전환');
-    button.setAttribute('aria-pressed',String(uiTheme==='christmas'));
-    const icon=button.querySelector('.theme-cycle-icon');
-    if(icon)icon.textContent=theme.icon;
-    const text=button.querySelector('.theme-cycle-text');
-    if(text)text.textContent=theme.name;
-  }
+// Apply a server announcement without recreating a live game or moving
+// an existing scroll viewport. Never store a player-specific theme choice.
+function applyPublicSiteSettings(settings,{repaint=true}={}){
+  if(!settings||typeof settings.christmasEnabled!=='boolean'||
+     !Object.hasOwn(UI_THEMES,settings.theme))throw Error('잘못된 서버 운영 설정입니다.');
+  const eventChanged=christmasEnabled!==settings.christmasEnabled;
+  const themeChanged=uiTheme!==settings.theme;
+  siteSettings=settings;
+  christmasEnabled=settings.christmasEnabled;
+  uiTheme=applyUiTheme(document.documentElement,settings.theme);
+  if(!christmasEnabled&&page==='christmas')page='home';
+  if(repaint&&!state&&(eventChanged||(!christmasEnabled&&page==='home'&&config.eventId)))
+    shell();
+  // Changing a global theme is CSS-only: never restart a match or reset scroll.
+  return eventChanged||themeChanged;
 }
-function switchVisualTheme(id){
-  if(!Object.hasOwn(UI_THEMES,id))return false;
-  uiTheme=applyUiTheme(document.documentElement,id,playerStorage);
-  syncThemeControls();
-  return true;
+async function refreshPublicSiteSettings({repaint=true,strict=false}={}){
+  if(!configuredPublicSettings)return siteSettings;
+  try{
+    const response=await fetch(online.api+'/settings',{method:'GET',cache:'no-store'});
+    if(!response.ok)throw Error('운영 설정 서버 연결 실패');
+    const result=await response.json();
+    if(!result?.ok||!result.data)throw Error('운영 설정 응답 오류');
+    applyPublicSiteSettings(result.data,{repaint});
+    lastSiteCheck=Date.now();
+    return siteSettings;
+  }catch(e){
+    // No stale device preference can re-enable an event if the Worker fails.
+    christmasEnabled=false;
+    if(!state&&page==='christmas')page='home';
+    if(repaint&&!state)shell();
+    if(strict)throw Error('이벤트 운영 상태를 확인할 수 없습니다. 다시 시도하세요.');
+    console.warn('공용 운영 설정 조회 실패:',e.message);
+    return null;
+  }
 }
 function shell(){
   const restore=preserveScroll();
-  app.innerHTML=`<div class="shell"><header class="topbar"><a class="brand" href="#" data-action="nav" data-id="home"><span class="brand-symbol">S</span><div>신성 디펜스<small>SHINSUNG DEFENSE</small></div></a><div class="build-label">ALPHA <span>01</span></div><button class="theme-cycle" type="button" data-action="themeCycle" aria-label="화면 테마 변경 · 현재 ${UI_THEMES[uiTheme].name}" aria-pressed="${uiTheme==='christmas'}" title="현재 ${UI_THEMES[uiTheme].name} · 눌러서 전환"><span class="theme-cycle-icon" aria-hidden="true">${UI_THEMES[uiTheme].icon}</span><span class="theme-cycle-text">${UI_THEMES[uiTheme].name}</span></button><div class="profilebar">${profileBar()}</div></header><aside class="sidebar"><div class="nav-caption">PLAY</div>${['home','towers','shop'].map(id=>`<button class="nav-item ${page===id?'active':''}" data-action="nav" data-id="${id}"><span>${icons[id]}</span>${{home:'로비',towers:'타워 구성',shop:'상점'}[id]}<i>›</i></button>`).join('')}<div class="christmas-nav-group"><button class="nav-item christmas-nav ${page==='christmas'?'active':''}" data-action="christmas"><span>❄</span>크리스마스 원정 <i>›</i></button><button class="christmas-mini-toggle ${christmasEnabled?'on':'off'}" data-action="christmasToggle" aria-pressed="${christmasEnabled}" title="크리스마스 이벤트 켜기 / 끄기">${christmasEnabled?'ON':'OFF'}</button></div><div class="nav-caption second">친구들과 더 재미있게</div><button class="nav-item temple-nav ${page==='temple'?'active':''}" data-action="temple"><span class="temple-nav-icon" aria-hidden="true">☼</span><b class="temple-nav-text">파멸의 신전</b><i>›</i></button><button class="nav-item" data-action="pvp"><span>⚔</span>대전 · PVP<i>›</i></button><button class="nav-item" data-action="coop"><span>♟</span>친구와 함께<i>›</i></button><button class="nav-item ${page==='achievements'?'active':''}" data-action="events"><span>✧</span>도전 과제${achievementSummary(profile).ready?'<b class="achievement-nav-count">'+achievementSummary(profile).ready+'</b>':''}<i>›</i></button>${isAdminSession?`<div class="nav-caption second">ADMIN</div><button class="nav-item ${page==='admin'?'active':''}" data-action="adminOpen"><span>⚙</span>관리자 패널<i>›</i></button>`:''}<div class="sidebar-bottom"><span class="status-dot"></span>${online.user?'ONLINE ACCOUNT':'LOCAL PLAY'}<small>모으고, 키우고,<br>함께 지켜내자!</small><button type="button" class="theme-menu-button" data-action="themeSettings">✧ 화면 테마 설정</button><button data-action="backupMenu">진행도 백업 ↧</button><button data-action="help">조작 안내 <span>?</span></button></div></aside><main class="content" id="content"></main><footer class="loadout-bar"><div class="loadout-label"><span>MY TEAM</span><b>내 팀</b><small>${profile.loadout.length} / 5 SLOTS</small></div><div class="loadout-slots">${loadout()}</div><div class="footer-note">${online.user?'계정 기록은 서버에 저장됩니다.':'게스트 기록은 이 브라우저에 저장됩니다.'}<br><span>BUILD 0.12.1 · INTEGER TOWER STATS</span></div></footer></div>`;
+  app.innerHTML=`<div class="shell"><header class="topbar"><a class="brand" href="#" data-action="nav" data-id="home"><span class="brand-symbol">S</span><div>신성 디펜스<small>SHINSUNG DEFENSE</small></div></a><div class="build-label">ALPHA <span>01</span></div><span class="site-theme-label" aria-label="운영 테마: ${UI_THEMES[uiTheme].name}" title="관리자 지정 운영 테마">${UI_THEMES[uiTheme].icon} ${UI_THEMES[uiTheme].name}</span><div class="profilebar">${profileBar()}</div></header><aside class="sidebar"><div class="nav-caption">PLAY</div>${['home','towers','shop'].map(id=>`<button class="nav-item ${page===id?'active':''}" data-action="nav" data-id="${id}"><span>${icons[id]}</span>${{home:'로비',towers:'타워 구성',shop:'상점'}[id]}<i>›</i></button>`).join('')}${christmasEnabled?'<button class="nav-item christmas-nav '+(page==='christmas'?'active':'')+'" data-action="christmas"><span>❄</span>크리스마스 원정 <i>›</i></button>':''}<div class="nav-caption second">친구들과 더 재미있게</div><button class="nav-item temple-nav ${page==='temple'?'active':''}" data-action="temple"><span class="temple-nav-icon" aria-hidden="true">☼</span><b class="temple-nav-text">파멸의 신전</b><i>›</i></button><button class="nav-item" data-action="pvp"><span>⚔</span>대전 · PVP<i>›</i></button><button class="nav-item" data-action="coop"><span>♟</span>친구와 함께<i>›</i></button><button class="nav-item ${page==='achievements'?'active':''}" data-action="events"><span>✧</span>도전 과제${achievementSummary(profile).ready?'<b class="achievement-nav-count">'+achievementSummary(profile).ready+'</b>':''}<i>›</i></button>${isAdminSession?`<div class="nav-caption second">ADMIN</div><button class="nav-item ${page==='admin'?'active':''}" data-action="adminOpen"><span>⚙</span>관리자 패널<i>›</i></button>`:''}<div class="sidebar-bottom"><span class="status-dot"></span>${online.user?'ONLINE ACCOUNT':'LOCAL PLAY'}<small>모으고, 키우고,<br>함께 지켜내자!</small><button data-action="backupMenu">진행도 백업 ↧</button><button data-action="help">조작 안내 <span>?</span></button></div></aside><main class="content" id="content"></main><footer class="loadout-bar"><div class="loadout-label"><span>MY TEAM</span><b>내 팀</b><small>${profile.loadout.length} / 5 SLOTS</small></div><div class="loadout-slots">${loadout()}</div><div class="footer-note">${online.user?'계정 기록은 서버에 저장됩니다.':'게스트 기록은 이 브라우저에 저장됩니다.'}<br><span>BUILD 0.12.1 · INTEGER TOWER STATS</span></div></footer></div>`;
   if(page==='home')home();else if(page==='christmas')christmasPage();else if(page==='temple')templePage();else if(page==='towers')collection();else if(page==='achievements')achievementRender();else if(page==='admin'&&isAdminSession)adminRender();else shop();
   restore();
 }
@@ -278,7 +298,7 @@ function christmasPage(){
         <span class="christmas-kicker">❄ SHINSUNG WINTER FESTIVAL · 2026</span>
         <h1>영원한 크리스마스</h1>
         <p>눈 내리는 북극의 마을, 사라진 선물과 깨어난 진저브레드 왕국. 총 50웨이브를 거쳐 크리스마스 한정 수호자들을 수집하세요.</p>
-        <div class="christmas-control"><button class="christmas-switch ${christmasEnabled?'is-on':'is-off'}" data-action="christmasToggle" aria-pressed="${christmasEnabled}">${christmasEnabled?'❄ 이벤트 ON · 끄기':'○ 이벤트 OFF · 켜기'}</button><span>${christmasEnabled?'이벤트 콘텐츠 활성화':'진행도는 보존됩니다. 다시 켜면 즉시 플레이 가능'}</span></div>
+        <div class="christmas-control"><span>❄ 현재 진행 중인 시즌 이벤트 · 이벤트 일정은 운영자가 관리합니다.</span></div>
       </div>
     </div>
     <section class="christmas-stages">
@@ -484,7 +504,7 @@ function startLocal(type='solo'){
 }
 function beginGame(){frameFailureCount=0;motion=new MotionView();predictionState=null;predictionBase=null;resetStory();placementRevision++;placement=null;resultShown=false;paused=false;accumulator=0;botClock=0;claimAfter=0;previousWave=0;$('#modal-root').innerHTML='';gameUI();}
 function gameUI(){
-  const p=state.players[playerId];app.innerHTML=`<div class="battle"><canvas id="battlefield" aria-label="타워 디펜스 전장"></canvas><div class="enemy-tooltip" id="enemy-tooltip" role="status" aria-live="off"></div><div class="battle-top"><button class="battle-brand" data-action="battleMenu">S<span>신성 디펜스</span>☰</button><div class="battle-stats"><div><small>기지 내구도</small><b id="base-hp"></b><span class="base-meter"><i id="base-meter-fill"></i></span></div>${state.config.type==='pvp'?'<div><small>상대 내구도</small><b id="opponent-hp"></b></div>':''}<div><small>전투 자금</small><b class="gold" id="cash"></b></div><div><small>배치 타워</small><b id="tower-count"></b></div></div><div class="wave-panel"><small>${campaignOf(state.config).name} · ${isOnlineMatch?'SERVER':'LOCAL'}</small><b id="wave-label"></b><span id="wave-intel" class="wave-intel"></span><span id="wave-clock"></span><div class="wave-progress" aria-label="웨이브 진행률"><span id="wave-progress-fill"></span></div></div></div><div class="battle-hints"><button type="button" class="battle-mobile-menu" data-action="battleMenu" aria-label="전투 메뉴 열기">☰ 메뉴</button><button type="button" class="battle-theme-cycle" data-action="themeCycle" title="화면 테마 변경" aria-label="화면 테마 변경 · 현재 ${UI_THEMES[uiTheme].name}" aria-pressed="${uiTheme==='christmas'}"><span class="theme-cycle-icon" aria-hidden="true">${UI_THEMES[uiTheme].icon}</span><span class="theme-cycle-text">테마</span></button><span>WASD 이동</span><span>E 확대 · R 축소 · 휠 줌</span><span>U 강화</span><span>1–5 배치</span><span>Q 취소</span>${state.config.type==='pvp'?'<button data-action="field">필드 전환 ⇄</button>':''}${state.config.type==='pvp'||state.config.eventId?'':`<button type="button" class="story-hud-button" data-action="storyJournal">✧ 이야기 기록</button><button type="button" class="story-hud-button" id="story-replay" data-action="storyReplay" disabled>↺ 최근 대사</button><button type="button" class="story-hud-button" data-action="storyToggle" id="story-toggle" aria-pressed="${storyEnabled}">${storyEnabled?'대사 켜짐':'대사 꺼짐'}</button>`}<span id="connection-status"></span></div><div id="story-overlay" class="story-overlay" role="status" aria-live="polite" aria-atomic="true" hidden></div><div class="boss-strip" id="boss-strip" hidden><span id="boss-name"></span><b id="boss-hp"></b><i><em id="boss-meter"></em></i></div><div class="wave-notice" id="wave-notice"></div><aside id="tower-inspector" class="battle-inspector"></aside>${state.config.type==='pvp'?`<div class="monster-tray"><span>상대에게 보내기 / ${PACKS[p.pack].name}</span>${PACKS[p.pack].monsters.map(([id,cost])=>`<button data-action="send" data-id="${id}" id="send-${id}" style="--enemy:${ENEMIES[id].color}"><i>▣</i><b>${ENEMIES[id].name}</b><small>₩ ${cost}</small></button>`).join('')}</div>`:''}<div class="battle-bottom"><div class="battle-tools"><button data-action="effects" class="effects-toggle" title="피해 숫자를 숨겨 전장을 더 또렷하게 표시합니다">효과: 표준</button><button data-action="intel" title="현재·다음 웨이브 정보 펼치기">정보</button><button data-action="zoomOut" aria-label="축소">−</button><button data-action="zoomReset" aria-label="카메라 초기화">⌾</button><button data-action="zoomIn" aria-label="확대">＋</button><button data-action="cancelPlace" aria-label="배치 취소">취소</button></div><div class="loadout-slots">${loadout(true)}</div><button class="skip-button" data-action="skip" id="skip">웨이브 스킵</button></div><div class="placement-hint" id="placement-hint"></div></div>`;
+  const p=state.players[playerId];app.innerHTML=`<div class="battle"><canvas id="battlefield" aria-label="타워 디펜스 전장"></canvas><div class="enemy-tooltip" id="enemy-tooltip" role="status" aria-live="off"></div><div class="battle-top"><button class="battle-brand" data-action="battleMenu">S<span>신성 디펜스</span>☰</button><div class="battle-stats"><div><small>기지 내구도</small><b id="base-hp"></b><span class="base-meter"><i id="base-meter-fill"></i></span></div>${state.config.type==='pvp'?'<div><small>상대 내구도</small><b id="opponent-hp"></b></div>':''}<div><small>전투 자금</small><b class="gold" id="cash"></b></div><div><small>배치 타워</small><b id="tower-count"></b></div></div><div class="wave-panel"><small>${campaignOf(state.config).name} · ${isOnlineMatch?'SERVER':'LOCAL'}</small><b id="wave-label"></b><span id="wave-intel" class="wave-intel"></span><span id="wave-clock"></span><div class="wave-progress" aria-label="웨이브 진행률"><span id="wave-progress-fill"></span></div></div></div><div class="battle-hints"><button type="button" class="battle-mobile-menu" data-action="battleMenu" aria-label="전투 메뉴 열기">☰ 메뉴</button><span>WASD 이동</span><span>E 확대 · R 축소 · 휠 줌</span><span>U 강화</span><span>1–5 배치</span><span>Q 취소</span>${state.config.type==='pvp'?'<button data-action="field">필드 전환 ⇄</button>':''}${state.config.type==='pvp'||state.config.eventId?'':`<button type="button" class="story-hud-button" data-action="storyJournal">✧ 이야기 기록</button><button type="button" class="story-hud-button" id="story-replay" data-action="storyReplay" disabled>↺ 최근 대사</button><button type="button" class="story-hud-button" data-action="storyToggle" id="story-toggle" aria-pressed="${storyEnabled}">${storyEnabled?'대사 켜짐':'대사 꺼짐'}</button>`}<span id="connection-status"></span></div><div id="story-overlay" class="story-overlay" role="status" aria-live="polite" aria-atomic="true" hidden></div><div class="boss-strip" id="boss-strip" hidden><span id="boss-name"></span><b id="boss-hp"></b><i><em id="boss-meter"></em></i></div><div class="wave-notice" id="wave-notice"></div><aside id="tower-inspector" class="battle-inspector"></aside>${state.config.type==='pvp'?`<div class="monster-tray"><span>상대에게 보내기 / ${PACKS[p.pack].name}</span>${PACKS[p.pack].monsters.map(([id,cost])=>`<button data-action="send" data-id="${id}" id="send-${id}" style="--enemy:${ENEMIES[id].color}"><i>▣</i><b>${ENEMIES[id].name}</b><small>₩ ${cost}</small></button>`).join('')}</div>`:''}<div class="battle-bottom"><div class="battle-tools"><button data-action="effects" class="effects-toggle" title="피해 숫자를 숨겨 전장을 더 또렷하게 표시합니다">효과: 표준</button><button data-action="intel" title="현재·다음 웨이브 정보 펼치기">정보</button><button data-action="zoomOut" aria-label="축소">−</button><button data-action="zoomReset" aria-label="카메라 초기화">⌾</button><button data-action="zoomIn" aria-label="확대">＋</button><button data-action="cancelPlace" aria-label="배치 취소">취소</button></div><div class="loadout-slots">${loadout(true)}</div><button class="skip-button" data-action="skip" id="skip">웨이브 스킵</button></div><div class="placement-hint" id="placement-hint"></div></div>`;
   resetRenderer();renderer=new Renderer($('#battlefield'));renderer.camera.x=900+p.field*2100;renderer.camera.zoom=1.18;
   const c=$('#battlefield');c.addEventListener('wheel',e=>{e.preventDefault();renderer.zoomBy(Math.exp(-Math.max(-100,Math.min(100,e.deltaY))*.002));},{passive:false});
   // One-finger drag pans the field when not deploying; taps still select a tower.
@@ -752,25 +772,6 @@ async function openRoom(code){
 }
 async function pulse(now){if(!isOnlineMatch||!room||onlineBusy||now-lastPulse<2000||state?.status!=='playing')return;if(room.host!==playerId&&now-lastSnapshot<6500)return;lastPulse=now;onlineBusy=true;try{await online.call('pulse',{code:room.code});}catch(e){toast('동기화: '+e.message);}finally{onlineBusy=false;}}
 const actions={
-  themeCycle(){
-    switchVisualTheme(nextUiTheme(uiTheme));
-  },
-  themeSettings(){
-    const buttons=Object.entries(UI_THEMES).map(([id,theme])=>
-      '<button type="button" class="theme-option" data-action="themeSelect" data-id="'+id+'" aria-pressed="'+(id===uiTheme)+'">'+
-      '<span class="theme-option-icon" aria-hidden="true">'+theme.icon+'</span>'+
-      '<span class="theme-option-name">'+theme.name+(id===uiTheme?' · 선택 중':'')+'</span>'+
-      '<span class="theme-option-desc">'+theme.description+'</span></button>').join('');
-    modal('<span class="eyebrow">APPEARANCE · SEASONAL SKINS</span><h2>화면 테마 설정</h2>'+
-      '<p>게임의 색상, 장식, 메뉴와 전투 UI를 바꿉니다. 이벤트 진행도·보상·맵·멀티플레이 판정에는 영향을 주지 않습니다.</p>'+
-      '<div class="theme-choice-list">'+buttons+'</div>'+
-      '<p class="theme-choice-footnote">설정은 이 브라우저에 저장됩니다. 크리스마스 이벤트 ON/OFF와는 별도로 선택할 수 있습니다.</p>');
-  },
-  themeSelect(id){
-    if(!switchVisualTheme(id))return;
-    closeModal();
-    toast(UI_THEMES[id].name+' 적용 완료');
-  },
   effects(){renderer.reducedEffects=!renderer.reducedEffects;setText('[data-action="effects"]',renderer.reducedEffects?'효과: 간소':'효과: 표준');},
   intel(){document.querySelector('.battle')?.classList.toggle('show-intel');},
   closeInspector(){renderer.selected=null;inspector();},
@@ -806,23 +807,26 @@ const actions={
   async adminBan(){const reason=$('#admin-ban-reason')?.value.trim();if(!reason){adminData.error='제재 사유를 입력하세요.';adminRender();return;}await adminChange('ban',{reason});},
   async adminUnban(){await adminChange('unban');},
   mapPreview(){modal('<h2>'+MAPS.find(m=>m.id===config.map).name+'</h2><canvas id="world" class="terrain-preview" aria-label="실제 전투 맵"></canvas><p>빛나는 분홍 입구에서 시작해 파란 출구로 향합니다.</p>');resetRenderer();renderer=new Renderer($('#world'));},
-  christmas(){page='christmas';config.type='solo';shell();},
-  christmasToggle(){
-    christmasEnabled=!christmasEnabled;
-    try{localStorage.setItem('shinsung.christmas.enabled',String(christmasEnabled));}catch{}
-    // Toggling never touches progress or earned Christmas towers.
-    if(page==='christmas')christmasPage();else shell();
+  christmas(){
+    if(!christmasEnabled)return toast('현재 운영 중인 크리스마스 이벤트가 없습니다.');
+    page='christmas';config.type='solo';shell();
   },
-  christmasStageSolo(id){
+  async christmasStageSolo(id){
     const stage=CHRISTMAS_STAGES.find(t=>t.id===id);
-    if(!christmasEnabled||!stage)return toast('먼저 이벤트를 켜세요.');
+    if(!stage)return;
+    await refreshPublicSiteSettings({strict:true});
+    if(!christmasEnabled)return toast('크리스마스 이벤트 기간이 종료되었습니다.');
     if(!christmasStageUnlocked(profile,CHRISTMAS_STAGES.indexOf(stage)+1))
       return toast('이전 크리스마스 단계를 클리어해야 합니다.');
     if(!config.eventId)preEventConfig={...config,modes:[...config.modes]};
     config={eventId:id,map:stage.map,difficulty:'normal',type:'solo',modes:[]};
     try{startLocal('solo');}catch(e){toast(e.message);config=preEventConfig||{map:'plains',difficulty:'easy',type:'solo',modes:[]};preEventConfig=null;}
   },
-  christmasClaimPass(id){void mutate({kind:'christmasClaimPass',level:Number(id)});},
+  async christmasClaimPass(id){
+    await refreshPublicSiteSettings({strict:true});
+    if(!christmasEnabled)return toast('크리스마스 이벤트 기간이 종료되었습니다.');
+    void mutate({kind:'christmasClaimPass',level:Number(id)});
+  },
   temple(){page='temple';config.type='solo';shell();},
   templeSolo(){config=templeConfig('solo');try{startLocal('solo');}catch(e){toast(e.message);}},
   templeCoop(){config=templeConfig('coop');special('coop');},
