@@ -14,13 +14,14 @@ function stripModules(source){
     .replace(/^export\s+\{[^\n]*\}\s+from\s+['"][^'"\n]+['"];?\s*$/gm,'')
     .replace(/^export\s+(?=(const|let|var|function|class)\b)/gm,'');
 }
-const sources=['evolutions','christmas','data','engine','achievements','christmas-art','visual-design','meat-art','new-map-art','art','presentation','terrain','enemy-art','combat-fx','render','online','matchmaking','admin-panel','achievement-page','online-prediction','story','client-profile','main'];
+const sources=['evolutions','christmas','data','engine','achievements','christmas-art','christmas-map-expansion','visual-design','meat-art','new-map-art','art','presentation','terrain','enemy-art','combat-fx','render','online','matchmaking','admin-panel','achievement-page','online-prediction','story','client-profile','main'];
 const files=await Promise.all(sources.map(x=>read(`src/${x}.js`)));
 // Modules newly authored as ESM may use private helpers named like existing
 // legacy globals. Scope their helpers while explicitly exposing public bindings
 // to the legacy no-dependency browser bundle.
 const scopedExports={
   'christmas-art':['CHRISTMAS_ENEMY_IDS','drawChristmasVillageBack','drawChristmasVillageDecor','christmasVillagePreview','christmasTowerPortrait','drawChristmasEnemyPlate','christmasEnemyPortrait'],
+  'christmas-map-expansion':['HOLIDAY_EXTRA_MAPS','drawHolidayMapBack','drawHolidayMapDecor','holidayMapPreview'],
   'meat-art':['MEAT_MONSTERS','meatMonsterPortrait','drawMeatPlate'],
   'new-map-art':['NEW_MAP_IDS','drawNewMapBackdrop','drawNewMapDecor','newMapLandscape'],
   'combat-fx':['towerEffectProfile','EFFECT_TYPES','isTowerAttackEffect','drawTowerAttackEffect','drawTowerPresence']
