@@ -9,7 +9,7 @@ const pathGeometry=svg=>Array.from(svg.matchAll(/<path d="([^"]+)"/g),m=>m[1]).j
 
 test('all thirty-five baseline characters have unique silhouettes across five rarity tiers',()=>{
   const ids=Object.keys(TOWERS);
-  assert.equal(ids.length,38);
+  assert.equal(ids.length,42);
   assert.deepEqual(Object.keys(CHARACTER_DESIGNS).sort(),ids.sort());
   const portraits=new Set();
   for(const id of ids){
@@ -76,7 +76,7 @@ test('every common and rare default head is rounded or soft-square and outfits u
 });
 test('prestige art is explicitly different by rarity even if a mythic is inexpensive to deploy',()=>{
   assert.deepEqual(BASE_ART_TIERS,{
-    common:'everyday',rare:'craft',epic:'specialist',legendary:'iconic',mythic:'myth'
+    common:'everyday',rare:'craft',epic:'specialist',legendary:'iconic',mythic:'myth',limited:'limited'
   });
   for(const [id,tower] of Object.entries(TOWERS)){
     const svg=character(id);
@@ -93,7 +93,7 @@ test('prestige art is explicitly different by rarity even if a mythic is inexpen
   assert.ok(character('chef','donut').includes('data-art-tier="costume"'));
 });
 test('only explicitly supported towers have newly obtainable skins',()=>{
-  assert.equal(Object.keys(SKIN_STYLES).length,15);
+  assert.equal(Object.keys(SKIN_STYLES).length,19);
   assert.deepEqual(Object.keys(COSTUME_SCHEMES).sort(),Object.keys(SKIN_STYLES).sort());
   for(const [skin,style] of Object.entries(SKIN_STYLES)){
     assert.ok(style.targets.length>=1&&style.targets.length<=6,skin);
