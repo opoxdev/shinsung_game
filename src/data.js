@@ -1,5 +1,6 @@
 import { EVOLUTIONS } from './evolutions.js';
 import {CHRISTMAS_STAGES,CHRISTMAS_PASS,CHRISTMAS_PASS_LEVELS,CHRISTMAS_PASS_XP_PER_LEVEL,christmasPassLevel,christmasStageUnlocked,christmasClaimPass} from './christmas.js';
+export {CHRISTMAS_STAGES,CHRISTMAS_PASS,CHRISTMAS_PASS_LEVELS,CHRISTMAS_PASS_XP_PER_LEVEL,christmasPassLevel,christmasStageUnlocked,christmasClaimPass} from './christmas.js';
 export const VERSION = '0.12.1';
 // All combat health and damage numbers use a 1/6 display scale. Economy, ranges,
 // movement and relative time-to-kill are deliberately unchanged.
