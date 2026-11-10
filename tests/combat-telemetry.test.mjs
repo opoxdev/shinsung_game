@@ -112,7 +112,9 @@ test('defeat pays modest progress rewards while clear pays 8x with major bonus',
     for(const wave of [0,1,Math.floor(max/2),max]){
       s.wave=wave;s.status='defeat';
       const reward=rewardFor(s,'p');
-      const expected=Math.floor(d.reward*.4*wave/max);
+      const middle=Math.ceil(max/2);
+      const progress=wave>=middle?(wave-middle+1)/(max-middle+1):0;
+      const expected=Math.floor(d.reward*.4*progress);
       assert.equal(reward.coins,expected,d.id+':'+wave);
       assert.equal(reward.clearBonus,0);
       assert.equal(reward.sonic,false);
@@ -127,7 +129,9 @@ test('defeat pays modest progress rewards while clear pays 8x with major bonus',
   mod.status='defeat';mod.wave=11;
   const d=DIFFICULTIES.find(d=>d.id==='hard');
   const base=Math.floor(d.reward*1.5);
-  assert.equal(rewardFor(mod,'p').coins,Math.floor(base*.4*11/d.waves.length));
+  const mid=Math.ceil(d.waves.length/2);
+  assert.equal(rewardFor(mod,'p').coins,11<mid?0:
+    Math.floor(base*.4*(11-mid+1)/(d.waves.length-mid+1)));
   const pvp=createMatch(cfg({type:'pvp'}),[{id:'p',profile:starterProfile()},{id:'other',profile:starterProfile()}]);
   pvp.status='complete';pvp.winner=1;
   assert.equal(rewardFor(pvp,'p').coins,0,'No intentional-loss currency farming in PvP');
