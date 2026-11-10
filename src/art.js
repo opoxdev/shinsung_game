@@ -2,6 +2,7 @@ import { ENEMIES, TOWERS } from './data.js';
 import { meatMonsterPortrait } from './meat-art.js';
 import { newMapLandscape } from './new-map-art.js';
 import { christmasVillagePreview, christmasEnemyPortrait } from './christmas-art.js';
+import { holidayMapPreview } from './christmas-map-expansion.js';
 import { evolutionAt } from './evolutions.js';
 import { redesignedPortrait } from './visual-design.js';
 // v0.9.1: everyday common/rare equipment evolves through class-specific tools.
@@ -245,6 +246,8 @@ export function templeRuinPreview(){
 export function landscape(map){
   if(landscapeCache.has(map.id))return landscapeCache.get(map.id);
   if(map.id==='christmas_village'){const art=christmasVillagePreview(map);landscapeCache.set(map.id,art);return art;}
+  const holiday=holidayMapPreview(map);
+  if(holiday){landscapeCache.set(map.id,holiday);return holiday;}
   const dedicated=newMapLandscape(map);
   if(dedicated){landscapeCache.set(map.id,dedicated);return dedicated;}
   const palettes={plains:['#65baf4','#bdedff','#6ec963','#2e9260','#a9eb71'],mountains:['#303466','#8d7bb7','#524a77','#292b51','#9380b6'],crystal:['#252253','#6a58b8','#54448b','#302955','#a183f6'],volcano:['#5a2349','#f57d67','#6e4254','#362a42','#bb5861'],snow:['#69bde7','#e9faff','#b4e3f3','#6399bc','#edfaff']};
