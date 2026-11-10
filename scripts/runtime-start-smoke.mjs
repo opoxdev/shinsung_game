@@ -18,28 +18,35 @@ try {
  page.on('pageerror',error=>errors.push(error.message));
  await page.goto('file://'+path.join(root,'dist/index.html'),{waitUntil:'domcontentloaded'});
  await page.locator('[data-action="start"]').waitFor({timeout:15000});
- // A real browser must see the Christmas skin on ALL screens by default,
- // toggle instantly without remounting or simulation changes, and persist a
- // manual selection independent of event ON/OFF.
+ // Operator-managed live theme. The player has no toggle or local setting.
  assert.equal(await page.locator('html').getAttribute('data-theme'),'christmas');
+ assert.equal(await page.locator('.theme-cycle,.theme-menu-button,.theme-option').count(),0);
+ assert.equal(await page.locator('[data-action="christmasToggle"]').count(),0);
+ assert.equal(await page.locator('.site-theme-label').count(),1);
  const holidayHeader=await page.locator('.topbar').evaluate(el=>getComputedStyle(el).backgroundImage);
  assert.match(holidayHeader,/gradient/i);
- await page.locator('.theme-cycle').click();
- assert.equal(await page.locator('html').getAttribute('data-theme'),'classic');
- const normalHeader=await page.locator('.topbar').evaluate(el=>getComputedStyle(el).backgroundImage);
- assert.notEqual(normalHeader,holidayHeader,'theme switch must change real topbar CSS');
- assert.equal(await page.locator('.map-picker').count(),1,'switching theme must NOT recreate the lobby');
- await page.locator('.theme-menu-button').click();
- assert.equal(await page.locator('.theme-option').count(),2);
- assert.equal(await page.locator('.theme-option[data-action="themeSelect"][data-id="classic"]').count(),1);
- await page.locator('[data-action="themeSelect"][data-id="christmas"]').click();
- assert.equal(await page.locator('html').getAttribute('data-theme'),'christmas');
- assert.equal(await page.locator('.modal').count(),0);
- await page.reload({waitUntil:'domcontentloaded'});
- await page.locator('[data-action="start"]').waitFor({timeout:15000});
- assert.equal(await page.locator('html').getAttribute('data-theme'),'christmas',
-  'selected theme must persist after reload');
  if(capture)await page.screenshot({path:path.join(shotsDir,'christmas-global-lobby.png'),animations:'disabled'});
+ // Public Worker settings are authoritative even for unsigned guests.
+ // Simulate different admin deployments without Firebase or account access.
+ let publicSettings={christmasEnabled:false,theme:'classic',version:2,updatedAt:1};
+ const globalPage=await browser.newPage({viewport:{width:1280,height:800}});
+ globalPage.on('pageerror',error=>errors.push(error.message));
+ await globalPage.addInitScript(()=>{window.__CLOUDFLARE_API__='https://mock.global-settings.invalid';});
+ await globalPage.route('https://mock.global-settings.invalid/settings',route=>route.fulfill({
+  status:200,contentType:'application/json',headers:{'access-control-allow-origin':'*'},
+  body:JSON.stringify({ok:true,data:publicSettings})
+ }));
+ await globalPage.goto('file://'+path.join(root,'dist/index.html'),{waitUntil:'domcontentloaded'});
+ await globalPage.waitForFunction(()=>document.documentElement.dataset.theme==='classic');
+ assert.equal(await globalPage.locator('[data-action="christmas"]').count(),0,
+  'server-closed events must disappear from every user menu');
+ assert.equal(await globalPage.locator('.theme-cycle,.theme-menu-button,[data-action="christmasToggle"]').count(),0);
+ publicSettings={christmasEnabled:true,theme:'christmas',version:3,updatedAt:2};
+ await globalPage.reload({waitUntil:'domcontentloaded'});
+ await globalPage.waitForFunction(()=>document.documentElement.dataset.theme==='christmas');
+ await globalPage.locator('[data-action="christmas"]').waitFor({timeout:10000});
+ assert.equal(await globalPage.locator('.site-theme-label').count(),1);
+ await globalPage.close();
  // Release gate: the seasonal event page must render, remain scrollable, and
  // launch its own dedicated Christmas-only battle without JS exceptions.
  const christmasPage=await browser.newPage({viewport:{width:1280,height:800},deviceScaleFactor:1});
@@ -49,16 +56,8 @@ try {
  await christmasPage.locator('[data-action="christmas"]').click();
  await christmasPage.locator('.christmas-page').waitFor({timeout:15000});
  assert.equal(await christmasPage.locator('html').getAttribute('data-theme'),'christmas');
- // Make sure changing visual themes from a long scrolling battle pass does
- // not jump to top, discard already-rendered rewards, or cancel the event.
- await christmasPage.locator('.content').evaluate(el=>{el.scrollTop=450;});
- const eventScrollBefore=await christmasPage.locator('.content').evaluate(el=>el.scrollTop);
- await christmasPage.locator('.theme-cycle').click();
- assert.equal(await christmasPage.locator('html').getAttribute('data-theme'),'classic');
- assert.equal(await christmasPage.locator('.christmas-pass-tier').count(),30);
- assert.ok(Math.abs((await christmasPage.locator('.content').evaluate(el=>el.scrollTop))-eventScrollBefore)<8);
- await christmasPage.locator('.theme-cycle').click();
- assert.equal(await christmasPage.locator('html').getAttribute('data-theme'),'christmas');
+ // The user cannot change the season or appearance; only Admin can.
+ assert.equal(await christmasPage.locator('.theme-cycle,.theme-menu-button,.christmas-switch').count(),0);
  assert.equal(await christmasPage.locator('.christmas-stage-card').count(),3);
  for(const id of ['christmas_village','christmas_station','christmas_kingdom']){
   const thumbnail=christmasPage.locator('.christmas-stage-map[data-christmas-map="'+id+'"]');
@@ -76,13 +75,6 @@ try {
  assert.ok(scroll.whole>scroll.height+250&&scroll.overflow==='auto',
   '30-level event pass must scroll inside the proper content panel');
  if(capture)await christmasPage.screenshot({path:path.join(shotsDir,'christmas-event.png'),animations:'disabled'});
- await christmasPage.locator('.christmas-switch').click();
- assert.equal(await christmasPage.locator('html').getAttribute('data-theme'),'christmas',
-  'disabling holiday event must NOT forcibly change a saved visual theme');
- assert.equal(await christmasPage.locator('[data-action="christmasStageSolo"][data-id="christmas_1"]').isEnabled(),false,
-  'Christmas toggle OFF must disable stage starts');
- await christmasPage.locator('.christmas-switch').click();
- assert.equal(await christmasPage.locator('[data-action="christmasStageSolo"][data-id="christmas_1"]').isEnabled(),true);
  await christmasPage.locator('[data-action="christmasStageSolo"][data-id="christmas_1"]').click();
  await christmasPage.locator('#battlefield').waitFor({timeout:15000});
  await christmasPage.waitForFunction(()=>{
@@ -180,13 +172,7 @@ try {
  await page.locator('[data-action="start"]').click();
  await page.locator('#battlefield').waitFor({timeout:15000});
  assert.equal(await page.locator('html').getAttribute('data-theme'),'christmas');
- assert.equal(await page.locator('.battle-theme-cycle').count(),1);
- await page.locator('.battle-theme-cycle').click();
- assert.equal(await page.locator('html').getAttribute('data-theme'),'classic');
- assert.equal(await page.locator('#battlefield').count(),1,
-  'theme switching in live combat must NEVER restart or unmount the Canvas');
- await page.locator('.battle-theme-cycle').click();
- assert.equal(await page.locator('html').getAttribute('data-theme'),'christmas');
+ assert.equal(await page.locator('.battle-theme-cycle').count(),0);
  // The first enemy should enter within a few seconds. If a ReferenceError
  // stops requestAnimationFrame, this assertion catches it reliably.
  await page.waitForFunction(()=>{
