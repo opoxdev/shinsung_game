@@ -16,7 +16,7 @@ function mockDb(){
    const query={
      bind(...values){args=values;return query;},
      async first(){
-       if(sql.includes('FROM site_settings'))return settings===null?null:{json:JSON.stringify(settings),updated_at:updatedAt};
+       if(sql.includes('FROM site_settings')){if(!created)throw Error('D1_ERROR: no such table: site_settings');return settings===null?null:{json:JSON.stringify(settings),updated_at:updatedAt};}
        if(sql.startsWith('SELECT profile_json'))return {profile_json:JSON.stringify(p),version};
        return null;
      },
