@@ -39,6 +39,7 @@ export function adminPageMarkup(data){
     '<section class="admin-utilities"><div><h2>개발 · 점검 도구</h2><p>내 계정 테스트 자금 지급, 전체 타워 해금, 서버 상태 점검</p></div>'+
       '<div class="admin-tool-buttons"><button data-action="adminQuickCoins">＋ 내 코인 50,000</button>'+
       '<button data-action="adminQuickTowers">✦ 내 타워 전체 해금</button>'+
+      '<button data-action="adminQuickFrieza">♛ 개발자 타워 「프리져」 지급</button>'+
       '<button data-action="adminDiagnostics">⚡ 연결 점검</button></div>'+
       (diagnostics?'<div class="admin-diagnostics"><b>점검 결과</b><span>Worker '+escAdmin(diagnostics.worker)+' · D1 '+escAdmin(diagnostics.database)+' · 방 목록 '+escAdmin(diagnostics.rooms)+
         ' · 등록 프로필 '+fmtAdmin(diagnostics.profiles)+' · 타워 '+fmtAdmin(diagnostics.towerDefinitions)+
