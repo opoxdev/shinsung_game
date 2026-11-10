@@ -113,6 +113,8 @@ export async function adminAction(db,user,action,p={},helpers={}){
   if(['coins','xp'].includes(operation)&&amount===0)throw Error('변경할 값을 입력하세요.');
   const tower=['grantTower','revokeTower'].includes(operation)?String(p.tower||''):'';
   if(['grantTower','revokeTower'].includes(operation)&&!Object.hasOwn(Core.TOWERS,tower))throw Error('존재하지 않는 타워입니다.');
+  if(Core.TOWERS[tower]?.developerOnly&&uid!==user.uid)
+    throw Error('개발자 전용 타워는 개발자 본인 계정에만 지급하거나 회수할 수 있습니다.');
   const reason=String(p.reason||'').trim().slice(0,120);
   // Must exist already: administrative actions never silently create accounts.
   const original=await existingProfile(db,uid);
