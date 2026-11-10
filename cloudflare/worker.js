@@ -91,6 +91,9 @@ export async function applyAction(env,action,p,user){
     if(cfg.eventId?.startsWith('christmas_')&&!(await readSiteSettings(db)).christmasEnabled)
       throw Error('크리스마스 이벤트가 종료되었습니다.');
     if(!['pvp','coop'].includes(cfg.type))throw Error('솔로 전투는 브라우저에서만 실행됩니다.');
+    const christmasStage=Core.EVENTS[cfg.eventId]?.christmasStage;
+    if(christmasStage&&!Core.christmasStageUnlocked(stored,christmasStage))
+      throw Error('이전 크리스마스 단계를 먼저 클리어해야 협동 방을 만들 수 있습니다.');
     const profile=roomLoadout(stored,p.loadout);
     for(let attempt=0;attempt<4;attempt++){
       const code=Array.from(crypto.getRandomValues(new Uint8Array(6)),n=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[n%32]).join('');
