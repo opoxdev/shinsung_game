@@ -84,7 +84,7 @@ try {
   await chapterPage.locator('#battlefield').waitFor({timeout:15000});
   await chapterPage.waitForFunction(()=>{
    const label=document.querySelector('#wave-clock')?.textContent||'';
-   return Number(label.match(/적\\s+(\\d+)/)?.[1]||0)>0;
+   return Number(label.match(/적\s+(\d+)/)?.[1]||0)>0;
   },null,{timeout:18000});
   if(capture)await chapterPage.screenshot({
    path:path.join(shotsDir,'christmas-chapter-'+chapter+'-battle.png'),animations:'disabled'});
