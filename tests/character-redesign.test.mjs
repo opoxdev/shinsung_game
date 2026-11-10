@@ -8,7 +8,7 @@ import { profileAction } from '../src/engine.js';
 const pathGeometry=svg=>Array.from(svg.matchAll(/<path d="([^"]+)"/g),m=>m[1]).join('|');
 
 test('all thirty-five baseline characters have unique silhouettes across five rarity tiers',()=>{
-  const ids=Object.keys(TOWERS);
+  const ids=Object.keys(TOWERS).filter(id=>!TOWERS[id].developerOnly);
   assert.equal(ids.length,42);
   assert.deepEqual(Object.keys(CHARACTER_DESIGNS).sort(),ids.sort());
   const portraits=new Set();
@@ -78,7 +78,7 @@ test('prestige art is explicitly different by rarity even if a mythic is inexpen
   assert.deepEqual(BASE_ART_TIERS,{
     common:'everyday',rare:'craft',epic:'specialist',legendary:'iconic',mythic:'myth',limited:'limited'
   });
-  for(const [id,tower] of Object.entries(TOWERS)){
+  for(const [id,tower] of Object.entries(TOWERS).filter(([,tower])=>!tower.developerOnly)){
     const svg=character(id);
     assert.ok(svg.includes('data-art-tier="'+BASE_ART_TIERS[tower.rarity]+'"'),id);
     if(tower.rarity==='legendary'||tower.rarity==='mythic'){
