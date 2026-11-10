@@ -26,9 +26,24 @@ try {
   assert.equal(await card.locator('svg[data-base="'+id+'"]').count(),1,'new tower portrait missing: '+id);
  }
  await page.locator('.sidebar [data-action="nav"][data-id="home"]').click();
+ // Map selection must NOT replace the horizontal scroll rail or reset its
+ // horizontal position. Previously home() rebuilt the entire mission layout.
+ const mapRail=page.locator('.map-picker');
+ const railWidth=await mapRail.evaluate(el=>el.scrollWidth-el.clientWidth);
+ assert.ok(railWidth>50,'map choices should need horizontal scrolling');
+ await mapRail.evaluate(el=>{el.dataset.preserveRail='original';});
+ assert.match(await page.locator('.defeat-reward-note').textContent(),/5웨이브부터/);
  // Every new map must be selectable through the actual scrolling map rail.
  for(const id of ['sakura','moonlake','stardune','skyisles']){
-  await page.locator('.map-pick[data-id="'+id+'"]').click();
+  const button=page.locator('.map-pick[data-id="'+id+'"]');
+  await button.scrollIntoViewIfNeeded();
+  const leftBefore=await mapRail.evaluate(el=>el.scrollLeft);
+  await button.click();
+  assert.equal(await mapRail.evaluate(el=>el.dataset.preserveRail),'original',
+    'map selection replaced the scroll rail and reset the user's position');
+  const leftAfter=await mapRail.evaluate(el=>el.scrollLeft);
+  assert.ok(Math.abs(leftAfter-leftBefore)<8,
+    'map selection jumped the horizontal scroll from '+leftBefore+' to '+leftAfter);
   assert.equal(await page.locator('.map-stage.biome-'+id).count(),1,'map is not selected: '+id);
   assert.equal(await page.locator('.world-art svg[data-biome-art="'+id+'"]').count(),1,'bespoke SVG did not load: '+id);
   if(capture){
@@ -43,7 +58,10 @@ try {
  if(capture)await page.screenshot({path:path.join(shotsDir,'skyisles-terrain-preview.png'),animations:'disabled'});
  await page.locator('.modal [data-action="close"]').click();
  for(const id of ['darkenergy','tank','rift','eclipse','laststand']){
+  const previousRailLeft=await mapRail.evaluate(el=>el.scrollLeft);
   await page.locator('[data-action="mode"][data-id="'+id+'"]').click();
+  assert.ok(Math.abs((await mapRail.evaluate(el=>el.scrollLeft))-previousRailLeft)<8,
+    'mode selection lost the map rail horizontal position');
   assert.ok(await page.locator('[data-action="mode"][data-id="'+id+'"]').evaluate(el=>el.classList.contains('selected')),'challenge mode did not remain selected: '+id);
  }
  await page.locator('[data-action="start"]').click();
