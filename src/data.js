@@ -110,6 +110,23 @@ for(const [id,def] of Object.entries(TOWERS)) {
   for(const step of EVOLUTIONS[id])if(step.dot)step.dot/=COMBAT_SCALE;
 }
 export const ENEMIES = {
+  // Holiday-only bestiary. These enemies never occur in regular campaigns.
+  snow_sprite:{name:'눈송이 정령',hp:175,speed:58,color:'#d8faff',leak:1,size:11,eventOnly:'christmas'},
+  candy_imp:{name:'사탕 도둑',hp:330,speed:95,color:'#ff89a9',leak:2,size:12,eventOnly:'christmas'},
+  snow_golem:{name:'눈덩이 골렘',hp:1950,speed:35,color:'#e5f7ff',shield:450,leak:5,size:18,eventOnly:'christmas'},
+  ornament_wisp:{name:'장식구 망령',hp:880,speed:78,color:'#c9f5bd',regen:8,leak:3,size:15,eventOnly:'christmas'},
+  frost_bell:{name:'서리 종의 감시자',hp:12500,speed:37,color:'#aadff3',shield:2800,armor:.18,leak:25,size:34,eventOnly:'christmas'},
+  winter_witch:{name:'보스 · 눈보라의 마녀',hp:68000,speed:30,color:'#b9d7ff',shield:11000,armor:.24,regen:90,leak:100,size:49,eventOnly:'christmas'},
+  gift_mimic:{name:'움직이는 선물 상자',hp:4100,speed:54,color:'#e96d76',shield:250,leak:8,size:19,eventOnly:'christmas'},
+  toy_soldier:{name:'호두까기 병정',hp:7000,speed:51,color:'#eab871',armor:.21,leak:12,size:21,eventOnly:'christmas'},
+  reindeer_guard:{name:'사슴 뿔 돌격병',hp:12000,speed:72,color:'#ad8a78',armor:.12,leak:16,size:23,eventOnly:'christmas'},
+  gift_guardian:{name:'중간보스 · 선물 수호자',hp:95000,speed:30,color:'#ffb469',shield:14000,armor:.25,leak:33,size:39,eventOnly:'christmas'},
+  gift_conductor:{name:'보스 · 크리스마스 열차 기관장',hp:400000,speed:30,color:'#eb8877',shield:65000,armor:.29,regen:350,leak:100,size:55,eventOnly:'christmas'},
+  ginger_warrior:{name:'진저브레드 보병',hp:12500,speed:70,color:'#b57b55',leak:13,size:19,eventOnly:'christmas'},
+  peppermint_wraith:{name:'박하 사탕 망령',hp:23000,speed:94,color:'#f5b5cc',shield:3200,leak:19,size:20,eventOnly:'christmas'},
+  cookie_knight:{name:'설탕 갑옷 기사',hp:43000,speed:40,color:'#bf8863',armor:.26,shield:5000,leak:26,size:26,eventOnly:'christmas'},
+  ginger_general:{name:'중간보스 · 쿠키 장군',hp:220000,speed:32,color:'#b37654',armor:.32,shield:45000,leak:45,size:42,eventOnly:'christmas'},
+  ginger_king:{name:'최종보스 · 진저브레드 왕',hp:1750000,speed:24,color:'#d29565',armor:.38,shield:220000,regen:1550,leak:100,size:64,eventOnly:'christmas'},
   temple_acolyte: {name:'신전 추종자',hp:2100,speed:68,color:'#bfa58a',leak:2,size:13,eventOnly:'temple_of_ruin'},
   temple_knight: {name:'타락한 성전병',hp:9500,speed:42,color:'#b6aa9d',armor:.26,shield:650,leak:7,size:20,eventOnly:'temple_of_ruin'},
   temple_spore: {name:'제단 감염체',hp:6000,speed:58,color:'#c36c87',onDeath:[['temple_acolyte',2]],leak:5,size:19,eventOnly:'temple_of_ruin'},
