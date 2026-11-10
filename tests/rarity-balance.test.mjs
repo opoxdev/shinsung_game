@@ -19,7 +19,7 @@ function target(s,hp=100000){
 }
 test('only five rarity tiers remain; no tower uses discontinued immortal tier',()=>{
  assert.deepEqual(Object.keys(RARITIES),['common','rare','epic','legendary','mythic','limited']);
- assert.equal(Object.keys(TOWERS).length,42);
+ assert.equal(Object.values(TOWERS).filter(t=>!t.developerOnly).length,42);
  assert.equal(TOWERS.aurora.rarity,'mythic');
  assert.ok(Object.values(TOWERS).every(t=>Object.hasOwn(RARITIES,t.rarity)));
 });
