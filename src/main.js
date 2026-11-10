@@ -263,8 +263,10 @@ function christmasPage(){
       <div class="christmas-stage-grid">${CHRISTMAS_STAGES.map((stage,i)=>{
         const event=EVENTS[stage.id],unlocked=christmasStageUnlocked(profile,i+1),done=cleared.includes(i+1);
         const boss=event.waves.at(-1).groups.at(-1)?.[0],tower=TOWERS[stage.unlock];
+        const eventMap=MAPS.find(m=>m.id===stage.map);
         return `<article class="christmas-stage-card ${done?'cleared':''} ${unlocked?'':'locked'}">
           <div class="christmas-stage-number">CHAPTER ${String(i+1).padStart(2,'0')} <span>${done?'✓ 클리어':unlocked?'도전 가능':'🔒 이전 단계 클리어 필요'}</span></div>
+          <div class="christmas-stage-map" data-christmas-map="${stage.map}" aria-label="${eventMap.name} 미리보기">${landscape(eventMap)}<div class="christmas-map-caption"><span>${eventMap.tag}</span><b>${eventMap.name}</b></div></div>
           <h3>${stage.name}</h3><small>${stage.subtitle}</small>
           <p>${stage.description}</p>
           <div class="christmas-chapter-monster">${monsterPortrait(boss)}<div><b>마지막 보스</b><span>${ENEMIES[boss].name}</span></div></div>
@@ -775,7 +777,7 @@ const actions={
     if(!christmasStageUnlocked(profile,CHRISTMAS_STAGES.indexOf(stage)+1))
       return toast('이전 크리스마스 단계를 클리어해야 합니다.');
     if(!config.eventId)preEventConfig={...config,modes:[...config.modes]};
-    config={eventId:id,map:'christmas_village',difficulty:'normal',type:'solo',modes:[]};
+    config={eventId:id,map:stage.map,difficulty:'normal',type:'solo',modes:[]};
     try{startLocal('solo');}catch(e){toast(e.message);config=preEventConfig||{map:'plains',difficulty:'easy',type:'solo',modes:[]};preEventConfig=null;}
   },
   christmasClaimPass(id){void mutate({kind:'christmasClaimPass',level:Number(id)});},
