@@ -174,6 +174,15 @@ export function christmasTowerPortrait(id,skin='default'){
    +'<path d="M61 110q34 22 66 0" fill="none" stroke="#ee6677" stroke-width="11"/>'
    +'<path d="M62 114l-6 32" stroke="#ee6677" stroke-width="10"/>'
    +'<circle cx="91" cy="140" r="5" fill="#516574"/><circle cx="91" cy="160" r="5" fill="#516574"/>';
+  // Crystal snowflakes, branching mitten arms, embroidered scarf and hat
+  // ornaments create a readable premium silhouette at card and battle scale.
+  art+='<path d="M53 118L24 103 12 83M130 119l29-17 12-20" fill="none" stroke="#6e7a80" stroke-width="8" stroke-linecap="round"/>'
+   +'<path d="M24 103L13 112M24 103L25 86M159 102L176 112M159 102L158 87" fill="none" stroke="#8f9ea6" stroke-width="5" stroke-linecap="round"/>'
+   +'<path d="M70 117q19 12 46 0m-46 9q24 13 46 1" fill="none" stroke="#fff1e6" stroke-width="3"/>'
+   +'<path d="M76 15h31l-7 6H83Z" fill="#a8edcb"/><circle cx="92" cy="6" r="5" fill="#f9d6af"/>'
+   +'<path d="M25 48v-24m-12 12h24M17 28l16 16M17 44l16-16" stroke="#bceeff" stroke-width="3"/>'
+   +'<path d="M159 62v-25m-12 12h24m-21-9 18 18m-18 0 18-18" stroke="#d9f8ff" stroke-width="3"/>'
+   +'<circle cx="62" cy="144" r="5" fill="#f3fbff"/><circle cx="121" cy="150" r="4" fill="#f7fcff"/>';
  }else if(id==='stocking'){
   art='<path d="M48 35h87v100q0 44-48 58-57 17-71-18-5-19 15-29l32-11V35Z" fill="#da5f6b" stroke="#713e4f" stroke-width="7"/>'
     +'<path d="M44 35h98v39H44Z" fill="#f9f7eb" stroke="#bccfd6" stroke-width="5"/>'
@@ -181,6 +190,15 @@ export function christmasTowerPortrait(id,skin='default'){
     +'<path d="M28 146q33 16 42 43-42 13-56-12Z" fill="#f7f0e1" stroke="#aebec1" stroke-width="4"/>'
     +'<path d="M110 127q25 1 25 25" fill="none" stroke="#ffe3af" stroke-width="7"/>';
   for(let i=0;i<7;i++)art+='<circle cx="'+(65+(i*31)%64)+'" cy="'+(89+(i*23)%67)+'" r="5" fill="'+['#ffd58f','#83e9a8','#9be7fa'][i%3]+'"/>';
+  // Bell ornament and stitches mark the lucky Christmas stocking as an
+  // active gift dispenser rather than an ordinary decorative stocking.
+  art+='<path d="M46 76h95" stroke="#b8dbd4" stroke-width="3" stroke-dasharray="6 6"/>'
+   +'<path d="M81 38l-15 19 26 12 27-11-16-20" fill="none" stroke="#78beab" stroke-width="5"/>'
+   +'<path d="M102 97l13-25 14 25-3 20h-21Z" fill="#ffe3a1" stroke="#dbad68" stroke-width="3"/>'
+   +'<circle cx="115" cy="113" r="6" fill="#e19d56"/><circle cx="115" cy="72" r="5" fill="#fff8db"/>'
+   +'<path d="M64 95l12-10 11 10-11 11Z" fill="#a0f0d0" stroke="#fef6ec" stroke-width="2"/>'
+   +'<path d="M32 161q31 14 30 28m14-64q-5 24 8 33" stroke="#fff9eb" stroke-width="3" fill="none"/>'
+   +'<circle cx="141" cy="151" r="6" fill="#fef1cc"/><circle cx="138" cy="139" r="3" fill="#6addaa"/>';
  }else if(candy){
   art='<path d="M58 83l17-44 31-4 22 47-5 97H57Z" fill="#ebfbf5" stroke="#597b8b" stroke-width="7"/>'
   +'<path d="M68 44l-11-29 35 17 31-16 5 31-22-13Z" fill="#ec6b80" stroke="#fff6f4" stroke-width="4"/>'
