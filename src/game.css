@@ -1124,3 +1124,17 @@ body{background:#15203d;color:var(--text)}button{border:2px solid #101a35;border
 @media(max-width:1120px){.christmas-stage-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.christmas-monsters{grid-template-columns:repeat(6,minmax(0,1fr))}.christmas-pass-grid{grid-template-columns:repeat(5,minmax(0,1fr))}}
 @media(max-width:720px){.christmas-hero{min-height:285px}.christmas-hero-copy{padding:24px 18px;max-width:none}.christmas-stage-grid{grid-template-columns:1fr}.christmas-monsters{grid-template-columns:repeat(4,minmax(0,1fr))}.christmas-pass-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.christmas-pass{padding:10px}.christmas-stage-card>p{min-height:0}}
 @media(max-width:420px){.christmas-pass-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.christmas-monsters{grid-template-columns:repeat(3,minmax(0,1fr))}.christmas-hero h1{font-size:29px}.christmas-stage-prize>svg{width:58px;height:67px}}
+
+/* Three independent Christmas battlefields: stage cards reveal their actual
+   authored roads and dominant landmarks even before chapters are unlocked. */
+.christmas-stage-map{position:relative;aspect-ratio:16/9;border:1px solid #c4d9ec9c;border-radius:11px;overflow:hidden;background:#345069;box-shadow:inset 0 0 0 1px #ffffff2e,0 5px 19px #1323389e;margin:4px 0 2px}
+.christmas-stage-map>svg{display:block;width:100%;height:100%;object-fit:cover;transform:scale(1.015);transition:transform .4s ease,filter .3s ease;filter:saturate(1.07) contrast(1.04)}
+.christmas-stage-card:hover .christmas-stage-map>svg{transform:scale(1.055)}
+.christmas-stage-map:after{content:'';position:absolute;inset:20% 0 0;pointer-events:none;background:linear-gradient(transparent 35%,#112236c9)}
+.christmas-map-caption{position:absolute;bottom:10px;left:12px;right:10px;z-index:1;display:flex;flex-direction:column;gap:1px;text-shadow:0 2px 5px #102030}
+.christmas-map-caption span{color:#ffe5ac;font:800 9px var(--display);letter-spacing:.18em}
+.christmas-map-caption b{font-size:15px;color:#ffffff;line-height:1.22}
+.christmas-stage-map[data-christmas-map="christmas_station"]{border-color:#95d1f7}
+.christmas-stage-map[data-christmas-map="christmas_kingdom"]{border-color:#f4c190}
+.christmas-stage-card.locked .christmas-stage-map>svg{filter:saturate(.78) contrast(1.02)}
+@media(max-width:720px){.christmas-stage-map{aspect-ratio:16/8.6}.christmas-map-caption b{font-size:16px}}
