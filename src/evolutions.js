@@ -4,6 +4,12 @@
 const v=(name,cost,damageMult,rateMult,rangeMult,look,desc,traits={})=>
   ({name,cost,damageMult,rateMult,rangeMult,look,desc,...traits});
 export const EVOLUTIONS = {
+  frieza:[
+    v('데스 빔 · 관통',400,1.45,1.25,1.08,'emperor-beam','붉은 눈에서 응축한 보랏빛 관통 섬광이 전장을 지배한다.',{bossBonus:3.8}),
+    v('초신성의 폭군',1100,2.3,1.52,1.14,'emperor-supernova','양손 사이에서 압축한 초신성 구체가 연속 폭발한다.',{bossBonus:4.5}),
+    v('제왕의 종언',2900,3.8,2.0,1.25,'emperor-tyrant','차원 균열이 전장 곳곳에 전이하며 보스까지 소멸시킨다.',{bossBonus:6}),
+    v('절대형태 · 우주 삭제',7000,7.5,2.6,1.35,'emperor-omega','균열이 하나의 절대 소멸핵으로 수렴하고 전장 전체를 삼킨다.',{bossBonus:9})
+  ],
   cookiehouse:[
     v('진저브레드 행군',1750,1.55,1.16,1.13,'ginger','기본 진저브레드 쿠키에게 진저 방패를 지급한다.',{summons:2,summonHp:570,unitSpeed:134,unitAttackInterval:.65,unitAttackRange:185,unitLife:69}),
     v('별설탕 부대',3800,2.4,1.28,1.24,'cookie-star','별모양 사탕 쿠키가 새롭게 합류한다.',{summons:3,summonHp:880,unitSpeed:142,unitAttackInterval:.56,unitAttackRange:200,unitLife:76}),
