@@ -1,4 +1,5 @@
 import {Core} from '../dist/cloudflare/core.js';
+import {readSiteSettings} from './site-settings.js';
 const bad = message => new Response(JSON.stringify({ok:false,error:message}),{status:400,headers:{'content-type':'application/json'}});
 const ok = data => new Response(JSON.stringify({ok:true,data}),{headers:{'content-type':'application/json'}});
 const CODE_LIMIT=5000, ROOM_TTL=24*3600*1000, LOBBY_TTL=2*3600*1000;
@@ -100,6 +101,12 @@ export class GameRoom {
     if(!r||name!=='leave'&&Date.now()-r.createdAt>ROOM_TTL)throw Error('존재하지 않거나 만료된 방입니다.');
     if(name==='join'){
       if(r.status!=='lobby'||r.config.type==='solo')throw Error('참가할 수 없는 대기실입니다.');
+      const christmasStage=Core.EVENTS[r.config.eventId]?.christmasStage;
+      if(christmasStage){
+        if(!(await readSiteSettings(this.env.DB)).christmasEnabled)throw Error('크리스마스 이벤트가 종료되었습니다.');
+        if(!Core.christmasStageUnlocked(p.profile,christmasStage))
+          throw Error('이전 크리스마스 단계를 먼저 클리어해야 참가할 수 있습니다.');
+      }
       if(Date.now()-r.createdAt>2*3600*1000)throw Error('대기실이 만료되었습니다.');
       if(!r.members[uid]&&Object.keys(r.members).length>=(r.config.type==='pvp'?2:4))throw Error('방이 가득 찼습니다.');
       r.code||=p.code||'';r.members[uid]=true;r.names[uid]=user.name;r.profiles[uid]=p.profile;
@@ -113,6 +120,8 @@ export class GameRoom {
     }
     if(name==='start'){
       if(r.host!==uid||r.status!=='lobby')throw Error('방장만 대기실에서 시작할 수 있습니다.');
+      if(r.config.eventId?.startsWith('christmas_')&&!(await readSiteSettings(this.env.DB)).christmasEnabled)
+        throw Error('크리스마스 이벤트가 종료되어 신규 전투를 시작할 수 없습니다.');
       const ids=Object.keys(r.members);
       if(r.config.type==='coop'&&ids.length<2)throw Error('협동전에는 2명 이상 필요합니다.');
       r.state=Core.createMatch(r.config,ids.map(id=>({id,profile:r.profiles[id]})));
@@ -136,6 +145,8 @@ export class GameRoom {
     }
     if(name==='reward'){
       if(!r.state||r.state.status==='playing')throw Error('전투가 끝나지 않았습니다.');
+      if(r.config.eventId?.startsWith('christmas_')&&!(await readSiteSettings(this.env.DB)).christmasEnabled)
+        throw Error('크리스마스 이벤트가 종료되어 보상 정산이 중단되었습니다.');
       return {...Core.rewardFor(r.state,uid),achievementRun:Core.achievementRun(r.state,uid)};
     }
     if(name==='leave'){
