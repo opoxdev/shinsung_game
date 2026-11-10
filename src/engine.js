@@ -162,7 +162,7 @@ export function command(s,playerId,c) {
     if(s.towers.filter(t=>t.field===p.field&&t.type===c.type).length>=d.cap)return fail('이 타워의 배치 한도에 도달했습니다.');
     if(p.money<d.cost)return fail('전투 자금이 부족합니다.');
     if(!canPlace(s,p.field,c.x,c.y))return fail('도로와 다른 타워를 피해 배치하세요.');
-    p.ach=p.ach||{places:0,upgrades:0};p.ach.places++;p.money-=d.cost;s.towers.push({id:s.nextId++,owner:playerId,field:p.field,type:c.type,x:c.x,y:c.y,level:0,cd:d.kind==='income'?d.interval:0,spent:d.cost,target:'first',skin:p.skins[c.type]||'default',shots:0});
+    p.ach=p.ach||{places:0,upgrades:0};p.ach.places++;p.money-=d.cost;s.towers.push({id:s.nextId++,owner:playerId,field:p.field,type:c.type,x:c.x,y:c.y,level:0,cd:['income','festive','stocking'].includes(d.kind)?d.interval:0,spent:d.cost,target:'first',skin:p.skins[c.type]||'default',shots:0});
   } else if(['upgrade','sell','target'].includes(c.kind)) {
     const t=s.towers.find(t=>t.id===c.id);if(!t||t.owner!==playerId)return fail('자신의 타워를 선택하세요.');
     if(c.kind==='upgrade') {
