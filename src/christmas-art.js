@@ -111,9 +111,8 @@ export function drawChristmasVillageDecor(g,map,pathDistance){
  }
  g.restore();return true;
 }
-export function christmasVillagePreview(){
- const route=[[0,230],[280,230],[420,370],[630,280],[790,425],[570,560],[320,520],[190,690],[330,930],[610,960],[780,735],[1040,650],[1250,850],[1590,770],[1650,510],[1450,340],[1180,260],[1390,130],[1800,150]]
-  .map(([x,y],i)=>(i?'L':'M')+(x*800/1800).toFixed(0)+' '+(205+y*265/1100).toFixed(0)).join(' ');
+export function christmasVillagePreview(map){
+ const route=map.path.map(([x,y],i)=>(i?'L':'M')+(x/1800*800).toFixed(1)+' '+(205+y/1100*245).toFixed(1)).join(' ');
  const trees=Array.from({length:27},(_,i)=>{
   const x=28+(i*163+17)%748,y=188+(i*101)%238,sc=.57+(i%4)*.15;
   return '<g transform="translate('+x+' '+y+') scale('+sc+')"><path d="M0-109l-35 75h15l-29 42H46L21-34h15Z" fill="#4f8482" stroke="#c7eeee" stroke-width="5"/><path d="M0-109L0 8H46L21-34h15Z" fill="#305e72"/><path d="M-19-57L0-109 25-57M-26-21l27-66 30 65" fill="none" stroke="#eefbfa" stroke-width="5"/></g>';
@@ -141,7 +140,7 @@ export function christmasTowerPortrait(id,skin='default'){
  const cosmetic=(id==='scout'&&skin==='snowglobe')||(id==='icewitch'&&skin==='candycane')||
    (id==='knight'&&skin==='hollyknight');
  if(!isTower&&!candy&&!cosmetic)return null;
- const s='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 210" data-design="christmas" data-art-tier="limited" data-base="'+id+'" data-costume="'+skin+'">';
+ const s='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 210" data-design="v2" data-art-tier="limited" data-base="'+id+'" data-costume="'+skin+'">';
  const shadow='<ellipse cx="91" cy="191" rx="71" ry="13" fill="#223b5280"/>';
  const star='<path d="M90 8l9 17 19 2-14 13 4 19-18-9-17 9 4-19-15-13 20-2Z" fill="#fff3b1" stroke="#e1aa73" stroke-width="3"/>';
  const icing='<path d="M23 90q9 15 19 0t18 0t18 0t18 0t18 0t19 0t19 0" fill="none" stroke="#fff8ee" stroke-width="11" stroke-linecap="round"/>';
