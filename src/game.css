@@ -1200,3 +1200,18 @@ body{background:#15203d;color:var(--text)}button{border:2px solid #101a35;border
  .admin-audit>summary{flex-wrap:wrap;gap:7px}.admin-audit>summary small{margin-left:0}
  .admin-hero{padding:14px}.admin-site-form select{font-size:13px}
 }
+
+/* Keep the audit log after the user-management workbench in the actual box
+   flow. The old auto-sized CSS grid could let overflowing user details cover
+   the collapsed <summary>, intercepting its click target. */
+.shell:has(.admin-console) .admin-console{
+ display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;
+ width:100%;height:auto;min-height:0;overflow:visible;
+}
+.shell:has(.admin-console) .admin-console>.admin-workspace{
+ position:relative;flex:0 0 auto;height:auto;min-height:min-content;
+}
+.shell:has(.admin-console) .admin-console>.admin-audit{
+ position:relative;z-index:1;flex:0 0 auto;margin-top:0;isolation:isolate;
+}
+.shell:has(.admin-console) .admin-audit>summary{position:relative;z-index:2}
