@@ -40,7 +40,7 @@ try {
   const leftBefore=await mapRail.evaluate(el=>el.scrollLeft);
   await button.click();
   assert.equal(await mapRail.evaluate(el=>el.dataset.preserveRail),'original',
-    'map selection replaced the scroll rail and reset the user's position');
+    'map selection replaced the scroll rail and reset the player scroll position');
   const leftAfter=await mapRail.evaluate(el=>el.scrollLeft);
   assert.ok(Math.abs(leftAfter-leftBefore)<8,
     'map selection jumped the horizontal scroll from '+leftBefore+' to '+leftAfter);
