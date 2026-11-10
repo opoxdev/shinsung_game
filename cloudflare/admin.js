@@ -1,5 +1,6 @@
 import {Core} from '../dist/cloudflare/core.js';
 import {getProfile,updateProfile} from './profile.js';
+import {readSiteSettings,writeSiteSettings} from './site-settings.js';
 
 // This is a server-side authorization rule, not a UI or request-body flag.
 // Firebase ID token signature/audience/issuer are validated by authenticate().
@@ -51,6 +52,17 @@ export async function assertActiveProfile(db,user){
 }
 export async function adminAction(db,user,action,p={},helpers={}){
   requireAdmin(user);
+  if(action==='adminSiteSettings')return readSiteSettings(db);
+  if(action==='adminUpdateSiteSettings'){
+    const previous=await readSiteSettings(db);
+    const next=await writeSiteSettings(db,p);
+    await audit(db,user.uid,'GLOBAL','siteSettings',{
+      before:{christmasEnabled:previous.christmasEnabled,theme:previous.theme},
+      after:{christmasEnabled:next.christmasEnabled,theme:next.theme},
+      version:next.version
+    });
+    return next;
+  }
   if(action==='adminOverview'){
     const row=await db.prepare("SELECT COUNT(*) AS users, COALESCE(SUM(CASE WHEN json_extract(profile_json,'$.banned')=1 THEN 1 ELSE 0 END),0) AS banned, COALESCE(SUM(CAST(json_extract(profile_json,'$.coins') AS INTEGER)),0) AS coins FROM profiles").first();
     return {users:row?.users||0,banned:row?.banned||0,coins:row?.coins||0,
