@@ -667,6 +667,8 @@ async function finish(){
   if(resultShown||performance.now()<claimAfter)return;resultShown=true;
   const reward=rewardFor(state,playerId);
   const firstGodUnlock=reward.oldgod&&!profile.owned.includes('oldgod');
+  const firstHolidayUnlock=reward.christmasStage&&
+    !profile.owned.includes(CHRISTMAS_STAGES[reward.christmasStage-1]?.unlock);
   const alreadyEarned=new Set(achievementView(profile).filter(a=>a.earned).map(a=>a.id));
   try{
     if(isOnlineMatch)profile=await online.call('claim',{code:room.code});
@@ -687,8 +689,9 @@ async function finish(){
   const maxWaves=campaignOf(state.config).waves.length;
   const rewardText=state.config.type==='pvp'?'비랭크 PvP에는 계정 코인 보상이 없습니다.':
     reward.win?'클리어 보너스 ◈ '+fmt(reward.clearBonus)+' 포함':
-      '진행률 '+Math.round(100*state.wave/maxWaves)+'% · 클리어 보너스 제외 · 기본 보상의 50% × 진행률';
-  modal(`<span class="eyebrow">OPERATION COMPLETE</span><h2>${reward.win?'방어 성공':state.config.type==='pvp'&&state.winner===null?'무승부':'방어선 붕괴'}</h2><p>${state.wave} 웨이브 · 처치 ${state.kills} · ${Math.floor(state.time/60)}분 ${Math.floor(state.time%60)}초</p><div class="result-reward">◈ ${fmt(reward.coins)} <small>COINS</small> <span>+${reward.xp} XP</span></div><p class="result-reward-info">${esc(rewardText)}</p>${state.config.type==='pvp'||state.config.eventId?'':`<div class="story-ending"><span>✧ ${esc(STORIES[state.config.difficulty]?.title||'전장 기록')}</span><p>${esc(reward.win?STORIES[state.config.difficulty]?.ending:STORIES[state.config.difficulty]?.failure)}</p></div>`}${reward.sonic?'<p>신화 타워 「소닉」 획득!</p>':''}${reward.aurora?'<p>신화 타워 「오로라 정령」 획득!</p>':''}${reward.voidwalker?'<p>✦ 신화 타워 「심연의 방랑자」 영구 해금!</p>':''}${reward.meatlordPack?'<p class="meatlord-unlock">☠ 도전 보상 · 몬스터 팩 「고기군주」 영구 해금!</p>':''}${firstGodUnlock?'<p class="temple-clear-prize">☼ 파멸의 신전 격파 · 신화 타워 「고대의 신」 영구 해금!</p>':reward.oldgod?'<p class="temple-clear-prize">☼ 파멸의 신전 재클리어 · 신화 타워 보유 중</p>':''}${achievementMessage}<button class="primary wide" data-action="leave">로비로</button>`);}
+      state.wave<Math.ceil(maxWaves/2)?'중간 웨이브 미달 · 참여 보상 없음':
+      '진행률 '+Math.round(100*state.wave/maxWaves)+'% · 중간 웨이브 이후 단계별 참여 보상';
+  modal(`<span class="eyebrow">OPERATION COMPLETE</span><h2>${reward.win?'방어 성공':state.config.type==='pvp'&&state.winner===null?'무승부':'방어선 붕괴'}</h2><p>${state.wave} 웨이브 · 처치 ${state.kills} · ${Math.floor(state.time/60)}분 ${Math.floor(state.time%60)}초</p><div class="result-reward">◈ ${fmt(reward.coins)} <small>COINS</small> <span>+${reward.xp} XP</span></div><p class="result-reward-info">${esc(rewardText)}</p>${state.config.type==='pvp'||state.config.eventId?'':`<div class="story-ending"><span>✧ ${esc(STORIES[state.config.difficulty]?.title||'전장 기록')}</span><p>${esc(reward.win?STORIES[state.config.difficulty]?.ending:STORIES[state.config.difficulty]?.failure)}</p></div>`}${reward.sonic?'<p>신화 타워 「소닉」 획득!</p>':''}${reward.aurora?'<p>신화 타워 「오로라 정령」 획득!</p>':''}${reward.voidwalker?'<p>✦ 신화 타워 「심연의 방랑자」 영구 해금!</p>':''}${reward.meatlordPack?'<p class="meatlord-unlock">☠ 도전 보상 · 몬스터 팩 「고기군주」 영구 해금!</p>':''}${firstGodUnlock?'<p class="temple-clear-prize">☼ 파멸의 신전 격파 · 신화 타워 「고대의 신」 영구 해금!</p>':reward.oldgod?'<p class="temple-clear-prize">☼ 파멸의 신전 재클리어 · 신화 타워 보유 중</p>':''}${reward.christmasStage?'<p class="christmas-clear-prize">❄ '+CHRISTMAS_STAGES[reward.christmasStage-1].name+' 클리어 · '+(firstHolidayUnlock?'한정 타워 「'+TOWERS[CHRISTMAS_STAGES[reward.christmasStage-1].unlock].name+'」 획득!':'배틀패스 경험치 +'+reward.christmasPassXP)+'</p>':''}${achievementMessage}<button class="primary wide" data-action="leave">로비로</button>`);}
 function battleMenu(){if(!isOnlineMatch)paused=true;modal(`<span class="eyebrow">FIELD PLAY</span><h2>${isOnlineMatch?'전투는 계속 진행됩니다':'일시 정지'}</h2><p>전투에서 나가면 클리어 보상을 받을 수 없습니다.${isOnlineMatch?' 방장은 참가자가 이어서 동기화를 요청할 수 있습니다.':''}</p><button class="primary wide" data-action="close">전투 계속</button><button class="wide secondary" data-action="leave">본부로 돌아가기</button>`);}
 async function leave(){
   if(isOnlineMatch&&room){try{await online.call('leave',{code:room.code});}catch(e){toast(e.message);return;}}
@@ -759,6 +762,23 @@ const actions={
   async adminBan(){const reason=$('#admin-ban-reason')?.value.trim();if(!reason){adminData.error='제재 사유를 입력하세요.';adminRender();return;}await adminChange('ban',{reason});},
   async adminUnban(){await adminChange('unban');},
   mapPreview(){modal('<h2>'+MAPS.find(m=>m.id===config.map).name+'</h2><canvas id="world" class="terrain-preview" aria-label="실제 전투 맵"></canvas><p>빛나는 분홍 입구에서 시작해 파란 출구로 향합니다.</p>');resetRenderer();renderer=new Renderer($('#world'));},
+  christmas(){page='christmas';config.type='solo';shell();},
+  christmasToggle(){
+    christmasEnabled=!christmasEnabled;
+    try{localStorage.setItem('shinsung.christmas.enabled',String(christmasEnabled));}catch{}
+    // Toggling never touches progress or earned Christmas towers.
+    if(page==='christmas')christmasPage();else shell();
+  },
+  christmasStageSolo(id){
+    const stage=CHRISTMAS_STAGES.find(t=>t.id===id);
+    if(!christmasEnabled||!stage)return toast('먼저 이벤트를 켜세요.');
+    if(!christmasStageUnlocked(profile,CHRISTMAS_STAGES.indexOf(stage)+1))
+      return toast('이전 크리스마스 단계를 클리어해야 합니다.');
+    if(!config.eventId)preEventConfig={...config,modes:[...config.modes]};
+    config={eventId:id,map:'christmas_village',difficulty:'normal',type:'solo',modes:[]};
+    try{startLocal('solo');}catch(e){toast(e.message);config=preEventConfig||{map:'plains',difficulty:'easy',type:'solo',modes:[]};preEventConfig=null;}
+  },
+  christmasClaimPass(id){void mutate({kind:'christmasClaimPass',level:Number(id)});},
   temple(){page='temple';config.type='solo';shell();},
   templeSolo(){config=templeConfig('solo');try{startLocal('solo');}catch(e){toast(e.message);}},
   templeCoop(){config=templeConfig('coop');special('coop');},
