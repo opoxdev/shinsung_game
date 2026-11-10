@@ -9,7 +9,7 @@ import {drawChristmasVillageBack,drawChristmasVillageDecor,CHRISTMAS_ENEMY_IDS} 
 import {drawChristmasEnemyPlate} from '../src/christmas-art.js';
 import {enemyStyle} from '../src/enemy-art.js';
 
-const stageConfig=n=>({type:'solo',eventId:'christmas_'+n,map:'christmas_village',difficulty:'normal',modes:[]});
+const stageConfig=n=>({type:'solo',eventId:'christmas_'+n,map:CHRISTMAS_STAGES[n-1].map,difficulty:'normal',modes:[]});
 const player=()=>({id:'a',profile:{...starterProfile(),loadout:['scout','blade','cookiehouse','snowman','stocking']}});
 function match(stage=1){
  const s=createMatch(stageConfig(stage),[player()]);
@@ -28,12 +28,13 @@ const foe=(s,type='snow_sprite',progress=750,hp=20000)=>{
 };
 test('three challenging holiday campaigns have 10, 15 and 25 authored waves with Christmas-only monsters',()=>{
  assert.deepEqual(CHRISTMAS_STAGES.map(s=>s.waves),[10,15,25]);
- assert.equal(MAPS.filter(m=>m.eventOnly==='christmas').length,1);
+ assert.equal(MAPS.filter(m=>m.eventOnly==='christmas').length,3);
  const finals=['winter_witch','gift_conductor','ginger_king'];
  for(const [index,stage] of CHRISTMAS_STAGES.entries()){
   const event=EVENTS[stage.id];
   assert.equal(event.waves.length,stage.waves);
   assert.equal(event.christmasStage,index+1);
+  assert.equal(event.map,stage.map,'event battle must use the matching chapter world');
   assert.equal(event.firstClearTower,['snowman','stocking','cookiehouse'][index]);
   assert.ok(event.reward>=700&&event.hp>=1);
   const miniboss=['frost_bell','gift_guardian','ginger_general'][index];
@@ -134,7 +135,7 @@ test('limited towers are never purchasable, start unowned and offer unique visib
 
 test('Cookie House spawns new troop variants, halts to fire and resumes when enemies die',()=>{
  const s=match(3);
- const path=MAPS.find(m=>m.id==='christmas_village').path;
+ const path=MAPS.find(m=>m.id===s.config.map).path;
  const dist=routeLength(path);
  const e=foe(s,'ginger_warrior',dist-100,80000);
  const t=attach(s,'cookiehouse',500,250,3);
