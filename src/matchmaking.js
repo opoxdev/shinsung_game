@@ -6,6 +6,28 @@ const option=(item,current)=>'<option value="'+escapeHTML(item.id)+'"'+(item.id=
 // Inspired by clear arcade match-selection panels: only user-created rooms
 // appear, and a PvP page never contains cooperative rooms (or vice versa).
 export function matchmakingMarkup(type,config,{loggedIn=false,activeRoom=null,enabled=false}={}){
+  if(type==='coop'&&/^christmas_[123]$/.test(config.eventId||'')&&EVENTS[config.eventId]){
+    const event=EVENTS[config.eventId],map=MAPS.find(m=>m.id===event.map);
+    const auth=loggedIn?'<span class="mm-status online">● 계정 연결됨 · 친구 초대 가능</span>':
+      '<button class="mm-signin" data-action="lobbyLogin">로그인 / 회원가입</button>';
+    return '<div class="matchmaking-page christmas-mm" data-type="coop" data-event-id="'+event.id+'">'+
+      '<span class="mm-overline">❄ WINTER EXPEDITION · CHAPTER '+String(event.christmasStage).padStart(2,'0')+'</span>'+
+      '<h2>'+escapeHTML(event.name)+' · 협동 원정</h2>'+
+      '<p class="mm-intro">'+escapeHTML(event.description)+'</p>'+
+      '<div class="mm-account">'+auth+'</div>'+
+      '<div class="mm-section-label">공동 전장 · 2~4명 · 각 플레이어에게 개인별 이벤트 보상</div>'+
+      '<div class="christmas-mm-meta"><span>❄ '+escapeHTML(map?.name||event.map)+'</span>'+
+      '<span>'+event.waves.length+' WAVES</span><span>2~4인 실시간 협동</span>'+
+      '<span>시작 자금 ₩ '+event.startMoney.toLocaleString('ko-KR')+'</span></div>'+
+      '<div class="mm-actions"><button class="mm-create" data-action="createRoom">'+(loggedIn?'＋ 크리스마스 공개 방 만들기':'로그인 후 방 만들기')+'</button>'+
+      '<button class="mm-join-code" data-action="joinPrompt">⌗ 6자리 코드 참가</button></div>'+
+      (activeRoom?'<button class="mm-resume" data-action="resumeRoom">진행 중인 방 재접속</button>':'')+
+      '<div class="mm-list-head"><div><span class="mm-section-label">이 챕터의 공개 대기실</span>'+
+      '<h3>참가 가능한 방 <span id="room-count">—</span></h3></div><button class="mm-refresh" data-action="refreshRooms">↻ 새로고침</button></div>'+
+      '<div id="public-room-list" class="public-room-list mm-room-grid" data-mode="coop" data-event-id="'+event.id+'">'+
+      '<div class="mm-state"><b>크리스마스 원정 방을 확인하는 중…</b></div></div>'+
+      '<button class="mm-practice" data-action="christmas">← 크리스마스 이벤트로 돌아가기</button></div>';
+  }
   if(type==='coop'&&config.eventId==='temple_of_ruin'){
     const event=EVENTS.temple_of_ruin;
     const auth=loggedIn?'<span class="mm-status online">● 계정 연결됨</span>':
