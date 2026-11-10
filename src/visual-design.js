@@ -4,6 +4,10 @@ import { christmasTowerPortrait } from './christmas-art.js';
 // Everyday/common and craft/rare portraits use modest civilian jobs.
 // Epic/legendary/mythic gain progressively unique silhouettes; no military-uniform template.
 const DESIGNS={
+  cookiehouse:{main:'#c79065',dark:'#61495b',trim:'#fff4dc',helmet:'none',weapon:'cookie',rig:'structure'},
+  christmastree:{main:'#2f8d73',dark:'#1c4857',trim:'#ffe7a6',helmet:'none',weapon:'star',rig:'structure'},
+  snowman:{main:'#d8f7ff',dark:'#6892b2',trim:'#f88c98',helmet:'none',weapon:'snowball',rig:'relic'},
+  stocking:{main:'#d95e72',dark:'#774157',trim:'#f9e9d7',helmet:'none',weapon:'gift',rig:'relic'},
   sunlancer:{main:'#bd8757',dark:'#54465b',trim:'#ffeab1',helmet:'knight',weapon:'greatsword',rig:'cape'},
   graviturge:{main:'#7766ba',dark:'#33285e',trim:'#dcbbff',helmet:'spire',weapon:'aurora',rig:'cape'},
   thornkeeper:{main:'#6d9c7d',dark:'#315b53',trim:'#d9ffd0',helmet:'hood',weapon:'vial',rig:'cape'},
@@ -59,7 +63,11 @@ const SCHEMES={
  void:{main:'#50446b',dark:'#201d35',trim:'#bf87ec',helmet:'spire',rig:'cape',emblem:'void'},
  celestial:{main:'#ad85ae',dark:'#353758',trim:'#f7d9b6',helmet:'aurora',rig:'cape',emblem:'star'},
  donut:{main:'#f3d8bd',dark:'#744f65',trim:'#f6a6ae',helmet:'chef',rig:'apron',weapon:'donut',emblem:'donut'},
- kitsune:{main:'#d2cad2',dark:'#553350',trim:'#ef7795',helmet:'fox',rig:'haori',weapon:'katana',emblem:'kitsune'}
+ kitsune:{main:'#d2cad2',dark:'#553350',trim:'#ef7795',helmet:'fox',rig:'haori',weapon:'katana',emblem:'kitsune'},
+ candyblade:{main:'#f4f2e8',dark:'#a24561',trim:'#f59a9f',helmet:'candy',rig:'haori',weapon:'candy-sword',emblem:'peppermint'},
+ snowglobe:{main:'#c9f2f9',dark:'#537e9a',trim:'#f6ffff',helmet:'globe',rig:'casual',weapon:'slingshot',emblem:'snow'},
+ candycane:{main:'#fff1e3',dark:'#b75d70',trim:'#f9a3a0',helmet:'candy',rig:'robe',weapon:'cane',emblem:'peppermint'},
+ hollyknight:{main:'#89c18e',dark:'#486655',trim:'#ffeba2',helmet:'holly',rig:'cape',weapon:'greatsword',emblem:'holly'}
 };
 export const COSTUME_SCHEMES=SCHEMES;
 
@@ -180,7 +188,7 @@ function weapon(type,c,style){
 // BASE COMMON + RARE: civilian professions. The same military helmet and
 // tactical armor must NOT appear on every starter unit. These are quiet,
 // recognizable 75px silhouettes: wood, cloth, leather, modest hand tools.
-export const BASE_ART_TIERS={common:'everyday',rare:'craft',epic:'specialist',legendary:'iconic',mythic:'myth'};
+export const BASE_ART_TIERS={common:'everyday',rare:'craft',epic:'specialist',legendary:'iconic',mythic:'myth',limited:'limited'};
 function everydayPortrait(id,c,rare=false){
   const a=c.trim,p=c.dark,m=c.main;
   const skin='#ddbca6';
