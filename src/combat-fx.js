@@ -20,6 +20,10 @@ const COLORS={
  papercrane:['#ffe0ad','#ffffff','origami'],marker:['#c995ff','#fff9ff','target'],
  pulsekeeper:['#c78cff','#f9e9ff','pulse'],duskarcher:['#d8a8ff','#fff7ff','arrow'],
  crystalspider:['#67ffe5','#ffffff','crystal'],
+ cookiehouse:['#f1bd85','#fff2d5','cookie'],
+ christmastree:['#88efbd','#ffeab2','ornament'],
+ snowman:['#b8ecff','#ffffff','frost'],
+ stocking:['#f77e9a','#ffe2ad','gift'],
  sunlancer:['#ffce75','#fff5cc','sunbeam'],
  graviturge:['#b48aff','#f4e8ff','gravity'],
  thornkeeper:['#8df5ae','#efffd4','thorn']
