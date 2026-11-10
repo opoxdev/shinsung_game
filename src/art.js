@@ -56,6 +56,18 @@ function evolvedPortrait(svg,id,level){
     kit+='<text x="92" y="193" text-anchor="middle" font-size="9" font-weight="900" fill="#fff0b6">RANK '+level+'</text></g>';
     return svg.replace('</svg>',kit+'</svg>');
   }
+  if(id==='frieza'){
+    const colors=['#d4a3ff','#bb6cff','#8b51f4','#f2baff'];
+    const rays=Array.from({length:level+2},(_,i)=>{
+      const a=(i*6.283185307179586/(level+2))+(level*.35);
+      const x=90+Math.cos(a)*73,y=104+Math.sin(a)*94;
+      return '<path d="M90 103L'+x.toFixed(1)+' '+y.toFixed(1)+'" stroke="'+colors[level-1]+'" stroke-width="'+(level>=4?4:2)+'" opacity=".7"/>';
+    }).join('');
+    const orbit='<ellipse cx="90" cy="107" rx="'+(68+level*4)+'" ry="'+(88+level*2)+'" fill="none" stroke="'+colors[level-1]+'" stroke-width="'+(2+level*.7)+'" stroke-dasharray="12 8" opacity=".75"/>';
+    const nova=level>=2?'<circle cx="151" cy="113" r="'+(12+level*3)+'" fill="#852fc2" stroke="#f5c8ff" stroke-width="4"/><circle cx="146" cy="108" r="5" fill="#fff7ff"/>':'';
+    const omega=level>=4?'<path d="M50 15Q90-21 130 15" stroke="#f3c8ff" stroke-width="8" fill="none"/><path d="M35 173Q90 217 145 173" stroke="#eeb9ff" stroke-width="8" fill="none"/>':'';
+    return svg.replace('</svg>','<g data-frieza-stage="'+level+'">'+rays+orbit+nova+omega+'</g></svg>');
+  }
   if(rarity==='common'||rarity==='rare'){
     // Profession upgrades, not generic helmets/crowns/ballistic suits:
     // these small changes are read as skill and equipment, not new heroes.
